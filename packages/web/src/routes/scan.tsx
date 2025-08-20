@@ -17,19 +17,13 @@ export const Route = createFileRoute('/scan')({
 
 type ScanResult = {
   scanId: string;
-  bbox: {
-    minLong: number;
-    minLat: number;
-    maxLong: number;
-    maxLat: number;
-  };
-  subBoxes: Array<{
-    minLong: number;
-    minLat: number;
-    maxLong: number;
-    maxLat: number;
-  }>;
-  results: Array<{
+  zoom: number | null;
+  cols: number;
+  rows: number;
+  tiles: Array<{
+    z: number;
+    x: number;
+    y: number;
     url: string;
     detections: unknown;
   }>;
@@ -125,23 +119,12 @@ function ScanComponent() {
       {(loaded || data) &&
         (() => {
           const payload = (loaded ?? data)!;
-          const items = payload.results.map((r, i) => ({
-            url: r.url,
-            detections: r.detections,
-            bbox: payload.subBoxes[i],
-          }));
-          // Determine grid order: rows north→south (higher lat to lower), cols west→east (lower long to higher)
-          const uniqueLongs = Array.from(
-            new Set(items.map((i) => i.bbox.minLong))
-          ).sort((a, b) => a - b);
-          const uniqueLats = Array.from(
-            new Set(items.map((i) => i.bbox.minLat))
-          ).sort((a, b) => b - a);
-          const numCols = uniqueLongs.length || 1;
+          const items = payload.tiles;
+          // Slippy tiles: y increases southwards, x increases eastwards
+          const numCols = payload.cols || 1;
           const sorted = items.slice().sort((a, b) => {
-            if (a.bbox.minLat !== b.bbox.minLat)
-              return b.bbox.minLat - a.bbox.minLat;
-            return a.bbox.minLong - b.bbox.minLong;
+            if (a.y !== b.y) return a.y - b.y; // north→south
+            return a.x - b.x; // west→east
           });
 
           return (
@@ -149,65 +132,18 @@ function ScanComponent() {
               <Card className='p-3 text-sm'>
                 <div className='flex flex-wrap gap-4'>
                   <div>
-                    <div className='text-muted-foreground'>Bounding Box</div>
-                    <div>
-                      [{payload.bbox.minLat.toFixed(4)},{' '}
-                      {payload.bbox.minLong.toFixed(4)}] → [
-                      {payload.bbox.maxLat.toFixed(4)},{' '}
-                      {payload.bbox.maxLong.toFixed(4)}]
-                    </div>
+                    <div className='text-muted-foreground'>Zoom</div>
+                    <div>{payload.zoom ?? '—'}</div>
                   </div>
                   <div>
                     <div className='text-muted-foreground'>Grid</div>
                     <div>
-                      {uniqueLats.length} × {uniqueLongs.length}
+                      {payload.rows} × {payload.cols}
                     </div>
                   </div>
                   <div>
                     <div className='text-muted-foreground'>Images</div>
                     <div>{items.length}</div>
-                  </div>
-                </div>
-                <div className='mt-3 grid grid-cols-4 gap-4 border-t pt-3'>
-                  <div>
-                    <div className='text-muted-foreground'>
-                      minLongs (west→east)
-                    </div>
-                    <div className='text-xs font-mono'>
-                      {uniqueLongs.map((l, i) => (
-                        <div key={i}>{l.toFixed(4)}</div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className='text-muted-foreground'>
-                      maxLongs (west→east)
-                    </div>
-                    <div className='text-xs font-mono'>
-                      {uniqueLongs.map((l, i) => (
-                        <div key={i}>{(l + 0.0136).toFixed(4)}</div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className='text-muted-foreground'>
-                      minLats (north→south)
-                    </div>
-                    <div className='text-xs font-mono'>
-                      {uniqueLats.map((l, i) => (
-                        <div key={i}>{l.toFixed(4)}</div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div className='text-muted-foreground'>
-                      maxLats (north→south)
-                    </div>
-                    <div className='text-xs font-mono'>
-                      {uniqueLats.map((l, i) => (
-                        <div key={i}>{(l + 0.0136).toFixed(4)}</div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               </Card>
@@ -220,7 +156,7 @@ function ScanComponent() {
               >
                 {sorted.map((item, idx) => (
                   <div
-                    key={item.url}
+                    key={`${item.z}/${item.x}/${item.y}`}
                     className='group relative overflow-hidden'
                   >
                     <button
@@ -268,12 +204,10 @@ function ScanComponent() {
                       />
                     </div>
                     <div className='mb-3 text-sm'>
-                      <div className='text-muted-foreground'>Bounding Box</div>
+                      <div className='text-muted-foreground'>Tile</div>
                       <div>
-                        [{sorted[modalIndex].bbox.minLat.toFixed(4)},{' '}
-                        {sorted[modalIndex].bbox.minLong.toFixed(4)}] → [
-                        {sorted[modalIndex].bbox.maxLat.toFixed(4)},{' '}
-                        {sorted[modalIndex].bbox.maxLong.toFixed(4)}]
+                        z/x/y: {sorted[modalIndex].z}/{sorted[modalIndex].x}/
+                        {sorted[modalIndex].y}
                       </div>
                     </div>
                     <pre className='whitespace-pre-wrap break-words text-xs'>

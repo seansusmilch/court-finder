@@ -1,12 +1,7 @@
 import { action } from './_generated/server';
 import { v } from 'convex/values';
 import { internal } from './_generated/api';
-import {
-  createBoundingBoxFromCenter,
-  splitBoundingBoxIntoSubBoxes,
-  generateMapboxUrlsForSubBoxes,
-  detectObjectsWithRoboflow,
-} from './lib';
+import { detectObjectsWithRoboflow, tilesInRadiusFromPoint } from './lib';
 
 export const scanArea = action({
   args: {
@@ -31,12 +26,22 @@ export const scanArea = action({
       throw new Error('Missing ROBOFLOW_API_KEY environment variable');
     }
 
-    const bbox = createBoundingBoxFromCenter(args.latitude, args.longitude);
-    console.log('[scanArea] bbox computed', bbox);
-    const subBoxes = splitBoundingBoxIntoSubBoxes(bbox);
-    console.log('[scanArea] subBoxes generated', { count: subBoxes.length });
-    const imageUrls = generateMapboxUrlsForSubBoxes(subBoxes, mapboxToken);
-    console.log('[scanArea] image URLs generated', { count: imageUrls.length });
+    const radius = 1;
+    const coverage = tilesInRadiusFromPoint(
+      args.latitude,
+      args.longitude,
+      radius,
+      undefined,
+      {
+        accessToken: mapboxToken,
+      }
+    );
+    console.log('[scanArea] tiles generated', {
+      zoom: coverage.zoom,
+      count: coverage.tiles.length,
+      rows: coverage.rows,
+      cols: coverage.cols,
+    });
 
     // Look for an existing scan with same center & query
     const existingScans: any[] = await ctx.runQuery(
@@ -73,9 +78,21 @@ export const scanArea = action({
       foundCount: existingInferences?.length ?? 0,
     });
 
-    let results: Array<{ url: string; detections: unknown }> = [];
-    if (existingInferences && existingInferences.length === imageUrls.length) {
+    let results: Array<{
+      z: number;
+      x: number;
+      y: number;
+      url: string;
+      detections: unknown;
+    }> = [];
+    if (
+      existingInferences &&
+      existingInferences.length === coverage.tiles.length
+    ) {
       results = existingInferences.map((inf: any) => ({
+        z: inf.z,
+        x: inf.x,
+        y: inf.y,
         url: inf.imageUrl,
         detections: inf.response,
       }));
@@ -84,15 +101,20 @@ export const scanArea = action({
       });
     } else {
       results = [];
-      for (let i = 0; i < imageUrls.length; i++) {
-        const url = imageUrls[i];
-        const subBox = subBoxes[i];
+      for (let i = 0; i < coverage.tiles.length; i++) {
+        const tile = coverage.tiles[i];
         console.log('[scanArea] inferring', {
           index: i + 1,
-          total: imageUrls.length,
-          url,
+          total: coverage.tiles.length,
+          z: tile.z,
+          x: tile.x,
+          y: tile.y,
+          url: tile.url,
         });
-        const detections = await detectObjectsWithRoboflow(url, roboflowKey);
+        const detections = await detectObjectsWithRoboflow(
+          tile.url,
+          roboflowKey
+        );
         const predictionsCount = Array.isArray((detections as any)?.predictions)
           ? (detections as any).predictions.length
           : undefined;
@@ -100,17 +122,30 @@ export const scanArea = action({
           index: i + 1,
           predictionsCount,
         });
-        results.push({ url, detections });
+        results.push({
+          z: tile.z,
+          x: tile.x,
+          y: tile.y,
+          url: tile.url,
+          detections,
+        });
         // store inference per sub-box
         await ctx.runMutation(internal.inferences.create, {
           scanId,
-          bbox: subBox,
-          imageUrl: url,
+          z: tile.z,
+          x: tile.x,
+          y: tile.y,
+          imageUrl: tile.url,
           model: 'satellite-sports-facilities-bubrg',
           version: '4',
           response: detections,
         });
-        console.log('[scanArea] inference stored', { index: i + 1, url });
+        console.log('[scanArea] inference stored', {
+          index: i + 1,
+          z: tile.z,
+          x: tile.x,
+          y: tile.y,
+        });
       }
     }
 
@@ -120,6 +155,12 @@ export const scanArea = action({
       resultsCount: results.length,
       durationMs: endTs - startTs,
     });
-    return { scanId, bbox, subBoxes, results };
+    return {
+      scanId,
+      zoom: coverage.zoom,
+      cols: coverage.cols,
+      rows: coverage.rows,
+      tiles: results,
+    };
   },
 });

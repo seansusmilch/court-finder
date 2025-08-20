@@ -14,12 +14,10 @@ export default defineSchema({
   }).index('by_center_query', ['centerLat', 'centerLong', 'query']),
   inferences: defineTable({
     scanId: v.id('scans'),
-    bbox: v.object({
-      minLong: v.number(),
-      minLat: v.number(),
-      maxLong: v.number(),
-      maxLat: v.number(),
-    }),
+    // Slippy tile coordinates
+    z: v.number(),
+    x: v.number(),
+    y: v.number(),
     imageUrl: v.string(),
     model: v.string(),
     version: v.string(),

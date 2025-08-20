@@ -17,12 +17,9 @@ export const getByScan = internalQuery({
 export const create = internalMutation({
   args: {
     scanId: v.id('scans'),
-    bbox: v.object({
-      minLong: v.number(),
-      minLat: v.number(),
-      maxLong: v.number(),
-      maxLat: v.number(),
-    }),
+    z: v.number(),
+    x: v.number(),
+    y: v.number(),
     imageUrl: v.string(),
     model: v.string(),
     version: v.string(),
@@ -37,7 +34,9 @@ export const create = internalMutation({
     });
     const id = await ctx.db.insert('inferences', {
       scanId: args.scanId,
-      bbox: args.bbox,
+      z: args.z,
+      x: args.x,
+      y: args.y,
       imageUrl: args.imageUrl,
       model: args.model,
       version: args.version,
