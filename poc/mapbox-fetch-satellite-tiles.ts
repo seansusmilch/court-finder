@@ -6,11 +6,10 @@ export const MAPBOX_TILE_DEFAULTS = {
   accessToken: process.env.MAPBOX_API_KEY!,
 } as const;
 
-export type BBox = {
-  minLat: number;
-  minLong: number;
-  maxLat: number;
-  maxLong: number;
+export type TileCoordinate = {
+  z: number;
+  x: number;
+  y: number;
 };
 
 /**
@@ -40,16 +39,19 @@ function clampLat(lat: number): number {
 }
 
 /**
- * Convert bounding box to tile range at given zoom level
+ * Convert a point (lat, lon) to tile coordinates at given zoom level
  */
-export function bboxToTileRange(bbox: BBox, zoom = MAPBOX_TILE_DEFAULTS.zoom) {
-  const minLat = clampLat(bbox.minLat);
-  const maxLat = clampLat(bbox.maxLat);
-  const minX = lon2tileX(bbox.minLong, zoom);
-  const maxX = lon2tileX(bbox.maxLong, zoom);
-  const minY = lat2tileY(maxLat, zoom); // note: y grows southward
-  const maxY = lat2tileY(minLat, zoom);
-  return { zoom, minX, minY, maxX, maxY };
+export function pointToTile(
+  lat: number,
+  lon: number,
+  zoom = MAPBOX_TILE_DEFAULTS.zoom
+): TileCoordinate {
+  const clampedLat = clampLat(lat);
+  return {
+    x: lon2tileX(lon, zoom),
+    y: lat2tileY(clampedLat, zoom),
+    z: zoom,
+  };
 }
 
 /**
@@ -74,82 +76,81 @@ export function styleTileUrl(
 }
 
 /**
- * Generate all tiles needed to cover a bounding box at given zoom
+ * Generate all tiles in a radius around a center tile
  */
-export function tilesForBBox(bbox: BBox, zoom = MAPBOX_TILE_DEFAULTS.zoom) {
-  const { minX, minY, maxX, maxY } = bboxToTileRange(bbox, zoom);
-  const tiles: Array<{ z: number; x: number; y: number; url: string }> = [];
+export function tilesInRadiusFromTile(
+  center: TileCoordinate,
+  radius: number,
+  opts?: Partial<{
+    username: string;
+    styleId: string;
+    tileSize: 256 | 512;
+    accessToken: string;
+  }>
+) {
+  const { z, x: centerX, y: centerY } = center;
+  const maxTile = Math.pow(2, z) - 1;
+  const tiles: Array<TileCoordinate & { url: string }> = [];
 
-  for (let x = minX; x <= maxX; x++) {
-    for (let y = minY; y <= maxY; y++) {
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dy = -radius; dy <= radius; dy++) {
+      const x = centerX + dx;
+      const y = centerY + dy;
+
+      if (x < 0 || x > maxTile || y < 0 || y > maxTile) continue;
+
       tiles.push({
-        z: zoom,
+        z,
         x,
         y,
-        url: styleTileUrl(zoom, x, y),
+        url: styleTileUrl(z, x, y, opts),
       });
     }
   }
 
   return {
-    zoom,
+    zoom: z,
     tiles,
-    cols: maxX - minX + 1,
-    rows: maxY - minY + 1,
-    bbox: { minX, minY, maxX, maxY },
+    cols: radius * 2 + 1,
+    rows: radius * 2 + 1,
   };
 }
 
 /**
- * Get tile coordinates for a specific point at given zoom
+ * Convenience: generate tiles in a radius from a center point (lat/lon)
  */
-export function pointToTile(
+export function tilesInRadiusFromPoint(
   lat: number,
   lon: number,
-  zoom = MAPBOX_TILE_DEFAULTS.zoom
+  radius: number,
+  zoom = MAPBOX_TILE_DEFAULTS.zoom,
+  opts?: Partial<{
+    username: string;
+    styleId: string;
+    tileSize: 256 | 512;
+    accessToken: string;
+  }>
 ) {
-  return {
-    x: lon2tileX(lon, zoom),
-    y: lat2tileY(lat, zoom),
-    z: zoom,
-  };
-}
-
-/**
- * Get tile bounds in lat/lon coordinates
- */
-export function tileToBBox(x: number, y: number, z: number): BBox {
-  const n = Math.pow(2, z);
-  const west = (x / n) * 360 - 180;
-  const east = ((x + 1) / n) * 360 - 180;
-  const north =
-    (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / n))) * 180) / Math.PI;
-  const south =
-    (Math.atan(Math.sinh(Math.PI * (1 - (2 * (y + 1)) / n))) * 180) / Math.PI;
-
-  return {
-    minLong: west,
-    maxLong: east,
-    minLat: south,
-    maxLat: north,
-  };
+  const center = pointToTile(lat, lon, zoom);
+  return tilesInRadiusFromTile(center, radius, opts);
 }
 
 if (require.main === module) {
-  // Example: Generate tiles for Chicago area
-  const chicagoBBox: BBox = {
-    minLat: 41.94,
-    minLong: -87.7,
-    maxLat: 41.95,
-    maxLong: -87.69,
-  };
+  // Example: Generate tiles in a 1-tile radius around Chicago center
+  const centerLat = 41.8781;
+  const centerLon = -87.6298;
+  const zoom = 15;
 
-  console.log('Chicago bbox:', chicagoBBox);
-  const tileCoverage = tilesForBBox(chicagoBBox, 15);
-  console.log('Tile coverage:', tileCoverage);
+  const centerTile = pointToTile(centerLat, centerLon, zoom);
+  console.log('Center tile:', centerTile);
+
+  const radius = 1;
+  const coverage = tilesInRadiusFromTile(centerTile, radius);
+  console.log('Tiles in radius:', coverage);
 
   // Show first few tile URLs
-  tileCoverage.tiles.slice(0, 3).forEach((tile) => {
+  coverage.tiles.slice(0, 3).forEach((tile) => {
     console.log(`Tile ${tile.z}/${tile.x}/${tile.y}:`, tile.url);
   });
+  console.log(coverage.tiles.length);
 }
