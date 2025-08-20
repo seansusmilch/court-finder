@@ -1,34 +1,15 @@
-# dependencies (bun install)
 node_modules
+.turbo
 
-# output
-out
-dist
-*.tgz
 
-# code coverage
-coverage
-*.lcov
+# START Ruler Generated Files
+*.bak
+.cursor/rules/ruler_cursor_instructions.mdc
+.cursor/rules/ruler_cursor_instructions.mdc.bak
+.gemini/settings.json
+.gemini/settings.json.bak
+GEMINI.md
+GEMINI.md.bak
+# END Ruler Generated Files
 
-# logs
-logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
-
-# dotenv environment variable files
 .env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# caches
-.eslintcache
-.cache
-*.tsbuildinfo
-
-# IntelliJ based IDEs
-.idea
-
-# Finder (MacOS) folder config
-.DS_Store

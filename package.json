@@ -1,15 +1,23 @@
 {
-  "name": "court-finder",
-  "module": "index.ts",
-  "type": "module",
+  "name": "my-better-t-app",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "ruler:apply": "bunx @intellectronica/ruler@latest apply --local-only",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:native": "turbo -F native dev",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F @my-better-t-app/backend dev",
+    "dev:setup": "turbo -F @my-better-t-app/backend dev:setup"
+  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/bun": "latest"
+    "turbo": "^2.5.4"
   },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@types/node": "^24.3.0"
-  }
+  "packageManager": "bun@1.2.19"
 }
