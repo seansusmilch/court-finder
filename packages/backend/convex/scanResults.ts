@@ -1,6 +1,6 @@
 import { query } from './_generated/server';
 import { v } from 'convex/values';
-import { createBoundingBoxFromCenter } from './poc';
+import { createBoundingBoxFromCenter } from './lib';
 
 export const getByScanId = query({
   args: { scanId: v.id('scans') },

@@ -16,7 +16,7 @@ export async function detectObjectsWithRoboflow(
   imageUrl: string,
   apiKey: string,
   modelName = 'satellite-sports-facilities-bubrg',
-  version = '4'
+  version = '5'
 ): Promise<RoboflowResponse> {
   const url = `https://detect.roboflow.com/${modelName}/${version}`;
   const params = new URLSearchParams({ api_key: apiKey, image: imageUrl });

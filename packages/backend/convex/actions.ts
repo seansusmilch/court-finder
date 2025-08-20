@@ -5,8 +5,8 @@ import {
   createBoundingBoxFromCenter,
   splitBoundingBoxIntoSubBoxes,
   generateMapboxUrlsForSubBoxes,
-} from './poc';
-import { detectObjectsWithRoboflow } from './poc';
+  detectObjectsWithRoboflow,
+} from './lib';
 
 export const scanArea = action({
   args: {

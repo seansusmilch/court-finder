@@ -5,6 +5,10 @@ const BOUNDING_BOX_SETTINGS = {
   imageSizeDegrees: 0.0136,
 } as const;
 
+function roundToFourDecimals(value: number): number {
+  return Math.round(value * 10000) / 10000;
+}
+
 export interface BoundingBox {
   minLong: number;
   minLat: number;
@@ -74,10 +78,10 @@ export function createBoundingBoxFromCenter(
   const { imageRadiusCount, imageSizeDegrees } = BOUNDING_BOX_SETTINGS;
   const totalSpan = imageRadiusCount * imageSizeDegrees;
   const boundingBox: BoundingBox = {
-    minLong: longitude - totalSpan,
-    maxLong: longitude + totalSpan,
-    minLat: latitude - totalSpan,
-    maxLat: latitude + totalSpan,
+    minLong: roundToFourDecimals(longitude - totalSpan),
+    maxLong: roundToFourDecimals(longitude + totalSpan),
+    minLat: roundToFourDecimals(latitude - totalSpan),
+    maxLat: roundToFourDecimals(latitude + totalSpan),
   };
   const validation = validateBoundingBox(boundingBox);
   if (!validation.isValid) {
@@ -101,11 +105,27 @@ export function splitBoundingBoxIntoSubBoxes(
   const latSteps = Math.ceil((maxLat - minLat) / imageSizeDegrees);
   const subBoxes: BoundingBox[] = [];
   for (let longIndex = 0; longIndex < longSteps; longIndex++) {
-    const subBoxMinLong = minLong + longIndex * imageSizeDegrees;
-    const subBoxMaxLong = Math.min(subBoxMinLong + imageSizeDegrees, maxLong);
+    const subBoxMinLongRaw = minLong + longIndex * imageSizeDegrees;
+    const subBoxMaxLongRaw = Math.min(
+      subBoxMinLongRaw + imageSizeDegrees,
+      maxLong
+    );
+    const subBoxMinLong = roundToFourDecimals(subBoxMinLongRaw);
+    const subBoxMaxLong = Math.min(
+      roundToFourDecimals(subBoxMaxLongRaw),
+      maxLong
+    );
     for (let latIndex = 0; latIndex < latSteps; latIndex++) {
-      const subBoxMinLat = minLat + latIndex * imageSizeDegrees;
-      const subBoxMaxLat = Math.min(subBoxMinLat + imageSizeDegrees, maxLat);
+      const subBoxMinLatRaw = minLat + latIndex * imageSizeDegrees;
+      const subBoxMaxLatRaw = Math.min(
+        subBoxMinLatRaw + imageSizeDegrees,
+        maxLat
+      );
+      const subBoxMinLat = roundToFourDecimals(subBoxMinLatRaw);
+      const subBoxMaxLat = Math.min(
+        roundToFourDecimals(subBoxMaxLatRaw),
+        maxLat
+      );
       const subBox: BoundingBox = {
         minLong: subBoxMinLong,
         maxLong: subBoxMaxLong,
