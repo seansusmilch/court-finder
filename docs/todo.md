@@ -1,0 +1,5 @@
+- translate the inferences to map coordinates
+- make sure that rows in inferences have unique xyz model/ver
+- grab user location instead of asking for coords
+- also support a search box
+- remove createdAt in scans

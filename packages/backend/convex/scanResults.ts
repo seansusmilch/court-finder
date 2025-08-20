@@ -8,20 +8,16 @@ export const getByScanId = query({
     if (!scan) {
       return null;
     }
-    let inferences: any[] = [];
-    if (
-      Array.isArray((scan as any).inferenceIds) &&
-      (scan as any).inferenceIds.length
-    ) {
-      const fetched = await Promise.all(
-        ((scan as any).inferenceIds as string[]).map((id) =>
-          ctx.db.get(id as any)
-        )
-      );
-      inferences = fetched.filter(Boolean) as any[];
-    }
 
-    if (!inferences.length) {
+    const tiles = Array.isArray((scan as any).tiles)
+      ? ((scan as any).tiles as Array<{
+          z: number;
+          x: number;
+          y: number;
+        }>)
+      : [];
+
+    if (!tiles.length) {
       return {
         scanId: args.scanId,
         zoom: null,
@@ -31,14 +27,42 @@ export const getByScanId = query({
       };
     }
 
-    const zoom = inferences[0].z as number;
-    const tiles = inferences.map((i) => ({
-      z: i.z as number,
-      x: i.x as number,
-      y: i.y as number,
-      url: i.imageUrl as string,
-      detections: i.response as unknown,
-    }));
+    // Use default model/version for now - in the future we could store these on the scan
+    const model = 'satellite-sports-facilities-bubrg';
+    const version = '4';
+    const zoom = tiles[0].z as number;
+
+    // For each tile, fetch latest inference by tile coordinates
+    const resultTiles = await Promise.all(
+      tiles.map(async (t) => {
+        const matches = await ctx.db
+          .query('inferences')
+          .withIndex('by_tile', (q) =>
+            q
+              .eq('z', t.z as number)
+              .eq('x', t.x as number)
+              .eq('y', t.y as number)
+              .eq('model', model)
+              .eq('version', version)
+          )
+          .collect();
+        if (!matches.length) {
+          return { z: t.z, x: t.x, y: t.y, detections: null };
+        }
+        matches.sort(
+          (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
+        );
+        const latest = matches[0];
+        return {
+          z: latest.z as number,
+          x: latest.x as number,
+          y: latest.y as number,
+          url: latest.imageUrl as string,
+          detections: latest.response as unknown,
+        };
+      })
+    );
+
     const uniqueXs = Array.from(new Set(tiles.map((t) => t.x))).sort(
       (a, b) => a - b
     );
@@ -51,7 +75,7 @@ export const getByScanId = query({
       zoom,
       cols: uniqueXs.length,
       rows: uniqueYs.length,
-      tiles,
+      tiles: resultTiles,
     };
   },
 });

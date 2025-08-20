@@ -11,10 +11,16 @@ export type TileCoordinate = {
   y: number;
 };
 
+/**
+ * Convert longitude to tile X coordinate at given zoom level
+ */
 function lon2tileX(lon: number, z: number): number {
   return Math.floor(((lon + 180) / 360) * Math.pow(2, z));
 }
 
+/**
+ * Convert latitude to tile Y coordinate at given zoom level
+ */
 function lat2tileY(lat: number, z: number): number {
   const rad = (lat * Math.PI) / 180;
   const n = Math.pow(2, z);
@@ -23,10 +29,17 @@ function lat2tileY(lat: number, z: number): number {
   );
 }
 
+/**
+ * Clamp latitude to Web Mercator limits
+ */
 function clampLat(lat: number): number {
+  // Web Mercator max latitude
   return Math.max(Math.min(lat, 85.05112878), -85.05112878);
 }
 
+/**
+ * Convert a point (lat, lon) to tile coordinates at given zoom level
+ */
 export function pointToTile(
   lat: number,
   lon: number,
@@ -40,6 +53,9 @@ export function pointToTile(
   };
 }
 
+/**
+ * Generate Mapbox style tile URL
+ */
 export function styleTileUrl(
   z: number,
   x: number,
@@ -59,6 +75,9 @@ export function styleTileUrl(
   return `https://api.mapbox.com/styles/v1/${username}/${styleId}/tiles/${tileSize}/${z}/${x}/${y}@2x?access_token=${accessToken}`;
 }
 
+/**
+ * Generate all tiles in a radius around a center tile
+ */
 export function tilesInRadiusFromTile(
   center: TileCoordinate,
   radius: number,
@@ -97,6 +116,9 @@ export function tilesInRadiusFromTile(
   };
 }
 
+/**
+ * Convenience: generate tiles in a radius from a center point (lat/lon)
+ */
 export function tilesInRadiusFromPoint(
   lat: number,
   lon: number,

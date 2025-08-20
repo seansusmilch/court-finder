@@ -11,11 +11,8 @@ export const findByCenter = internalQuery({
     console.log('[scans.findByCenter] args', args);
     return await ctx.db
       .query('scans')
-      .withIndex('by_center_query', (q) =>
-        q
-          .eq('centerLat', args.centerLat)
-          .eq('centerLong', args.centerLong)
-          .eq('query', args.query)
+      .withIndex('by_center', (q) =>
+        q.eq('centerLat', args.centerLat).eq('centerLong', args.centerLong)
       )
       .collect();
   },
@@ -25,33 +22,33 @@ export const create = internalMutation({
   args: {
     centerLat: v.number(),
     centerLong: v.number(),
-    query: v.string(),
   },
   handler: async (ctx, args) => {
     console.log('[scans.create] creating scan', args);
     const id = await ctx.db.insert('scans', {
       centerLat: args.centerLat,
       centerLong: args.centerLong,
-      query: args.query,
       createdAt: Date.now(),
-      inferenceIds: [],
+      tiles: [],
     });
     console.log('[scans.create] created', { id });
     return id;
   },
 });
 
-export const updateInferenceIds = internalMutation({
+export const updateTiles = internalMutation({
   args: {
     scanId: v.id('scans'),
-    inferenceIds: v.array(v.id('inferences')),
+    tiles: v.array(v.object({ z: v.number(), x: v.number(), y: v.number() })),
   },
   handler: async (ctx, args) => {
-    console.log('[scans.updateInferenceIds] updating', {
+    console.log('[scans.updateTiles] updating', {
       scanId: args.scanId,
-      count: args.inferenceIds.length,
+      count: args.tiles.length,
     });
-    await ctx.db.patch(args.scanId, { inferenceIds: args.inferenceIds });
+    await ctx.db.patch(args.scanId, {
+      tiles: args.tiles,
+    });
     return true;
   },
 });
@@ -66,11 +63,8 @@ export const listAll = query({
       _id: s._id,
       centerLat: s.centerLat as number,
       centerLong: s.centerLong as number,
-      query: s.query as string,
       createdAt: s.createdAt as number,
-      inferenceCount: Array.isArray((s as any).inferenceIds)
-        ? (s as any).inferenceIds.length
-        : 0,
+      tileCount: s.tiles.length,
     }));
   },
 });

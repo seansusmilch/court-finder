@@ -3,13 +3,17 @@ import { v } from 'convex/values';
 
 export default defineSchema({
   scans: defineTable({
-    query: v.string(),
     centerLat: v.number(),
     centerLong: v.number(),
     createdAt: v.number(),
-    // Association to tile inferences used for this scan
-    inferenceIds: v.array(v.id('inferences')),
-  }).index('by_center_query', ['centerLat', 'centerLong', 'query']),
+    tiles: v.array(
+      v.object({
+        z: v.number(),
+        x: v.number(),
+        y: v.number(),
+      })
+    ),
+  }).index('by_center', ['centerLat', 'centerLong']),
   inferences: defineTable({
     // Slippy tile coordinates
     z: v.number(),

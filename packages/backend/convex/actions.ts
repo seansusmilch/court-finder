@@ -64,7 +64,6 @@ export const scanArea = action({
       scanId = await ctx.runMutation(internal.scans.create, {
         centerLat: args.latitude,
         centerLong: args.longitude,
-        query: args.query ?? '',
       });
       console.log('[scanArea] created new scan', { scanId });
     }
@@ -77,7 +76,8 @@ export const scanArea = action({
       url: string;
       detections: unknown;
     }> = [];
-    const inferenceIds: Array<any> = [];
+    const scanTiles: Array<{ z: number; x: number; y: number }> = [];
+
     for (let i = 0; i < coverage.tiles.length; i++) {
       const tile = coverage.tiles[i];
       console.log('[scanArea] processing tile', {
@@ -88,6 +88,7 @@ export const scanArea = action({
         y: tile.y,
         url: tile.url,
       });
+
       // Check if we've already scanned this tile with the same model/version
       const cached: any = await ctx.runQuery(
         internal.inferences.getLatestByTile,
@@ -99,6 +100,7 @@ export const scanArea = action({
           version: MODEL_VERSION,
         }
       );
+
       let detections: unknown = cached?.response;
       if (!detections) {
         detections = await detectObjectsWithRoboflow(
@@ -108,6 +110,7 @@ export const scanArea = action({
           MODEL_VERSION
         );
       }
+
       const predictionsCount = Array.isArray((detections as any)?.predictions)
         ? (detections as any).predictions.length
         : undefined;
@@ -116,8 +119,9 @@ export const scanArea = action({
         predictionsCount,
         reused: Boolean(cached),
       });
-      // Upsert and collect id
-      const inferenceId = await ctx.runMutation(internal.inferences.upsert, {
+
+      // Upsert inference record
+      await ctx.runMutation(internal.inferences.upsert, {
         z: tile.z,
         x: tile.x,
         y: tile.y,
@@ -126,7 +130,10 @@ export const scanArea = action({
         version: MODEL_VERSION,
         response: detections,
       });
-      inferenceIds.push(inferenceId);
+
+      // Store tile coordinates (without URL) in scan
+      scanTiles.push({ z: tile.z, x: tile.x, y: tile.y });
+
       results.push({
         z: tile.z,
         x: tile.x,
@@ -136,10 +143,10 @@ export const scanArea = action({
       });
     }
 
-    // Associate all inference IDs to the scan
-    await ctx.runMutation(internal.scans.updateInferenceIds, {
+    // Store tile coordinates on the scan
+    await ctx.runMutation(internal.scans.updateTiles, {
       scanId,
-      inferenceIds,
+      tiles: scanTiles,
     });
 
     const endTs = Date.now();
