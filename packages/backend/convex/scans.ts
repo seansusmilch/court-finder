@@ -34,9 +34,25 @@ export const create = internalMutation({
       centerLong: args.centerLong,
       query: args.query,
       createdAt: Date.now(),
+      inferenceIds: [],
     });
     console.log('[scans.create] created', { id });
     return id;
+  },
+});
+
+export const updateInferenceIds = internalMutation({
+  args: {
+    scanId: v.id('scans'),
+    inferenceIds: v.array(v.id('inferences')),
+  },
+  handler: async (ctx, args) => {
+    console.log('[scans.updateInferenceIds] updating', {
+      scanId: args.scanId,
+      count: args.inferenceIds.length,
+    });
+    await ctx.db.patch(args.scanId, { inferenceIds: args.inferenceIds });
+    return true;
   },
 });
 
@@ -52,6 +68,9 @@ export const listAll = query({
       centerLong: s.centerLong as number,
       query: s.query as string,
       createdAt: s.createdAt as number,
+      inferenceCount: Array.isArray((s as any).inferenceIds)
+        ? (s as any).inferenceIds.length
+        : 0,
     }));
   },
 });

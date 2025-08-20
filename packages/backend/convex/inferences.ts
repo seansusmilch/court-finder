@@ -1,19 +1,6 @@
 import { internalQuery, internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 
-export const getByScan = internalQuery({
-  args: {
-    scanId: v.id('scans'),
-  },
-  handler: async (ctx, args) => {
-    console.log('[inferences.getByScan] scanId', args.scanId);
-    return await ctx.db
-      .query('inferences')
-      .withIndex('by_scan', (q) => q.eq('scanId', args.scanId))
-      .collect();
-  },
-});
-
 export const getLatestByTile = internalQuery({
   args: {
     z: v.number(),
@@ -36,7 +23,7 @@ export const getLatestByTile = internalQuery({
       )
       .collect();
     if (!matches.length) return null;
-    // Return the most recent by requestedAt
+    // With uniqueness, there should be at most one. If multiple, pick newest.
     matches.sort(
       (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
     );
@@ -44,9 +31,8 @@ export const getLatestByTile = internalQuery({
   },
 });
 
-export const create = internalMutation({
+export const upsert = internalMutation({
   args: {
-    scanId: v.id('scans'),
     z: v.number(),
     x: v.number(),
     y: v.number(),
@@ -56,14 +42,38 @@ export const create = internalMutation({
     response: v.any(),
   },
   handler: async (ctx, args) => {
-    console.log('[inferences.create] creating inference', {
-      scanId: args.scanId,
+    console.log('[inferences.upsert] upserting', {
       imageUrl: args.imageUrl,
       model: args.model,
       version: args.version,
+      z: args.z,
+      x: args.x,
+      y: args.y,
     });
+    const matches = await ctx.db
+      .query('inferences')
+      .withIndex('by_tile', (q) =>
+        q
+          .eq('z', args.z)
+          .eq('x', args.x)
+          .eq('y', args.y)
+          .eq('model', args.model)
+          .eq('version', args.version)
+      )
+      .collect();
+    if (matches.length > 0) {
+      matches.sort(
+        (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
+      );
+      const latest = matches[0];
+      await ctx.db.patch(latest._id, {
+        imageUrl: args.imageUrl,
+        response: args.response,
+        requestedAt: Date.now(),
+      });
+      return latest._id;
+    }
     const id = await ctx.db.insert('inferences', {
-      scanId: args.scanId,
       z: args.z,
       x: args.x,
       y: args.y,
@@ -73,7 +83,14 @@ export const create = internalMutation({
       requestedAt: Date.now(),
       response: args.response,
     });
-    console.log('[inferences.create] created', { id });
     return id;
+  },
+});
+
+export const getMany = internalQuery({
+  args: { ids: v.array(v.id('inferences')) },
+  handler: async (ctx, args) => {
+    const results = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
+    return results.filter(Boolean);
   },
 });

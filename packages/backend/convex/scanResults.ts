@@ -8,11 +8,18 @@ export const getByScanId = query({
     if (!scan) {
       return null;
     }
-
-    const inferences = await ctx.db
-      .query('inferences')
-      .withIndex('by_scan', (q) => q.eq('scanId', args.scanId))
-      .collect();
+    let inferences: any[] = [];
+    if (
+      Array.isArray((scan as any).inferenceIds) &&
+      (scan as any).inferenceIds.length
+    ) {
+      const fetched = await Promise.all(
+        ((scan as any).inferenceIds as string[]).map((id) =>
+          ctx.db.get(id as any)
+        )
+      );
+      inferences = fetched.filter(Boolean) as any[];
+    }
 
     if (!inferences.length) {
       return {

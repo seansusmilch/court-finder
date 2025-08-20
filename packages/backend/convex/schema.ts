@@ -7,9 +7,10 @@ export default defineSchema({
     centerLat: v.number(),
     centerLong: v.number(),
     createdAt: v.number(),
+    // Association to tile inferences used for this scan
+    inferenceIds: v.array(v.id('inferences')),
   }).index('by_center_query', ['centerLat', 'centerLong', 'query']),
   inferences: defineTable({
-    scanId: v.id('scans'),
     // Slippy tile coordinates
     z: v.number(),
     x: v.number(),
@@ -19,7 +20,5 @@ export default defineSchema({
     version: v.string(),
     requestedAt: v.number(),
     response: v.any(),
-  })
-    .index('by_scan', ['scanId'])
-    .index('by_tile', ['z', 'x', 'y', 'model', 'version']),
+  }).index('by_tile', ['z', 'x', 'y', 'model', 'version']),
 });

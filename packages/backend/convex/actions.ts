@@ -69,102 +69,78 @@ export const scanArea = action({
       console.log('[scanArea] created new scan', { scanId });
     }
 
-    // Check for existing inferences for this scan
-    const existingInferences: any[] = await ctx.runQuery(
-      internal.inferences.getByScan,
-      {
-        scanId,
-      }
-    );
-    console.log('[scanArea] existing inferences', {
-      foundCount: existingInferences?.length ?? 0,
-    });
-
-    let results: Array<{
+    // Build results by reusing or running inference per tile
+    const results: Array<{
       z: number;
       x: number;
       y: number;
       url: string;
       detections: unknown;
     }> = [];
-    if (
-      existingInferences &&
-      existingInferences.length === coverage.tiles.length
-    ) {
-      results = existingInferences.map((inf: any) => ({
-        z: inf.z,
-        x: inf.x,
-        y: inf.y,
-        url: inf.imageUrl,
-        detections: inf.response,
-      }));
-      console.log('[scanArea] reusing cached inferences', {
-        count: results.length,
+    const inferenceIds: Array<any> = [];
+    for (let i = 0; i < coverage.tiles.length; i++) {
+      const tile = coverage.tiles[i];
+      console.log('[scanArea] processing tile', {
+        index: i + 1,
+        total: coverage.tiles.length,
+        z: tile.z,
+        x: tile.x,
+        y: tile.y,
+        url: tile.url,
       });
-    } else {
-      results = [];
-      for (let i = 0; i < coverage.tiles.length; i++) {
-        const tile = coverage.tiles[i];
-        console.log('[scanArea] inferring', {
-          index: i + 1,
-          total: coverage.tiles.length,
+      // Check if we've already scanned this tile with the same model/version
+      const cached: any = await ctx.runQuery(
+        internal.inferences.getLatestByTile,
+        {
           z: tile.z,
           x: tile.x,
           y: tile.y,
-          url: tile.url,
-        });
-        // Check if we've already scanned this tile with the same model/version
-        const cached: any = await ctx.runQuery(
-          internal.inferences.getLatestByTile,
-          {
-            z: tile.z,
-            x: tile.x,
-            y: tile.y,
-            model: MODEL_NAME,
-            version: MODEL_VERSION,
-          }
-        );
-        const detections = cached
-          ? (cached.response as unknown)
-          : await detectObjectsWithRoboflow(
-              tile.url,
-              roboflowKey,
-              MODEL_NAME,
-              MODEL_VERSION
-            );
-        const predictionsCount = Array.isArray((detections as any)?.predictions)
-          ? (detections as any).predictions.length
-          : undefined;
-        console.log('[scanArea] inference complete', {
-          index: i + 1,
-          predictionsCount,
-        });
-        results.push({
-          z: tile.z,
-          x: tile.x,
-          y: tile.y,
-          url: tile.url,
-          detections,
-        });
-        // store inference per sub-box
-        await ctx.runMutation(internal.inferences.create, {
-          scanId,
-          z: tile.z,
-          x: tile.x,
-          y: tile.y,
-          imageUrl: tile.url,
           model: MODEL_NAME,
           version: MODEL_VERSION,
-          response: detections,
-        });
-        console.log('[scanArea] inference stored', {
-          index: i + 1,
-          z: tile.z,
-          x: tile.x,
-          y: tile.y,
-        });
+        }
+      );
+      let detections: unknown = cached?.response;
+      if (!detections) {
+        detections = await detectObjectsWithRoboflow(
+          tile.url,
+          roboflowKey,
+          MODEL_NAME,
+          MODEL_VERSION
+        );
       }
+      const predictionsCount = Array.isArray((detections as any)?.predictions)
+        ? (detections as any).predictions.length
+        : undefined;
+      console.log('[scanArea] inference ready', {
+        index: i + 1,
+        predictionsCount,
+        reused: Boolean(cached),
+      });
+      // Upsert and collect id
+      const inferenceId = await ctx.runMutation(internal.inferences.upsert, {
+        z: tile.z,
+        x: tile.x,
+        y: tile.y,
+        imageUrl: tile.url,
+        model: MODEL_NAME,
+        version: MODEL_VERSION,
+        response: detections,
+      });
+      inferenceIds.push(inferenceId);
+      results.push({
+        z: tile.z,
+        x: tile.x,
+        y: tile.y,
+        url: tile.url,
+        detections,
+      });
     }
+
+    // Associate all inference IDs to the scan
+    await ctx.runMutation(internal.scans.updateInferenceIds, {
+      scanId,
+      inferenceIds,
+    });
 
     const endTs = Date.now();
     console.log('[scanArea] done', {
