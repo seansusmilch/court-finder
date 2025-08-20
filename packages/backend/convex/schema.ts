@@ -23,5 +23,7 @@ export default defineSchema({
     version: v.string(),
     requestedAt: v.number(),
     response: v.any(),
-  }).index('by_scan', ['scanId']),
+  })
+    .index('by_scan', ['scanId'])
+    .index('by_tile', ['z', 'x', 'y', 'model', 'version']),
 });

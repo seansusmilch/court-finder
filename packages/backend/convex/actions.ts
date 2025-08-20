@@ -10,6 +10,8 @@ export const scanArea = action({
     query: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const MODEL_NAME = 'satellite-sports-facilities-bubrg';
+    const MODEL_VERSION = '4';
     const startTs = Date.now();
     console.log('[scanArea] start', {
       latitude: args.latitude,
@@ -111,10 +113,25 @@ export const scanArea = action({
           y: tile.y,
           url: tile.url,
         });
-        const detections = await detectObjectsWithRoboflow(
-          tile.url,
-          roboflowKey
+        // Check if we've already scanned this tile with the same model/version
+        const cached: any = await ctx.runQuery(
+          internal.inferences.getLatestByTile,
+          {
+            z: tile.z,
+            x: tile.x,
+            y: tile.y,
+            model: MODEL_NAME,
+            version: MODEL_VERSION,
+          }
         );
+        const detections = cached
+          ? (cached.response as unknown)
+          : await detectObjectsWithRoboflow(
+              tile.url,
+              roboflowKey,
+              MODEL_NAME,
+              MODEL_VERSION
+            );
         const predictionsCount = Array.isArray((detections as any)?.predictions)
           ? (detections as any).predictions.length
           : undefined;
@@ -136,8 +153,8 @@ export const scanArea = action({
           x: tile.x,
           y: tile.y,
           imageUrl: tile.url,
-          model: 'satellite-sports-facilities-bubrg',
-          version: '4',
+          model: MODEL_NAME,
+          version: MODEL_VERSION,
           response: detections,
         });
         console.log('[scanArea] inference stored', {

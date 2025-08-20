@@ -1,4 +1,4 @@
-import { internalQuery, internalMutation } from './_generated/server';
+import { internalQuery, internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
 
 export const findByCenter = internalQuery({
@@ -37,5 +37,21 @@ export const create = internalMutation({
     });
     console.log('[scans.create] created', { id });
     return id;
+  },
+});
+
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const scans = await ctx.db.query('scans').collect();
+    // Sort newest first
+    scans.sort((a, b) => (b.createdAt as number) - (a.createdAt as number));
+    return scans.map((s) => ({
+      _id: s._id,
+      centerLat: s.centerLat as number,
+      centerLong: s.centerLong as number,
+      query: s.query as string,
+      createdAt: s.createdAt as number,
+    }));
   },
 });

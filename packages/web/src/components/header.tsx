@@ -7,6 +7,7 @@ export default function Header() {
     { to: '/', label: 'Home' },
     { to: '/todos', label: 'Todos' },
     { to: '/scan', label: 'Scan' },
+    { to: '/scans', label: 'Scans' },
   ];
 
   return (
