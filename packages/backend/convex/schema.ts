@@ -5,7 +5,6 @@ export default defineSchema({
   scans: defineTable({
     centerLat: v.number(),
     centerLong: v.number(),
-    createdAt: v.number(),
     tiles: v.array(
       v.object({
         z: v.number(),
