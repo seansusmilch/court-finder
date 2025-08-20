@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
+import { Route as ScanRouteImport } from './routes/scan'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TodosRoute = TodosRouteImport.update({
   id: '/todos',
   path: '/todos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScanRoute = ScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/scan': typeof ScanRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/scan': typeof ScanRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/scan': typeof ScanRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/todos'
+  fullPaths: '/' | '/scan' | '/todos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/todos'
-  id: '__root__' | '/' | '/todos'
+  to: '/' | '/scan' | '/todos'
+  id: '__root__' | '/' | '/scan' | '/todos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ScanRoute: typeof ScanRoute
   TodosRoute: typeof TodosRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/todos'
       fullPath: '/todos'
       preLoaderRoute: typeof TodosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scan': {
+      id: '/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof ScanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ScanRoute: ScanRoute,
   TodosRoute: TodosRoute,
 }
 export const routeTree = rootRouteImport

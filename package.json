@@ -2,11 +2,12 @@
   "name": "court-finder",
   "version": "0.0.1",
   "author": "Sean Susmilch",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "turbo": "^2.5.4"
+  },
+  "packageManager": "bun@1.2.19",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "ruler:apply": "bunx @intellectronica/ruler@latest apply --local-only",
     "dev": "turbo dev",
@@ -17,9 +18,8 @@
     "dev:server": "turbo -F @court-finder/backend dev",
     "dev:setup": "turbo -F @court-finder/backend dev:setup"
   },
-  "dependencies": {},
-  "devDependencies": {
-    "turbo": "^2.5.4"
-  },
-  "packageManager": "bun@1.2.19"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
