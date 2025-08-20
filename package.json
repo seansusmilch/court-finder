@@ -1,5 +1,7 @@
 {
-  "name": "my-better-t-app",
+  "name": "court-finder",
+  "version": "0.0.1",
+  "author": "Sean Susmilch",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -12,8 +14,8 @@
     "check-types": "turbo check-types",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
-    "dev:server": "turbo -F @my-better-t-app/backend dev",
-    "dev:setup": "turbo -F @my-better-t-app/backend dev:setup"
+    "dev:server": "turbo -F @court-finder/backend dev",
+    "dev:setup": "turbo -F @court-finder/backend dev:setup"
   },
   "dependencies": {},
   "devDependencies": {

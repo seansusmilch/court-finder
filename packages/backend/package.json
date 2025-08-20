@@ -1,11 +1,11 @@
 {
-  "name": "@my-better-t-app/backend",
-  "version": "1.0.0",
+  "name": "@court-finder/backend",
+  "version": "0.0.1",
   "scripts": {
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success"
   },
-  "author": "",
+  "author": "Sean Susmilch",
   "license": "ISC",
   "description": "",
   "devDependencies": {

@@ -1,6 +1,7 @@
 {
-  "name": "web",
-  "version": "0.0.0",
+  "name": "@court-finder/web",
+  "version": "0.0.1",
+  "author": "Sean Susmilch",
   "private": true,
   "type": "module",
   "scripts": {
@@ -28,7 +29,7 @@
     "tw-animate-css": "^1.2.5",
     "zod": "^4.0.2",
     "convex": "^1.25.4",
-    "@my-better-t-app/backend": "workspace:*",
+    "@court-finder/backend": "workspace:*",
     "vite-plugin-pwa": "^1.0.1"
   },
   "devDependencies": {
