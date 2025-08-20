@@ -168,6 +168,48 @@ function ScanComponent() {
                     <div>{items.length}</div>
                   </div>
                 </div>
+                <div className='mt-3 grid grid-cols-4 gap-4 border-t pt-3'>
+                  <div>
+                    <div className='text-muted-foreground'>
+                      minLongs (west→east)
+                    </div>
+                    <div className='text-xs font-mono'>
+                      {uniqueLongs.map((l, i) => (
+                        <div key={i}>{l.toFixed(4)}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-muted-foreground'>
+                      maxLongs (west→east)
+                    </div>
+                    <div className='text-xs font-mono'>
+                      {uniqueLongs.map((l, i) => (
+                        <div key={i}>{(l + 0.0136).toFixed(4)}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-muted-foreground'>
+                      minLats (north→south)
+                    </div>
+                    <div className='text-xs font-mono'>
+                      {uniqueLats.map((l, i) => (
+                        <div key={i}>{l.toFixed(4)}</div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-muted-foreground'>
+                      maxLats (north→south)
+                    </div>
+                    <div className='text-xs font-mono'>
+                      {uniqueLats.map((l, i) => (
+                        <div key={i}>{(l + 0.0136).toFixed(4)}</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </Card>
 
               <div
@@ -224,6 +266,15 @@ function ScanComponent() {
                         alt='Selected image'
                         className='max-h-64 w-full object-contain'
                       />
+                    </div>
+                    <div className='mb-3 text-sm'>
+                      <div className='text-muted-foreground'>Bounding Box</div>
+                      <div>
+                        [{sorted[modalIndex].bbox.minLat.toFixed(4)},{' '}
+                        {sorted[modalIndex].bbox.minLong.toFixed(4)}] → [
+                        {sorted[modalIndex].bbox.maxLat.toFixed(4)},{' '}
+                        {sorted[modalIndex].bbox.maxLong.toFixed(4)}]
+                      </div>
                     </div>
                     <pre className='whitespace-pre-wrap break-words text-xs'>
                       {JSON.stringify(sorted[modalIndex].detections, null, 2)}

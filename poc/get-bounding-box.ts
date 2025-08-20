@@ -1,4 +1,4 @@
-import { generateMapboxStaticImageUrl } from './mapbox-fetch-satellite';
+import { generateMapboxStaticImageUrl } from './mapbox-fetch-satellite-images';
 
 // Configuration constants for bounding box calculations
 const BOUNDING_BOX_SETTINGS = {

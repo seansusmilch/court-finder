@@ -103,35 +103,38 @@ export function splitBoundingBoxIntoSubBoxes(
   const { imageSizeDegrees } = BOUNDING_BOX_SETTINGS;
   const longSteps = Math.ceil((maxLong - minLong) / imageSizeDegrees);
   const latSteps = Math.ceil((maxLat - minLat) / imageSizeDegrees);
+
+  // Build aligned grid lines so adjacent tiles meet exactly and the last line equals the parent max
+  const longLines: number[] = [];
+  for (let i = 0; i <= longSteps; i++) {
+    if (i === longSteps) {
+      longLines.push(maxLong);
+    } else {
+      longLines.push(roundToFourDecimals(minLong + i * imageSizeDegrees));
+    }
+  }
+  const latLines: number[] = [];
+  for (let j = 0; j <= latSteps; j++) {
+    if (j === latSteps) {
+      latLines.push(maxLat);
+    } else {
+      latLines.push(roundToFourDecimals(minLat + j * imageSizeDegrees));
+    }
+  }
+
   const subBoxes: BoundingBox[] = [];
-  for (let longIndex = 0; longIndex < longSteps; longIndex++) {
-    const subBoxMinLongRaw = minLong + longIndex * imageSizeDegrees;
-    const subBoxMaxLongRaw = Math.min(
-      subBoxMinLongRaw + imageSizeDegrees,
-      maxLong
-    );
-    const subBoxMinLong = roundToFourDecimals(subBoxMinLongRaw);
-    const subBoxMaxLong = Math.min(
-      roundToFourDecimals(subBoxMaxLongRaw),
-      maxLong
-    );
-    for (let latIndex = 0; latIndex < latSteps; latIndex++) {
-      const subBoxMinLatRaw = minLat + latIndex * imageSizeDegrees;
-      const subBoxMaxLatRaw = Math.min(
-        subBoxMinLatRaw + imageSizeDegrees,
-        maxLat
-      );
-      const subBoxMinLat = roundToFourDecimals(subBoxMinLatRaw);
-      const subBoxMaxLat = Math.min(
-        roundToFourDecimals(subBoxMaxLatRaw),
-        maxLat
-      );
+  for (let i = 0; i < longSteps; i++) {
+    for (let j = 0; j < latSteps; j++) {
       const subBox: BoundingBox = {
-        minLong: subBoxMinLong,
-        maxLong: subBoxMaxLong,
-        minLat: subBoxMinLat,
-        maxLat: subBoxMaxLat,
+        minLong: longLines[i],
+        maxLong: longLines[i + 1],
+        minLat: latLines[j],
+        maxLat: latLines[j + 1],
       };
+      // Skip degenerate tiles if rounding causes zero span
+      if (subBox.maxLong <= subBox.minLong || subBox.maxLat <= subBox.minLat) {
+        continue;
+      }
       const subBoxValidation = validateBoundingBox(subBox);
       if (!subBoxValidation.isValid) {
         continue;
