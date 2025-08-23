@@ -11,6 +11,20 @@ export type TileCoordinate = {
   y: number;
 };
 
+export type LngLatBounds = {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+};
+
+export type ViewportBbox = {
+  minLat: number;
+  minLng: number;
+  maxLat: number;
+  maxLng: number;
+};
+
 /**
  * Convert longitude to tile X coordinate at given zoom level
  */
@@ -133,4 +147,203 @@ export function tilesInRadiusFromPoint(
 ) {
   const center = pointToTile(lat, lon, zoom);
   return tilesInRadiusFromTile(center, radius, opts);
+}
+
+/**
+ * Compute geographic bounds (west, south, east, north) for a tile z/x/y
+ */
+export function tileToLngLatBounds(
+  z: number,
+  x: number,
+  y: number
+): LngLatBounds {
+  const n = Math.pow(2, z);
+  const west = (x / n) * 360 - 180;
+  const east = ((x + 1) / n) * 360 - 180;
+  const northRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y / n))));
+  const southRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * ((y + 1) / n))));
+  const north = (northRad * 180) / Math.PI;
+  const south = (southRad * 180) / Math.PI;
+  return { west, south, east, north };
+}
+
+/**
+ * Given a pixel position within a downloaded tile image, convert to lon/lat.
+ * The downloaded image may be larger than the base tile size (e.g., 512@2x → 1024).
+ */
+export function pixelOnTileToLngLat(
+  z: number,
+  x: number,
+  y: number,
+  px: number,
+  py: number,
+  imageW: number,
+  imageH: number,
+  basePx: 256 | 512 = MAPBOX_TILE_DEFAULTS.tileSize
+): { lon: number; lat: number } {
+  const n = Math.pow(2, z);
+  const pxBase = (px * basePx) / imageW;
+  const pyBase = (py * basePx) / imageH;
+  const tileFracX = (x + pxBase / basePx) / n;
+  const tileFracY = (y + pyBase / basePx) / n;
+  const lon = tileFracX * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * tileFracY)));
+  const lat = (latRad * 180) / Math.PI;
+  return { lon, lat };
+}
+
+type RoboflowPrediction = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  class?: string;
+  class_id?: number;
+  confidence?: number;
+  detection_id?: string | number;
+  [key: string]: unknown;
+};
+
+export type GeoJSONPointFeature = {
+  type: 'Feature';
+  geometry: { type: 'Point'; coordinates: [number, number] };
+  properties: Record<string, unknown>;
+};
+
+export type GeoJSONPolygonFeature = {
+  type: 'Feature';
+  geometry: { type: 'Polygon'; coordinates: [number, number][][] };
+  properties: Record<string, unknown>;
+};
+
+/**
+ * Convert a Roboflow prediction into GeoJSON features w.r.t. tile z/x/y and image size.
+ * Returns a Point feature for the center and, optionally, a Polygon for the bbox.
+ */
+export function predictionToFeature(
+  z: number,
+  x: number,
+  y: number,
+  prediction: RoboflowPrediction,
+  imageW: number,
+  imageH: number,
+  opts?: { includePolygon?: boolean; basePx?: 256 | 512 }
+): { point: GeoJSONPointFeature; polygon?: GeoJSONPolygonFeature } {
+  const { includePolygon = false, basePx = MAPBOX_TILE_DEFAULTS.tileSize } =
+    opts || {};
+
+  const { x: px, y: py, width, height } = prediction;
+  const { lon, lat } = pixelOnTileToLngLat(
+    z,
+    x,
+    y,
+    px,
+    py,
+    imageW,
+    imageH,
+    basePx
+  );
+
+  const properties: Record<string, unknown> = {
+    z,
+    x,
+    y,
+    class: prediction.class,
+    class_id: prediction.class_id,
+    confidence: prediction.confidence,
+    detection_id: prediction.detection_id,
+  };
+
+  const point: GeoJSONPointFeature = {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [lon, lat] },
+    properties,
+  };
+
+  if (!includePolygon) {
+    return { point };
+  }
+
+  // Compute bbox polygon corners using the same normalization
+  const left = px - width / 2;
+  const right = px + width / 2;
+  const top = py - height / 2;
+  const bottom = py + height / 2;
+  const nw = pixelOnTileToLngLat(z, x, y, left, top, imageW, imageH, basePx);
+  const ne = pixelOnTileToLngLat(z, x, y, right, top, imageW, imageH, basePx);
+  const se = pixelOnTileToLngLat(
+    z,
+    x,
+    y,
+    right,
+    bottom,
+    imageW,
+    imageH,
+    basePx
+  );
+  const sw = pixelOnTileToLngLat(z, x, y, left, bottom, imageW, imageH, basePx);
+  const polygon: GeoJSONPolygonFeature = {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [nw.lon, nw.lat],
+          [ne.lon, ne.lat],
+          [se.lon, se.lat],
+          [sw.lon, sw.lat],
+          [nw.lon, nw.lat],
+        ],
+      ],
+    },
+    properties,
+  };
+  return { point, polygon };
+}
+
+/**
+ * Enumerate all tiles that intersect a bbox at a given zoom.
+ * Handles dateline crossing by splitting if minLng > maxLng.
+ */
+export function tilesIntersectingBbox(
+  bbox: ViewportBbox,
+  zoom: number
+): TileCoordinate[] {
+  const parts: Array<{
+    minLng: number;
+    maxLng: number;
+    minLat: number;
+    maxLat: number;
+  }> = [];
+  if (bbox.minLng <= bbox.maxLng) {
+    parts.push(bbox);
+  } else {
+    // Dateline crossing: split into two ranges
+    parts.push({
+      minLat: bbox.minLat,
+      minLng: -180,
+      maxLat: bbox.maxLat,
+      maxLng: bbox.maxLng,
+    });
+    parts.push({
+      minLat: bbox.minLat,
+      minLng: bbox.minLng,
+      maxLat: bbox.maxLat,
+      maxLng: 180,
+    });
+  }
+
+  const tiles: TileCoordinate[] = [];
+  for (const part of parts) {
+    const minY = lat2tileY(clampLat(part.maxLat), zoom); // north
+    const maxY = lat2tileY(clampLat(part.minLat), zoom); // south
+    const minX = lon2tileX(part.minLng, zoom);
+    const maxX = lon2tileX(part.maxLng, zoom);
+    for (let x = minX; x <= maxX; x++) {
+      for (let y = minY; y <= maxY; y++) {
+        tiles.push({ z: zoom, x, y });
+      }
+    }
+  }
+  return tiles;
 }

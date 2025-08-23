@@ -1,5 +1,10 @@
-import { internalQuery, internalMutation } from './_generated/server';
+import { internalQuery, internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
+import {
+  predictionToFeature,
+  tilesIntersectingBbox,
+  type GeoJSONPointFeature,
+} from './lib/tiles';
 
 export const getLatestByTile = internalQuery({
   args: {
@@ -92,5 +97,161 @@ export const getMany = internalQuery({
   handler: async (ctx, args) => {
     const results = await Promise.all(args.ids.map((id) => ctx.db.get(id)));
     return results.filter(Boolean);
+  },
+});
+
+export const featuresByTile = query({
+  args: {
+    z: v.number(),
+    x: v.number(),
+    y: v.number(),
+    model: v.string(),
+    version: v.string(),
+    includePolygons: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db
+      .query('inferences')
+      .withIndex('by_tile', (q) =>
+        q
+          .eq('z', args.z)
+          .eq('x', args.x)
+          .eq('y', args.y)
+          .eq('model', args.model)
+          .eq('version', args.version)
+      )
+      .collect();
+    if (!match.length) {
+      return { type: 'FeatureCollection', features: [] } as const;
+    }
+    match.sort((a, b) => (b.requestedAt as number) - (a.requestedAt as number));
+    const latest = match[0] as any;
+    const response = latest.response as any;
+    const image = response?.image as
+      | { width: number; height: number }
+      | undefined;
+    const preds: Array<any> = Array.isArray(response?.predictions)
+      ? (response.predictions as Array<any>)
+      : [];
+    const features: GeoJSONPointFeature[] = [];
+    for (const p of preds) {
+      if (!image?.width || !image?.height) continue;
+      const { point } = predictionToFeature(
+        args.z,
+        args.x,
+        args.y,
+        p,
+        image.width,
+        image.height,
+        { includePolygon: false }
+      );
+      features.push(point);
+    }
+    return { type: 'FeatureCollection', features } as const;
+  },
+});
+
+// Get available zoom levels in the database
+export const getAvailableZoomLevels = query({
+  args: {
+    model: v.string(),
+    version: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const results = await ctx.db
+      .query('inferences')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('model'), args.model),
+          q.eq(q.field('version'), args.version)
+        )
+      )
+      .collect();
+
+    const zoomLevels = [...new Set(results.map((r) => r.z))].sort(
+      (a, b) => a - b
+    );
+    return zoomLevels;
+  },
+});
+
+export const featuresByViewport = query({
+  args: {
+    bbox: v.object({
+      minLat: v.number(),
+      minLng: v.number(),
+      maxLat: v.number(),
+      maxLng: v.number(),
+    }),
+    zoom: v.number(),
+    model: v.string(),
+    version: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const features: GeoJSONPointFeature[] = [];
+
+    // Get ALL available zoom levels from database
+    const allResults = await ctx.db
+      .query('inferences')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('model'), args.model),
+          q.eq(q.field('version'), args.version)
+        )
+      )
+      .collect();
+
+    // Group by zoom level
+    const zoomGroups = new Map<number, typeof allResults>();
+    for (const result of allResults) {
+      if (!zoomGroups.has(result.z)) {
+        zoomGroups.set(result.z, []);
+      }
+      zoomGroups.get(result.z)!.push(result);
+    }
+
+    // Process each zoom level's data
+    for (const [zoomLevel, zoomResults] of zoomGroups.entries()) {
+      // Get tiles that intersect with the viewport at this zoom level
+      const tiles = tilesIntersectingBbox(args.bbox, zoomLevel);
+
+      for (const t of tiles) {
+        // Find matching tile in this zoom level's results
+        const tileMatches = zoomResults.filter(
+          (r) => r.z === t.z && r.x === t.x && r.y === t.y
+        );
+
+        if (!tileMatches.length) continue;
+
+        // Get the latest result for this tile
+        const latest = tileMatches.sort(
+          (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
+        )[0] as any;
+
+        const response = latest.response as any;
+        const image = response?.image as
+          | { width: number; height: number }
+          | undefined;
+        const preds: Array<any> = Array.isArray(response?.predictions)
+          ? (response.predictions as Array<any>)
+          : [];
+
+        for (const p of preds) {
+          if (!image?.width || !image?.height) continue;
+          const { point } = predictionToFeature(
+            t.z,
+            t.x,
+            t.y,
+            p,
+            image.width,
+            image.height,
+            { includePolygon: false }
+          );
+          features.push(point);
+        }
+      }
+    }
+
+    return { type: 'FeatureCollection', features } as const;
   },
 });

@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
 
@@ -49,6 +49,21 @@ function HomeComponent() {
                 : 'Error'}
             </span>
           </div>
+        </section>
+        <section className='rounded-lg border p-4'>
+          <h2 className='mb-2 font-medium'>Next steps</h2>
+          <ul className='list-disc pl-5 text-sm text-muted-foreground'>
+            <li>
+              <Link to='/scans' className='text-primary underline'>
+                Run a scan
+              </Link>
+            </li>
+            <li>
+              <Link to={'/map' as any} className='text-primary underline'>
+                View detections on a map
+              </Link>
+            </li>
+          </ul>
         </section>
       </div>
     </div>
