@@ -1,5 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router';
-import Map, { Source, Layer } from 'react-map-gl/mapbox';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import Map, {
+  Source,
+  Layer,
+  GeolocateControl,
+  FullscreenControl,
+  ScaleControl,
+  NavigationControl,
+} from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMemo, useState, useCallback, useRef } from 'react';
@@ -9,6 +16,18 @@ import { CourtPopup } from '@/components/map/CourtPopup';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
 import { SearchBox } from '@/components/map/SearchBox';
 import type { MapboxEvent, MapLayerMouseEvent } from 'mapbox-gl';
+import {
+  PINS_VISIBLE_FROM_ZOOM,
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+  MAP_STYLE_SATELLITE,
+  CLUSTER_MAX_ZOOM,
+  CLUSTER_RADIUS,
+  SEARCH_FLY_TO_ZOOM,
+  FLY_TO_DURATION_MS,
+  INFER_MODEL,
+  INFER_VERSION,
+} from '@/lib/constants';
 
 const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
 
@@ -22,20 +41,38 @@ type FeatureCollection = {
 };
 
 export const Route = createFileRoute('/map')({
+  validateSearch: (search: Record<string, unknown>) => {
+    const parseNumber = (v: unknown) =>
+      typeof v === 'number'
+        ? v
+        : typeof v === 'string'
+        ? parseFloat(v)
+        : undefined;
+
+    const lon = parseNumber((search as any).longitude);
+    const lat = parseNumber((search as any).latitude);
+    const zm = parseNumber((search as any).zoom);
+
+    return {
+      longitude: Number.isFinite(lon) ? (lon as number) : DEFAULT_MAP_CENTER[0],
+      latitude: Number.isFinite(lat) ? (lat as number) : DEFAULT_MAP_CENTER[1],
+      zoom: Number.isFinite(zm) ? (zm as number) : DEFAULT_MAP_ZOOM,
+    };
+  },
   component: MapPage,
 });
 
 function MapPage() {
-  const initialCenter: [number, number] = [-87.6952, 41.9442];
+  const search = Route.useSearch();
   const mapRef = useRef<MapRef | null>(null);
+  const navigate = useNavigate({ from: Route.fullPath });
 
   // Configurable zoom level where pins start showing
-  const PINS_VISIBLE_FROM_ZOOM = 12;
 
   const [viewState, setViewState] = useState({
-    longitude: initialCenter[0],
-    latitude: initialCenter[1],
-    zoom: 15,
+    longitude: search.longitude,
+    latitude: search.latitude,
+    zoom: search.zoom,
   });
 
   const [bbox, setBbox] = useState<{
@@ -99,8 +136,8 @@ function MapPage() {
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
 
   // Hardcode model/version for now to match backend action
-  const model = 'satellite-sports-facilities-bubrg';
-  const version = '4';
+  const model = INFER_MODEL;
+  const version = INFER_VERSION;
 
   // Get available zoom levels from database
   const availableZoomLevels = useQuery(api.inferences.getAvailableZoomLevels, {
@@ -108,13 +145,14 @@ function MapPage() {
     version,
   }) as number[] | undefined;
 
-  // Show ALL court data regardless of zoom level
+  // Skip DB query when zoom is below threshold
+  const shouldQuery = bbox && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM;
   const featureCollection = useQuery(
     api.inferences.featuresByViewport,
-    bbox
+    shouldQuery
       ? {
-          bbox,
-          zoom: viewState.zoom, // Still needed for viewport calculation, but backend uses ALL zoom levels
+          bbox: bbox as NonNullable<typeof bbox>,
+          zoom: viewState.zoom,
           model,
           version,
           confidenceThreshold,
@@ -156,7 +194,7 @@ function MapPage() {
         mapboxAccessToken={MAPBOX_API_KEY}
         initialViewState={viewState}
         style={{ width: '100%', height: '100%' }}
-        mapStyle='mapbox://styles/mapbox/satellite-v9'
+        mapStyle={MAP_STYLE_SATELLITE}
         onMove={onMove}
         interactiveLayerIds={['clusters', 'unclustered-points']}
         onClick={(e) => {
@@ -174,69 +212,75 @@ function MapPage() {
           }
         }}
       >
-        <Source
-          id='courts'
-          type='geojson'
-          data={geojson}
-          cluster={true}
-          clusterMaxZoom={14}
-          clusterRadius={50}
-        >
-          {/* Cluster circles */}
-          <Layer
-            id='clusters'
-            type='circle'
-            filter={['has', 'point_count']}
-            paint={{
-              'circle-color': [
-                'step',
-                ['get', 'point_count'],
-                '#51bbd6',
-                100,
-                '#f1f075',
-                750,
-                '#f28cb1',
-              ],
-              'circle-radius': [
-                'step',
-                ['get', 'point_count'],
-                20,
-                100,
-                30,
-                750,
-                40,
-              ],
-            }}
-          />
+        <GeolocateControl position='top-left' />
+        <FullscreenControl position='top-left' />
+        <NavigationControl position='top-left' />
+        <ScaleControl />
+        {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM && (
+          <Source
+            id='courts'
+            type='geojson'
+            data={geojson}
+            cluster={true}
+            clusterMaxZoom={CLUSTER_MAX_ZOOM}
+            clusterRadius={CLUSTER_RADIUS}
+          >
+            {/* Cluster circles */}
+            <Layer
+              id='clusters'
+              type='circle'
+              filter={['has', 'point_count']}
+              paint={{
+                'circle-color': [
+                  'step',
+                  ['get', 'point_count'],
+                  '#51bbd6',
+                  100,
+                  '#f1f075',
+                  750,
+                  '#f28cb1',
+                ],
+                'circle-radius': [
+                  'step',
+                  ['get', 'point_count'],
+                  20,
+                  100,
+                  30,
+                  750,
+                  40,
+                ],
+              }}
+            />
 
-          {/* Cluster count labels */}
-          <Layer
-            id='cluster-count'
-            type='symbol'
-            filter={['has', 'point_count']}
-            layout={{
-              'text-field': '{point_count_abbreviated}',
-              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-              'text-size': 12,
-            }}
-            paint={{
-              'text-color': '#ffffff',
-            }}
-          />
+            {/* Cluster count labels */}
+            <Layer
+              id='cluster-count'
+              type='symbol'
+              filter={['has', 'point_count']}
+              layout={{
+                'text-field': '{point_count_abbreviated}',
+                'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                'text-size': 12,
+              }}
+              paint={{
+                'text-color': '#ffffff',
+              }}
+            />
 
-          {/* Unclustered court points */}
-          <Layer
-            id='unclustered-points'
-            type='circle'
-            filter={['!', ['has', 'point_count']]}
-            paint={{
-              'circle-color': '#ff0000',
-              'circle-radius': 8,
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#ffffff',
-            }}
-          />
-        </Source>
+            {/* Unclustered court points */}
+            <Layer
+              id='unclustered-points'
+              type='circle'
+              filter={['!', ['has', 'point_count']]}
+              paint={{
+                'circle-color': '#ff0000',
+                'circle-radius': 8,
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#ffffff',
+              }}
+            />
+          </Source>
+        )}
 
         {selectedPin && (
           <CourtPopup
@@ -248,14 +292,14 @@ function MapPage() {
         )}
       </Map>
 
-      <div className='absolute top-4 left-4 z-50'>
+      <div className='absolute top-4 left-15 z-50'>
         <SearchBox
           apiKey={MAPBOX_API_KEY}
           onSelect={(lng, lat) => {
             mapRef.current?.easeTo({
               center: [lng, lat],
-              zoom: 14,
-              duration: 800,
+              zoom: SEARCH_FLY_TO_ZOOM,
+              duration: FLY_TO_DURATION_MS,
             });
           }}
         />

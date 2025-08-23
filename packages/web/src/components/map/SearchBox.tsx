@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  GEOCODER_LIMIT,
+  GEOCODER_TYPES,
+  SEARCH_DEBOUNCE_MS,
+  MIN_QUERY_LENGTH,
+} from '@/lib/constants';
 
 type GeocodingFeature = {
   id: string;
@@ -43,7 +49,7 @@ export function SearchBox({ apiKey, onSelect }: SearchBoxProps) {
       window.clearTimeout(debounceRef.current);
     }
 
-    if (!query || query.trim().length < 2) {
+    if (!query || query.trim().length < MIN_QUERY_LENGTH) {
       setResults([]);
       setOpen(false);
       setHighlightIndex(-1);
@@ -56,7 +62,9 @@ export function SearchBox({ apiKey, onSelect }: SearchBoxProps) {
         setError(null);
         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
           query
-        )}.json?access_token=${apiKey}&autocomplete=true&limit=5&types=place,locality,neighborhood,address,poi`;
+        )}.json?access_token=${apiKey}&autocomplete=true&limit=${GEOCODER_LIMIT}&types=${encodeURIComponent(
+          GEOCODER_TYPES
+        )}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`Geocoding failed (${res.status})`);
         const data = await res.json();
@@ -75,7 +83,7 @@ export function SearchBox({ apiKey, onSelect }: SearchBoxProps) {
       } finally {
         setLoading(false);
       }
-    }, 300);
+    }, SEARCH_DEBOUNCE_MS);
   }, [query, apiKey]);
 
   const handleSelect = (feature: GeocodingFeature) => {
