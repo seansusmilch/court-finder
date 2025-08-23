@@ -5,11 +5,15 @@ export interface RoboflowPrediction {
   height: number;
   confidence: number;
   class: string;
+  class_id?: number;
+  detection_id?: string;
 }
 
 export interface RoboflowResponse {
-  predictions: RoboflowPrediction[];
   image: { width: number; height: number };
+  inference_id: string;
+  predictions: RoboflowPrediction[];
+  time: number;
 }
 
 export async function detectObjectsWithRoboflow(
