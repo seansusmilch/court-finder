@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import Map, { Source, Layer } from 'react-map-gl/mapbox';
+import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
+import { SearchBox } from '@/components/map/SearchBox';
 import type { MapboxEvent, MapLayerMouseEvent } from 'mapbox-gl';
 
 const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
@@ -25,6 +27,7 @@ export const Route = createFileRoute('/map')({
 
 function MapPage() {
   const initialCenter: [number, number] = [-87.6952, 41.9442];
+  const mapRef = useRef<MapRef | null>(null);
 
   // Configurable zoom level where pins start showing
   const PINS_VISIBLE_FROM_ZOOM = 12;
@@ -149,6 +152,7 @@ function MapPage() {
   return (
     <div className='h-[calc(100vh-2rem)] w-full p-2 relative'>
       <Map
+        ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}
         initialViewState={viewState}
         style={{ width: '100%', height: '100%' }}
@@ -243,6 +247,19 @@ function MapPage() {
           />
         )}
       </Map>
+
+      <div className='absolute top-4 left-4 z-50'>
+        <SearchBox
+          apiKey={MAPBOX_API_KEY}
+          onSelect={(lng, lat) => {
+            mapRef.current?.easeTo({
+              center: [lng, lat],
+              zoom: 14,
+              duration: 800,
+            });
+          }}
+        />
+      </div>
 
       <CourtDetectionInfo
         zoomLevel={viewState.zoom}

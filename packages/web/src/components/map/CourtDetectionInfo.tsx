@@ -1,4 +1,5 @@
 import { ConfidenceSlider } from './ConfidenceSlider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface CourtDetectionInfoProps {
   zoomLevel: number;
@@ -20,39 +21,45 @@ export function CourtDetectionInfo({
   isZoomSufficient,
 }: CourtDetectionInfoProps) {
   return (
-    <div className='absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-md text-sm'>
-      <div className='font-semibold'>Court Detection</div>
-      <div className='text-xs text-blue-300'>
-        Zoom level: {Math.round(zoomLevel)}
-      </div>
-      <div className='text-xs text-yellow-300 mt-1'>
-        Pins visible from zoom {pinsVisibleFromZoom}+
-      </div>
-
-      <ConfidenceSlider
-        confidenceThreshold={confidenceThreshold}
-        onConfidenceChange={onConfidenceChange}
-      />
-
-      {isZoomSufficient ? (
-        <>
-          <div className='text-xs text-green-300 mt-1'>
-            {courtCount} courts found
+    <div className='absolute top-4 right-4 text-sm'>
+      <Card className='bg-background/90 backdrop-blur shadow-sm min-w-64'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='text-sm'>Court Detection</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className='text-xs text-muted-foreground'>
+            Zoom level: {Math.round(zoomLevel)}
           </div>
-          <div className='text-xs text-green-300 mt-1'>
-            Showing ALL available court data
+          <div className='text-xs text-yellow-600 dark:text-yellow-400 mt-1'>
+            Pins visible from zoom {pinsVisibleFromZoom}+
           </div>
-          {availableZoomLevels && availableZoomLevels.length > 0 && (
-            <div className='text-xs text-gray-300 mt-1'>
-              Data from zoom levels: {availableZoomLevels.join(', ')}
+
+          <ConfidenceSlider
+            confidenceThreshold={confidenceThreshold}
+            onConfidenceChange={onConfidenceChange}
+          />
+
+          {isZoomSufficient ? (
+            <>
+              <div className='text-xs text-green-700 dark:text-green-400 mt-1'>
+                {courtCount} courts found
+              </div>
+              <div className='text-xs text-green-700 dark:text-green-400 mt-1'>
+                Showing ALL available court data
+              </div>
+              {availableZoomLevels && availableZoomLevels.length > 0 && (
+                <div className='text-xs text-muted-foreground mt-1'>
+                  Data from zoom levels: {availableZoomLevels.join(', ')}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className='text-xs text-destructive mt-1'>
+              Zoom in to see court pins
             </div>
           )}
-        </>
-      ) : (
-        <div className='text-xs text-red-300 mt-1'>
-          Zoom in to see court pins
-        </div>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

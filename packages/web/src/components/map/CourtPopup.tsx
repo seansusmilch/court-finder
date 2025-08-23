@@ -1,5 +1,6 @@
 import { Popup } from 'react-map-gl/mapbox';
 import { Activity, Target, Shield, Users, Navigation } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface CourtPopupProps {
   longitude: number;
@@ -49,15 +50,17 @@ export function CourtPopup({
       offset={[0, -10]}
       className='court-popup'
     >
-      <div className='bg-white p-3 rounded-lg shadow-lg max-w-xs'>
-        <div className='flex items-center gap-2 mb-2'>
-          <IconComponent size={16} className='text-red-500' />
-          <h3 className='font-semibold text-gray-800'>{courtInfo.name}</h3>
-        </div>
-        <div className='space-y-1 text-sm text-gray-600'>
+      <Card className='max-w-xs shadow-sm'>
+        <CardHeader className='py-3'>
+          <div className='flex items-center gap-2'>
+            <IconComponent size={16} className='text-red-500' />
+            <CardTitle className='text-sm'>{courtInfo.name}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-2'>
           <div>
-            <span className='font-medium'>Location:</span>
-            <div className='text-xs text-gray-500'>
+            <div className='text-xs text-muted-foreground'>Location</div>
+            <div className='text-xs'>
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </div>
             <a
@@ -83,7 +86,7 @@ export function CourtPopup({
                   );
                 }
               }}
-              className='inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 underline mt-1'
+              className='inline-flex items-center gap-1 text-xs text-primary underline mt-1'
               title='Open in default map application'
             >
               <Navigation size={12} />
@@ -91,27 +94,27 @@ export function CourtPopup({
             </a>
           </div>
           {properties.confidence != null && (
-            <div>
-              <span className='font-medium'>Confidence:</span>
-              <span className='ml-1 text-green-600'>
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Confidence:</span>
+              <span className='ml-1 text-green-700 dark:text-green-400'>
                 {Math.round(Number(properties.confidence) * 100)}%
               </span>
             </div>
           )}
           {properties.class != null && (
-            <div>
-              <span className='font-medium'>Type:</span>
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Type:</span>
               <span className='ml-1'>{courtInfo.name}</span>
             </div>
           )}
           {properties.zoom_level != null && (
-            <div>
-              <span className='font-medium'>Detected at zoom:</span>
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Detected at zoom:</span>
               <span className='ml-1'>{String(properties.zoom_level)}</span>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </Popup>
   );
 }
