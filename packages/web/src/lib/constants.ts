@@ -24,3 +24,10 @@ export const INFER_VERSION = '4';
 
 // Confidence slider
 export const CONFIDENCE_SLIDER_STEP = 0.1;
+
+// Navigation
+export const NAVIGATION_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/map', label: 'Map' },
+  { to: '/scans', label: 'Scans' },
+] as const;
