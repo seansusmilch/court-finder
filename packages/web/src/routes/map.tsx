@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
-import Map, { Source, Layer } from 'react-map-gl/mapbox';
+import Map, { Source, Layer, Marker, Popup } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
+import { Activity } from 'lucide-react';
 
 const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
 
@@ -39,6 +40,14 @@ function MapPage() {
     maxLng: number;
   } | null>(null);
 
+  const [selectedPin, setSelectedPin] = useState<{
+    longitude: number;
+    latitude: number;
+    properties: Record<string, unknown>;
+  } | null>(null);
+
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
+
   // Hardcode model/version for now to match backend action
   const model = 'satellite-sports-facilities-bubrg';
   const version = '4';
@@ -58,6 +67,7 @@ function MapPage() {
           zoom: viewState.zoom, // Still needed for viewport calculation, but backend uses ALL zoom levels
           model,
           version,
+          confidenceThreshold,
         }
       : 'skip'
   ) as FeatureCollection | undefined;
@@ -97,19 +107,94 @@ function MapPage() {
         style={{ width: '100%', height: '100%' }}
         mapStyle='mapbox://styles/mapbox/satellite-v9'
         onMove={onMove}
+        onClick={() => setSelectedPin(null)}
       >
-        <Source id='detections' type='geojson' data={geojson} />
-        <Layer
-          id='detections-points'
-          type='circle'
-          source='detections'
-          paint={{
-            'circle-radius': 4,
-            'circle-color': '#ff3b3b',
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 1,
-          }}
-        />
+        {geojson.features.map((feature, index) => {
+          const [longitude, latitude] = feature.geometry.coordinates;
+          const properties = feature.properties;
+
+          return (
+            <Marker
+              key={index}
+              longitude={longitude}
+              latitude={latitude}
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                setSelectedPin({
+                  longitude,
+                  latitude,
+                  properties,
+                });
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className='relative group'>
+                <div className='bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors duration-200 hover:scale-110 transform'>
+                  <Activity size={16} />
+                </div>
+                {/* Tooltip on hover */}
+                <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap'>
+                  Click for details
+                </div>
+              </div>
+            </Marker>
+          );
+        })}
+
+        {selectedPin && (
+          <Popup
+            longitude={selectedPin.longitude}
+            latitude={selectedPin.latitude}
+            onClose={() => setSelectedPin(null)}
+            closeButton={true}
+            closeOnClick={false}
+            offset={[0, -10]}
+            className='court-popup'
+          >
+            <div className='bg-white p-3 rounded-lg shadow-lg max-w-xs'>
+              <div className='flex items-center gap-2 mb-2'>
+                <Activity size={16} className='text-red-500' />
+                <h3 className='font-semibold text-gray-800'>Court Detected</h3>
+              </div>
+              <div className='space-y-1 text-sm text-gray-600'>
+                <div>
+                  <span className='font-medium'>Location:</span>
+                  <div className='text-xs text-gray-500'>
+                    {selectedPin.latitude.toFixed(6)},{' '}
+                    {selectedPin.longitude.toFixed(6)}
+                  </div>
+                </div>
+                {selectedPin.properties.confidence != null && (
+                  <div>
+                    <span className='font-medium'>Confidence:</span>
+                    <span className='ml-1 text-green-600'>
+                      {Math.round(
+                        Number(selectedPin.properties.confidence) * 100
+                      )}
+                      %
+                    </span>
+                  </div>
+                )}
+                {selectedPin.properties.class != null && (
+                  <div>
+                    <span className='font-medium'>Type:</span>
+                    <span className='ml-1 capitalize'>
+                      {String(selectedPin.properties.class)}
+                    </span>
+                  </div>
+                )}
+                {selectedPin.properties.zoom_level != null && (
+                  <div>
+                    <span className='font-medium'>Detected at zoom:</span>
+                    <span className='ml-1'>
+                      {String(selectedPin.properties.zoom_level)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Popup>
+        )}
       </Map>
 
       {/* Court detection info */}
@@ -121,6 +206,23 @@ function MapPage() {
         <div className='text-xs text-yellow-300 mt-1'>
           Pins visible from zoom {PINS_VISIBLE_FROM_ZOOM}+
         </div>
+
+        {/* Confidence threshold slider */}
+        <div className='mt-2'>
+          <div className='text-xs text-gray-300 mb-1'>
+            Confidence: {Math.round(confidenceThreshold * 100)}%
+          </div>
+          <input
+            type='range'
+            min='0'
+            max='1'
+            step='0.1'
+            value={confidenceThreshold}
+            onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
+            className='w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider'
+          />
+        </div>
+
         {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM ? (
           <>
             <div className='text-xs text-green-300 mt-1'>

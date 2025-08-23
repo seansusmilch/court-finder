@@ -1,3 +1,5 @@
+import type { RoboflowPrediction } from './roboflow';
+
 export const MAPBOX_TILE_DEFAULTS = {
   username: 'mapbox',
   styleId: 'satellite-v9',
@@ -191,18 +193,6 @@ export function pixelOnTileToLngLat(
   const lat = (latRad * 180) / Math.PI;
   return { lon, lat };
 }
-
-type RoboflowPrediction = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  class?: string;
-  class_id?: number;
-  confidence?: number;
-  detection_id?: string | number;
-  [key: string]: unknown;
-};
 
 export type GeoJSONPointFeature = {
   type: 'Feature';

@@ -5,6 +5,7 @@ import {
   tilesIntersectingBbox,
   type GeoJSONPointFeature,
 } from './lib/tiles';
+import type { RoboflowPrediction } from './lib/roboflow';
 
 export const getLatestByTile = internalQuery({
   args: {
@@ -108,6 +109,7 @@ export const featuresByTile = query({
     model: v.string(),
     version: v.string(),
     includePolygons: v.optional(v.boolean()),
+    confidenceThreshold: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const match = await ctx.db
@@ -124,18 +126,22 @@ export const featuresByTile = query({
     if (!match.length) {
       return { type: 'FeatureCollection', features: [] } as const;
     }
-    match.sort((a, b) => (b.requestedAt as number) - (a.requestedAt as number));
-    const latest = match[0] as any;
-    const response = latest.response as any;
-    const image = response?.image as
-      | { width: number; height: number }
-      | undefined;
-    const preds: Array<any> = Array.isArray(response?.predictions)
-      ? (response.predictions as Array<any>)
+    match.sort((a, b) => b.requestedAt - a.requestedAt);
+    const latest = match[0];
+    const response = latest.response;
+    const image = response.image;
+    const preds: RoboflowPrediction[] = Array.isArray(response.predictions)
+      ? response.predictions
       : [];
     const features: GeoJSONPointFeature[] = [];
     for (const p of preds) {
       if (!image?.width || !image?.height) continue;
+
+      // Filter by confidence threshold
+      if (p.confidence < (args.confidenceThreshold ?? 0.5)) {
+        continue;
+      }
+
       const { point } = predictionToFeature(
         args.z,
         args.x,
@@ -186,6 +192,7 @@ export const featuresByViewport = query({
     zoom: v.number(),
     model: v.string(),
     version: v.string(),
+    confidenceThreshold: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const features: GeoJSONPointFeature[] = [];
@@ -225,19 +232,23 @@ export const featuresByViewport = query({
 
         // Get the latest result for this tile
         const latest = tileMatches.sort(
-          (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
-        )[0] as any;
+          (a, b) => b.requestedAt - a.requestedAt
+        )[0];
 
-        const response = latest.response as any;
-        const image = response?.image as
-          | { width: number; height: number }
-          | undefined;
-        const preds: Array<any> = Array.isArray(response?.predictions)
-          ? (response.predictions as Array<any>)
+        const response = latest.response;
+        const image = response.image;
+        const preds: RoboflowPrediction[] = Array.isArray(response.predictions)
+          ? response.predictions
           : [];
 
         for (const p of preds) {
           if (!image?.width || !image?.height) continue;
+
+          // Filter by confidence threshold
+          if ((p.confidence ?? 0) < (args.confidenceThreshold ?? 0.5)) {
+            continue;
+          }
+
           const { point } = predictionToFeature(
             t.z,
             t.x,
