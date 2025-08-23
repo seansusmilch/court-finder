@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
-import Map from 'react-map-gl/mapbox';
+import Map, { Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
-import { CourtMarker } from '@/components/map/CourtMarker';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
+import type { MapboxEvent, MapLayerMouseEvent } from 'mapbox-gl';
 
 const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
 
@@ -47,6 +47,51 @@ function MapPage() {
     latitude: number;
     properties: Record<string, unknown>;
   } | null>(null);
+
+  // Handle cluster clicks - zoom in to show individual markers
+  const handleClusterClick = useCallback((event: MapLayerMouseEvent) => {
+    const features = event.features;
+    if (!features || features.length === 0) return;
+
+    const clusterId = features[0].properties?.cluster_id;
+    const mapboxSource = event.target.getSource('courts') as any;
+
+    if (clusterId && mapboxSource) {
+      // Get the cluster expansion zoom
+      mapboxSource.getClusterExpansionZoom(
+        clusterId,
+        (err: any, zoom: number) => {
+          if (err) return;
+
+          event.target.easeTo({
+            center: [event.lngLat.lng, event.lngLat.lat],
+            zoom: zoom + 0.5, // Add some padding
+            duration: 500,
+          });
+        }
+      );
+    }
+  }, []);
+
+  // Handle individual point clicks
+  const handlePointClick = useCallback((event: MapLayerMouseEvent) => {
+    event.originalEvent.stopPropagation();
+    const features = event.features;
+    if (!features || features.length === 0) return;
+
+    const feature = features[0];
+    const geometry = feature.geometry as {
+      type: 'Point';
+      coordinates: [number, number];
+    };
+    const [longitude, latitude] = geometry.coordinates;
+
+    setSelectedPin({
+      longitude,
+      latitude,
+      properties: feature.properties || {},
+    });
+  }, []);
 
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
 
@@ -109,28 +154,85 @@ function MapPage() {
         style={{ width: '100%', height: '100%' }}
         mapStyle='mapbox://styles/mapbox/satellite-v9'
         onMove={onMove}
-        onClick={() => setSelectedPin(null)}
+        interactiveLayerIds={['clusters', 'unclustered-points']}
+        onClick={(e) => {
+          // Handle map clicks and layer clicks
+          if (e.features && e.features.length > 0) {
+            const feature = e.features[0];
+            if (feature.layer?.id === 'clusters') {
+              handleClusterClick(e);
+            } else if (feature.layer?.id === 'unclustered-points') {
+              handlePointClick(e);
+            }
+          } else {
+            // Click on empty map area
+            setSelectedPin(null);
+          }
+        }}
       >
-        {geojson.features.map((feature, index) => {
-          const [longitude, latitude] = feature.geometry.coordinates;
-          const properties = feature.properties;
+        <Source
+          id='courts'
+          type='geojson'
+          data={geojson}
+          cluster={true}
+          clusterMaxZoom={14}
+          clusterRadius={50}
+        >
+          {/* Cluster circles */}
+          <Layer
+            id='clusters'
+            type='circle'
+            filter={['has', 'point_count']}
+            paint={{
+              'circle-color': [
+                'step',
+                ['get', 'point_count'],
+                '#51bbd6',
+                100,
+                '#f1f075',
+                750,
+                '#f28cb1',
+              ],
+              'circle-radius': [
+                'step',
+                ['get', 'point_count'],
+                20,
+                100,
+                30,
+                750,
+                40,
+              ],
+            }}
+          />
 
-          return (
-            <CourtMarker
-              key={index}
-              longitude={longitude}
-              latitude={latitude}
-              properties={properties}
-              onClick={(lon, lat, props) => {
-                setSelectedPin({
-                  longitude: lon,
-                  latitude: lat,
-                  properties: props,
-                });
-              }}
-            />
-          );
-        })}
+          {/* Cluster count labels */}
+          <Layer
+            id='cluster-count'
+            type='symbol'
+            filter={['has', 'point_count']}
+            layout={{
+              'text-field': '{point_count_abbreviated}',
+              'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+              'text-size': 12,
+            }}
+            paint={{
+              'text-color': '#ffffff',
+            }}
+          />
+
+          {/* Unclustered court points */}
+          <Layer
+            id='unclustered-points'
+            type='circle'
+            filter={['!', ['has', 'point_count']]}
+            paint={{
+              'circle-color': '#ff0000',
+              'circle-radius': 8,
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#ffffff',
+            }}
+          />
+        </Source>
 
         {selectedPin && (
           <CourtPopup
