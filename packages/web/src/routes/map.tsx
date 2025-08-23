@@ -1,10 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
-import Map, { Source, Layer, Marker, Popup } from 'react-map-gl/mapbox';
+import Map from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
-import { Activity } from 'lucide-react';
+import { CourtMarker } from '@/components/map/CourtMarker';
+import { CourtPopup } from '@/components/map/CourtPopup';
+import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
 
 const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
 
@@ -114,135 +116,41 @@ function MapPage() {
           const properties = feature.properties;
 
           return (
-            <Marker
+            <CourtMarker
               key={index}
               longitude={longitude}
               latitude={latitude}
-              onClick={(e) => {
-                e.originalEvent.stopPropagation();
+              properties={properties}
+              onClick={(lon, lat, props) => {
                 setSelectedPin({
-                  longitude,
-                  latitude,
-                  properties,
+                  longitude: lon,
+                  latitude: lat,
+                  properties: props,
                 });
               }}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className='relative group'>
-                <div className='bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors duration-200 hover:scale-110 transform'>
-                  <Activity size={16} />
-                </div>
-                {/* Tooltip on hover */}
-                <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap'>
-                  Click for details
-                </div>
-              </div>
-            </Marker>
+            />
           );
         })}
 
         {selectedPin && (
-          <Popup
+          <CourtPopup
             longitude={selectedPin.longitude}
             latitude={selectedPin.latitude}
+            properties={selectedPin.properties}
             onClose={() => setSelectedPin(null)}
-            closeButton={true}
-            closeOnClick={false}
-            offset={[0, -10]}
-            className='court-popup'
-          >
-            <div className='bg-white p-3 rounded-lg shadow-lg max-w-xs'>
-              <div className='flex items-center gap-2 mb-2'>
-                <Activity size={16} className='text-red-500' />
-                <h3 className='font-semibold text-gray-800'>Court Detected</h3>
-              </div>
-              <div className='space-y-1 text-sm text-gray-600'>
-                <div>
-                  <span className='font-medium'>Location:</span>
-                  <div className='text-xs text-gray-500'>
-                    {selectedPin.latitude.toFixed(6)},{' '}
-                    {selectedPin.longitude.toFixed(6)}
-                  </div>
-                </div>
-                {selectedPin.properties.confidence != null && (
-                  <div>
-                    <span className='font-medium'>Confidence:</span>
-                    <span className='ml-1 text-green-600'>
-                      {Math.round(
-                        Number(selectedPin.properties.confidence) * 100
-                      )}
-                      %
-                    </span>
-                  </div>
-                )}
-                {selectedPin.properties.class != null && (
-                  <div>
-                    <span className='font-medium'>Type:</span>
-                    <span className='ml-1 capitalize'>
-                      {String(selectedPin.properties.class)}
-                    </span>
-                  </div>
-                )}
-                {selectedPin.properties.zoom_level != null && (
-                  <div>
-                    <span className='font-medium'>Detected at zoom:</span>
-                    <span className='ml-1'>
-                      {String(selectedPin.properties.zoom_level)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Popup>
+          />
         )}
       </Map>
 
-      {/* Court detection info */}
-      <div className='absolute top-4 right-4 bg-black/70 text-white px-3 py-2 rounded-md text-sm'>
-        <div className='font-semibold'>Court Detection</div>
-        <div className='text-xs text-blue-300'>
-          Zoom level: {Math.round(viewState.zoom)}
-        </div>
-        <div className='text-xs text-yellow-300 mt-1'>
-          Pins visible from zoom {PINS_VISIBLE_FROM_ZOOM}+
-        </div>
-
-        {/* Confidence threshold slider */}
-        <div className='mt-2'>
-          <div className='text-xs text-gray-300 mb-1'>
-            Confidence: {Math.round(confidenceThreshold * 100)}%
-          </div>
-          <input
-            type='range'
-            min='0'
-            max='1'
-            step='0.1'
-            value={confidenceThreshold}
-            onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
-            className='w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider'
-          />
-        </div>
-
-        {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM ? (
-          <>
-            <div className='text-xs text-green-300 mt-1'>
-              {geojson.features.length} courts found
-            </div>
-            <div className='text-xs text-green-300 mt-1'>
-              Showing ALL available court data
-            </div>
-            {availableZoomLevels && availableZoomLevels.length > 0 && (
-              <div className='text-xs text-gray-300 mt-1'>
-                Data from zoom levels: {availableZoomLevels.join(', ')}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className='text-xs text-red-300 mt-1'>
-            Zoom in to see court pins
-          </div>
-        )}
-      </div>
+      <CourtDetectionInfo
+        zoomLevel={viewState.zoom}
+        pinsVisibleFromZoom={PINS_VISIBLE_FROM_ZOOM}
+        confidenceThreshold={confidenceThreshold}
+        onConfidenceChange={setConfidenceThreshold}
+        courtCount={geojson.features.length}
+        availableZoomLevels={availableZoomLevels}
+        isZoomSufficient={viewState.zoom >= PINS_VISIBLE_FROM_ZOOM}
+      />
     </div>
   );
 }
