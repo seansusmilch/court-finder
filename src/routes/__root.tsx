@@ -8,12 +8,12 @@ import {
   createRootRouteWithContext,
   useRouterState,
 } from '@tanstack/react-router';
-import { api } from '@court-finder/backend/convex/_generated/api';
+import { api } from '@backend/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { ConvexReactClient, useConvexAuth } from 'convex/react';
 import { useEffect } from 'react';
 import { useRouter } from '@tanstack/react-router';
-import type { Doc } from '@court-finder/backend/convex/_generated/dataModel';
+import type { Doc } from '@backend/dataModel';
 import '../index.css';
 
 export interface RouterAppContext {

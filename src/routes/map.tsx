@@ -12,7 +12,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMemo, useState, useCallback, useRef } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
-import { api } from '@court-finder/backend/convex/_generated/api';
+import { api } from '@backend/api';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';

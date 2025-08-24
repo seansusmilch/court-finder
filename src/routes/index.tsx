@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
-import { api } from '@court-finder/backend/convex/_generated/api';
+import { api } from '@backend/api';
 import { Authenticated, Unauthenticated, AuthLoading } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 
