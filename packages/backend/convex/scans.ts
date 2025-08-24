@@ -1,5 +1,7 @@
+import { api } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
+import { PERMISSIONS } from './lib/constants';
 
 export const findByCenter = internalQuery({
   args: {
@@ -55,6 +57,12 @@ export const updateTiles = internalMutation({
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
+    const canViewScans = await ctx.runQuery(api.users.hasPermission, {
+      permission: PERMISSIONS.SCANS.READ,
+    });
+    if (!canViewScans) {
+      throw new Error('Unauthorized');
+    }
     const scans = await ctx.db.query('scans').collect();
     // Sort newest first
     scans.sort(
@@ -65,6 +73,7 @@ export const listAll = query({
       centerLat: s.centerLat as number,
       centerLong: s.centerLong as number,
       tileCount: s.tiles.length,
+      createdAt: s._creationTime as number,
     }));
   },
 });

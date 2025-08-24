@@ -1,4 +1,9 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  redirect,
+  useNavigate,
+  useSearch,
+} from '@tanstack/react-router';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { useEffect, useState } from 'react';
 import {
@@ -28,6 +33,9 @@ function AuthPage() {
   const router = useRouter();
   const { signIn } = useAuthActions();
   const { isAuthenticated } = useConvexAuth();
+  const { redirect: redirectTo } = useSearch({ from: '/login' }) as {
+    redirect?: string;
+  };
   const [step, setStep] = useState<'signUp' | 'signIn'>('signIn');
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -47,7 +55,17 @@ function AuthPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate({ to: '/' });
+      let to: string = '/';
+      if (redirectTo && typeof redirectTo === 'string') {
+        try {
+          const url = new URL(redirectTo, window.location.origin);
+          if (url.origin === window.location.origin)
+            to = url.pathname + url.search + url.hash;
+        } catch (_) {
+          // ignore malformed redirect
+        }
+      }
+      navigate({ to: to as any });
     }
   }, [isAuthenticated, navigate, router]);
 

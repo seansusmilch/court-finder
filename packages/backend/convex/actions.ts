@@ -1,7 +1,14 @@
 import { action } from './_generated/server';
 import { v } from 'convex/values';
-import { internal } from './_generated/api';
+import { api, internal } from './_generated/api';
 import { detectObjectsWithRoboflow, tilesInRadiusFromPoint } from './lib';
+import {
+  PERMISSIONS,
+  ROBOFLOW_MODEL_NAME,
+  ROBOFLOW_MODEL_VERSION,
+  DEFAULT_TILE_RADIUS_KM,
+  ENV_VARS,
+} from './lib/constants';
 
 export const scanArea = action({
   args: {
@@ -10,16 +17,23 @@ export const scanArea = action({
     query: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const MODEL_NAME = 'satellite-sports-facilities-bubrg';
-    const MODEL_VERSION = '4';
+    const canScan = await ctx.runQuery(api.users.hasPermission, {
+      permission: PERMISSIONS.SCANS.EXECUTE,
+    });
+    if (!canScan) {
+      throw new Error('Unauthorized');
+    }
+
+    const MODEL_NAME = ROBOFLOW_MODEL_NAME;
+    const MODEL_VERSION = ROBOFLOW_MODEL_VERSION;
     const startTs = Date.now();
     console.log('[scanArea] start', {
       latitude: args.latitude,
       longitude: args.longitude,
       query: args.query ?? '',
     });
-    const mapboxToken = process.env.MAPBOX_API_KEY;
-    const roboflowKey = process.env.ROBOFLOW_API_KEY;
+    const mapboxToken = process.env[ENV_VARS.MAPBOX_API_KEY];
+    const roboflowKey = process.env[ENV_VARS.ROBOFLOW_API_KEY];
 
     if (!mapboxToken) {
       throw new Error('Missing MAPBOX_API_KEY environment variable');
@@ -28,7 +42,7 @@ export const scanArea = action({
       throw new Error('Missing ROBOFLOW_API_KEY environment variable');
     }
 
-    const radius = 1;
+    const radius = DEFAULT_TILE_RADIUS_KM;
     const coverage = tilesInRadiusFromPoint(
       args.latitude,
       args.longitude,

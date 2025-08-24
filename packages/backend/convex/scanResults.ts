@@ -1,9 +1,21 @@
+import { api } from './_generated/api';
 import { query } from './_generated/server';
 import { v } from 'convex/values';
+import {
+  PERMISSIONS,
+  ROBOFLOW_MODEL_NAME,
+  ROBOFLOW_MODEL_VERSION,
+} from './lib/constants';
 
 export const getByScanId = query({
   args: { scanId: v.id('scans') },
   handler: async (ctx, args) => {
+    const canViewScans = await ctx.runQuery(api.users.hasPermission, {
+      permission: PERMISSIONS.SCANS.READ,
+    });
+    if (!canViewScans) {
+      throw new Error('Unauthorized');
+    }
     const scan = await ctx.db.get(args.scanId);
     if (!scan) {
       return null;
@@ -28,8 +40,8 @@ export const getByScanId = query({
     }
 
     // Use default model/version for now - in the future we could store these on the scan
-    const model = 'satellite-sports-facilities-bubrg';
-    const version = '4';
+    const model = ROBOFLOW_MODEL_NAME;
+    const version = ROBOFLOW_MODEL_VERSION;
     const zoom = tiles[0].z as number;
 
     // For each tile, fetch latest inference by tile coordinates

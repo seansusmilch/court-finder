@@ -17,8 +17,8 @@ type ScanListItem = {
   _id: string;
   centerLat: number;
   centerLong: number;
-  query: string;
   createdAt: number;
+  tileCount: number;
 };
 
 type ScanResult = {
