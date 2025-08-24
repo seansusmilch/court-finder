@@ -27,26 +27,6 @@ export interface TrainingFeedbackItem {
   >;
 }
 
-export interface CroppedImageData {
-  predictionId: string;
-  imageUrl: string;
-  cropArea: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  prediction: RoboflowPrediction;
-}
-
-export interface TrainingFeedbackState {
-  items: TrainingFeedbackItem[];
-  currentIndex: number;
-  submittedFeedback: Map<string, TrainingFeedbackItem['userFeedback']>;
-  isLoading: boolean;
-  error?: string;
-}
-
 export interface FeedbackSubmission {
   itemId: string;
   predictionId: string;

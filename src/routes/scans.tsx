@@ -6,14 +6,6 @@ import type { Id } from '@backend/dataModel';
 import { ScanDetails, ScanList } from '@/components/scans';
 import { reverseGeocode } from '@/lib/geocoding';
 
-type ScanListItem = {
-  _id: string;
-  centerLat: number;
-  centerLong: number;
-  createdAt: number;
-  tileCount: number;
-};
-
 type ScanResult = {
   scanId: string;
   zoom: number | null;
@@ -32,7 +24,7 @@ export const Route = createFileRoute('/scans')({
   component: ScansPage,
   beforeLoad: async ({ context }) => {
     if (!context.me)
-      throw redirect({ to: '/login', search: { redirect: location.href } });
+      throw redirect({ to: '/login', search: { redirect: '/scans' } });
   },
 });
 
