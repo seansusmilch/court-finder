@@ -9,10 +9,8 @@ export default defineSchema({
     image: v.optional(v.string()),
     email: v.optional(v.string()),
     emailVerificationTime: v.optional(v.number()),
-    phone: v.optional(v.string()),
-    phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-    permissions: v.optional(v.array(v.string())),
+    permissions: v.array(v.string()),
   }).index('email', ['email']),
   scans: defineTable({
     centerLat: v.number(),

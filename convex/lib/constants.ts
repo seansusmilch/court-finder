@@ -20,6 +20,11 @@ export const DEFAULT_USER_PERMISSIONS = [
   PERMISSIONS.TRAINING.WRITE,
 ];
 
+export const DEFAULT_ANONYMOUS_PERMISSIONS = [
+  PERMISSIONS.SCANS.READ,
+  PERMISSIONS.TRAINING.READ,
+];
+
 // Roboflow model configuration
 export const ROBOFLOW_MODEL_NAME = 'satellite-sports-facilities-bubrg';
 export const ROBOFLOW_MODEL_VERSION = '4';

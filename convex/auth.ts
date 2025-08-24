@@ -1,6 +1,30 @@
 import { convexAuth } from '@convex-dev/auth/server';
 import { Password } from '@convex-dev/auth/providers/Password';
+import { MutationCtx } from './_generated/server';
+import {
+  DEFAULT_ANONYMOUS_PERMISSIONS,
+  DEFAULT_USER_PERMISSIONS,
+} from './lib/constants';
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Password],
+  callbacks: {
+    async createOrUpdateUser(ctx: MutationCtx, args: any) {
+      console.log('createOrUpdateUser', args);
+      if (args.existingUserId) {
+        return args.existingUserId;
+      }
+      if (args.profile.email) {
+        return ctx.db.insert('users', {
+          email: args.profile.email,
+          permissions: DEFAULT_USER_PERMISSIONS,
+        });
+      }
+
+      return ctx.db.insert('users', {
+        isAnonymous: true,
+        permissions: DEFAULT_ANONYMOUS_PERMISSIONS,
+      });
+    },
+  },
 });
