@@ -98,7 +98,6 @@ export const Route = createFileRoute('/map')({
 function MapPage() {
   const mapRef = useRef<MapRef | null>(null);
   const initial = Route.useLoaderData() as ViewState;
-  console.log('[initial]', initial);
   const [viewState, setViewState] = useState<ViewState>(initial);
   const hasAutoGeolocatedRef = useRef(false);
 

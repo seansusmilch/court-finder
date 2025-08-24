@@ -25,7 +25,6 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
   beforeLoad: async ({ context }) => {
     const me = await context.convex.query(api.users.me, {});
-    console.log('root before load', me);
     return { me };
   },
   head: () => ({
