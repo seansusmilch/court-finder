@@ -1,8 +1,8 @@
 import { createFileRoute, useSearch, redirect } from '@tanstack/react-router';
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'convex/react';
-import { api } from '@backend/api';
-import type { Id } from '@backend/dataModel';
+import { api } from '@backend/_generated/api';
+import type { Id } from '@backend/_generated/dataModel';
 import { ScanDetails, ScanList } from '@/components/scans';
 import { reverseGeocode } from '@/lib/geocoding';
 

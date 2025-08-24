@@ -1,4 +1,9 @@
-import { internalQuery, internalMutation, query } from './_generated/server';
+import {
+  internalQuery,
+  internalMutation,
+  query,
+  mutation,
+} from './_generated/server';
 import { v } from 'convex/values';
 import {
   predictionToFeature,
@@ -6,6 +11,8 @@ import {
   type GeoJSONPointFeature,
 } from './lib/tiles';
 import type { RoboflowPrediction } from './lib/roboflow';
+import { PERMISSIONS } from './lib/constants';
+import { api } from './_generated/api';
 
 export const getLatestByTile = internalQuery({
   args: {
@@ -275,10 +282,12 @@ export const getTrainingData = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Ensure user is authenticated
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error('Not authenticated');
+    const hasPermission = await ctx.runQuery(api.users.hasPermission, {
+      permission: PERMISSIONS.TRAINING.READ,
+    });
+
+    if (!hasPermission) {
+      throw new Error('Unauthorized');
     }
 
     // Get all results and filter by predictions
@@ -328,5 +337,39 @@ export const getTrainingData = query({
     }
 
     return trainingItems;
+  },
+});
+
+export const submitTrainingFeedback = mutation({
+  args: {
+    feedback: v.array(
+      v.object({
+        predictionId: v.string(),
+        inferenceId: v.id('inferences'),
+        feedback: v.union(
+          v.literal('good'),
+          v.literal('bad'),
+          v.literal('not_a_court')
+        ),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const hasPermission = await ctx.runQuery(api.users.hasPermission, {
+      permission: PERMISSIONS.TRAINING.WRITE,
+    });
+
+    if (!hasPermission) {
+      throw new Error('Unauthorized');
+    }
+
+    // In a real app, you'd save this to a new table for feedback.
+    // For now, we'll just log it.
+    console.log('Received training feedback:', args.feedback);
+
+    // You could also update the inference documents with feedback,
+    // but that might make them too large.
+
+    return { success: true, count: args.feedback.length };
   },
 });

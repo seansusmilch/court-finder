@@ -5,12 +5,19 @@ export const PERMISSIONS = {
     WRITE: 'scans.write',
     EXECUTE: 'scans.execute',
   },
+  TRAINING: {
+    PREFIX: 'training',
+    READ: 'training.read',
+    WRITE: 'training.write',
+  },
 };
 
 export const DEFAULT_USER_PERMISSIONS = [
   PERMISSIONS.SCANS.READ,
   PERMISSIONS.SCANS.WRITE,
   PERMISSIONS.SCANS.EXECUTE,
+  PERMISSIONS.TRAINING.READ,
+  PERMISSIONS.TRAINING.WRITE,
 ];
 
 // Roboflow model configuration

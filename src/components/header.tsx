@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
-import { api } from '@backend/api';
+import { api } from '@backend/_generated/api';
 import { Authenticated, Unauthenticated } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { MenuIcon, UserIcon } from 'lucide-react';

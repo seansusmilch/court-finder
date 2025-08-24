@@ -9,12 +9,12 @@ import {
   useRouterState,
   Link,
 } from '@tanstack/react-router';
-import { api } from '@backend/api';
+import { api } from '@backend/_generated/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { ConvexReactClient, useConvexAuth, useMutation } from 'convex/react';
 import { useEffect } from 'react';
 import { useRouter } from '@tanstack/react-router';
-import type { Doc } from '@backend/dataModel';
+import type { Doc } from '@backend/_generated/dataModel';
 import '../index.css';
 
 export interface RouterAppContext {

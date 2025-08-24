@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { MapPin, Search } from 'lucide-react';
 import { ScanListItem } from './ScanListItem';
-import type { Id } from '@backend/dataModel';
+import type { Id } from '@backend/_generated/dataModel';
 
 type ScanListProps = {
   scans: Array<{

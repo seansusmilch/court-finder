@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { useConvexAuth } from 'convex/react';
 import { redirect, useNavigate } from '@tanstack/react-router';
-import { api } from '@backend/api';
+import { api } from '@backend/_generated/api';
 import { DetectionFeedbackItem } from '@/components/training/DetectionFeedbackItem';
 import { FeedbackControls } from '@/components/training/FeedbackControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,17 +15,21 @@ import { createFileRoute } from '@tanstack/react-router';
 export const Route = createFileRoute('/training-feedback')({
   component: TrainingFeedbackPage,
   beforeLoad: async ({ context }) => {
-    if (!context.me)
+    if (!context.me) {
       throw redirect({
         to: '/login',
         search: { redirect: '/training-feedback' },
       });
+    }
   },
 });
 
 export function TrainingFeedbackPage() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const navigate = useNavigate();
+  const submitFeedbackMutation = useMutation(
+    api.inferences.submitTrainingFeedback
+  );
 
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [currentDetectionIndex, setCurrentDetectionIndex] = useState(0);
@@ -167,9 +171,8 @@ export function TrainingFeedbackPage() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement actual feedback submission to database
-      // For now, just simulate a delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const feedbackArray = Array.from(submittedFeedback.values());
+      await submitFeedbackMutation({ feedback: feedbackArray });
 
       // Show success message and reset
       alert(

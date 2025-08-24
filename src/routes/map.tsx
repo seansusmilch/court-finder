@@ -11,7 +11,7 @@ import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
-import { api } from '@backend/api';
+import { api } from '@backend/_generated/api';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';

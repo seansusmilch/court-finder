@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin } from 'lucide-react';
-import type { Id } from '@backend/dataModel';
+import type { Id } from '@backend/_generated/dataModel';
 import { Button } from '../ui/button';
 
 type ScanListItemProps = {

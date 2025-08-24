@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Authenticated, Unauthenticated, useQuery } from 'convex/react';
-import { api } from '@backend/api';
+import { api } from '@backend/_generated/api';
 import { Button } from '@/components/ui/button';
 import {
   Card,

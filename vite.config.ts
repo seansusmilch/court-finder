@@ -25,7 +25,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@backend': path.resolve(__dirname, './convex/_generated'),
+      '@backend': path.resolve(__dirname, './convex'),
     },
     dedupe: ['convex', 'convex/react'],
   },
