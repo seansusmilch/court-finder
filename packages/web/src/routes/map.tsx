@@ -15,7 +15,7 @@ import { api } from '@court-finder/backend/convex/_generated/api';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
-import { SearchBox } from '@/components/map/SearchBox';
+import { SearchBox } from '@mapbox/search-js-react';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
@@ -215,7 +215,7 @@ function MapPage() {
   }, [featureCollection, viewState.zoom, PINS_VISIBLE_FROM_ZOOM]);
 
   return (
-    <div className='h-[calc(100vh-2rem)] w-full p-2 relative'>
+    <div className='h-[calc(100vh-3rem)] w-full p-1 relative'>
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}
@@ -312,20 +312,30 @@ function MapPage() {
             onClose={() => setSelectedPin(null)}
           />
         )}
+        <div className='absolute top-4 left-15 z-50'>
+          {/* @ts-expect-error - SearchBox is not typed */}
+          <SearchBox
+            accessToken={MAPBOX_API_KEY as string}
+            onRetrieve={(res: any) => {
+              const feature = res?.features?.[0];
+              const coords =
+                (feature?.geometry?.coordinates as
+                  | [number, number]
+                  | undefined) ??
+                (feature?.properties?.coordinates as
+                  | [number, number]
+                  | undefined);
+              if (coords && mapRef.current) {
+                mapRef.current.easeTo({
+                  center: coords,
+                  zoom: SEARCH_FLY_TO_ZOOM,
+                  duration: FLY_TO_DURATION_MS,
+                });
+              }
+            }}
+          />
+        </div>
       </Map>
-
-      <div className='absolute top-4 left-15 z-50'>
-        <SearchBox
-          apiKey={MAPBOX_API_KEY}
-          onSelect={(lng, lat) => {
-            mapRef.current?.easeTo({
-              center: [lng, lat],
-              zoom: SEARCH_FLY_TO_ZOOM,
-              duration: FLY_TO_DURATION_MS,
-            });
-          }}
-        />
-      </div>
 
       <CourtDetectionInfo
         zoomLevel={viewState.zoom}

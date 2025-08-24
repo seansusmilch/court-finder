@@ -10,11 +10,7 @@ export const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/satellite-v9';
 export const CLUSTER_MAX_ZOOM = 14;
 export const CLUSTER_RADIUS = 50;
 
-// Search / geocoding
-export const GEOCODER_LIMIT = 5;
-export const GEOCODER_TYPES = 'place,locality,neighborhood,address,poi';
-export const SEARCH_DEBOUNCE_MS = 300;
-export const MIN_QUERY_LENGTH = 2;
+// Search / geocoding (Mapbox SearchBox handles querying internally)
 export const SEARCH_FLY_TO_ZOOM = 14;
 export const FLY_TO_DURATION_MS = 800;
 
