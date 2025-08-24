@@ -31,9 +31,12 @@ export const ensureDefaultPermissions = mutation({
     if (!userId) return null;
     const user = await ctx.db.get(userId);
     if (!user) return null;
-    if (!Array.isArray(user.permissions) || user.permissions.length === 0) {
-      await ctx.db.patch(userId, { permissions: DEFAULT_USER_PERMISSIONS });
-    }
+    const existingPermissions = user.permissions;
+    await ctx.db.patch(userId, {
+      permissions: Array.from(
+        new Set([...(existingPermissions || []), ...DEFAULT_USER_PERMISSIONS])
+      ),
+    });
     return await ctx.db.get(userId);
   },
 });
