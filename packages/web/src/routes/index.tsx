@@ -6,6 +6,9 @@ import { useAuthActions } from '@convex-dev/auth/react';
 
 export const Route = createFileRoute('/')({
   component: HomeComponent,
+  beforeLoad: async ({ context }) => {
+    console.log('home before load', context);
+  },
 });
 
 const TITLE_TEXT = `
@@ -25,6 +28,7 @@ const TITLE_TEXT = `
  `;
 
 function HomeComponent() {
+  const { me } = Route.useRouteContext();
   const healthCheck = useQuery(api.healthCheck.get);
   const { signOut } = useAuthActions();
   return (
@@ -70,7 +74,7 @@ function HomeComponent() {
         <section className='rounded-lg border p-4'>
           <h2 className='mb-2 font-medium'>Auth</h2>
           <Authenticated>
-            Authenticated
+            Authenticated as {me?.email ?? 'unknown'}
             <button onClick={() => signOut()}>Sign out</button>
           </Authenticated>
           <Unauthenticated>

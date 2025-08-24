@@ -13,16 +13,21 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useMutation } from '@tanstack/react-query';
-import { Authenticated } from 'convex/react';
+import { useRouter } from '@tanstack/react-router';
+import { useConvexAuth } from 'convex/react';
 
 export const Route = createFileRoute('/login')({
-  beforeLoad: async ({ context }) => {},
+  beforeLoad: async ({ context }) => {
+    if (context.me) throw redirect({ to: '/' });
+  },
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { signIn } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
   const [step, setStep] = useState<'signUp' | 'signIn'>('signIn');
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -32,15 +37,19 @@ function AuthPage() {
       setServerError(null);
       await signIn('password', formData);
     },
-    onSuccess: () => {
-      navigate({ to: '/' });
-    },
+
     onError: (err: unknown) => {
       const message =
         err instanceof Error ? err.message : 'Something went wrong';
       setServerError(message);
     },
   });
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: '/' });
+    }
+  }, [isAuthenticated, navigate, router]);
 
   return (
     <div className='flex min-h-[calc(100dvh-0px)] items-center justify-center p-4'>

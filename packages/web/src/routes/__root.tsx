@@ -8,13 +8,26 @@ import {
   createRootRouteWithContext,
   useRouterState,
 } from '@tanstack/react-router';
+import { api } from '@court-finder/backend/convex/_generated/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+import { ConvexReactClient, useConvexAuth } from 'convex/react';
+import { useEffect } from 'react';
+import { useRouter } from '@tanstack/react-router';
+import type { Doc } from '@court-finder/backend/convex/_generated/dataModel';
 import '../index.css';
 
-export interface RouterAppContext {}
+export interface RouterAppContext {
+  convex: ConvexReactClient;
+  me?: Doc<'users'> | null;
+}
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
+  beforeLoad: async ({ context }) => {
+    const me = await context.convex.query(api.users.me, {});
+    console.log('root before load', me);
+    return { me };
+  },
   head: () => ({
     meta: [
       {
@@ -38,6 +51,13 @@ function RootComponent() {
   const isFetching = useRouterState({
     select: (s) => s.isLoading,
   });
+  const { isAuthenticated } = useConvexAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // When auth status changes (e.g., after login), re-run beforeLoad to fetch fresh `me`.
+    router.invalidate();
+  }, [isAuthenticated, router]);
 
   return (
     <>

@@ -11,7 +11,7 @@ const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
   defaultPendingComponent: () => <Loader />,
-  context: {},
+  context: { convex },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     const queryClient = new QueryClient();
     return (

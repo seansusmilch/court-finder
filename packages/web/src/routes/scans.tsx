@@ -3,6 +3,7 @@ import {
   Link,
   useNavigate,
   useSearch,
+  redirect,
 } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useAction, useQuery } from 'convex/react';
@@ -36,6 +37,10 @@ type ScanResult = {
 
 export const Route = createFileRoute('/scans')({
   component: ScansPage,
+  beforeLoad: async ({ context }) => {
+    if (!context.me)
+      throw redirect({ to: '/login', search: { redirect: location.href } });
+  },
 });
 
 function ScansPage() {
