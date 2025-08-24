@@ -233,7 +233,7 @@ function MapPage() {
   }, [featureCollection, viewState.zoom, PINS_VISIBLE_FROM_ZOOM]);
 
   return (
-    <div className='h-[calc(100vh-3rem)] w-full p-1 relative'>
+    <div className='h-[calc(100vh-3rem)] w-full relative'>
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}
