@@ -39,6 +39,7 @@
     "react-map-gl": "^8.0.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.12",
     "tw-animate-css": "^1.3.7",
     "vite-plugin-pwa": "^1.0.3",
     "zod": "^4.1.0"
@@ -53,7 +54,6 @@
     "@vitejs/plugin-react": "^4.7.0",
     "concurrently": "^9.2.0",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.12",
     "typescript": "^5.9.2",
     "vite": "^6.3.5"
   }
