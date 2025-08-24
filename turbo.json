@@ -8,13 +8,13 @@
 			],
 			"inputs": [
 				"$TURBO_DEFAULT$",
-				".env*",
-				{
-					"env": "CONVEX_DEPLOY_KEY"
-				}
+				".env*"
 			],
 			"outputs": [
 				"dist/**"
+			],
+			"env": [
+				"CONVEX_DEPLOY_KEY"
 			]
 		},
 		"lint": {
