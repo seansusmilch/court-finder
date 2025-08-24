@@ -111,58 +111,69 @@ export function ScanDetails({ scanResult }: ScanDetailsProps) {
         </Card>
 
         {/* Detection Modal */}
-        {modalIndex !== null && scanResult.tiles[modalIndex] && (
-          <div
-            className='fixed inset-0 z-50 grid place-items-center bg-black/90 p-2'
-            onClick={() => setModalIndex(null)}
-          >
-            <div
-              className='max-h-[95vh] w-full max-w-[95vw] overflow-auto rounded-lg border bg-background shadow-xl'
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className='p-4'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <h2 className='text-xl font-semibold'>Image Analysis</h2>
-                  <Button variant='outline' onClick={() => setModalIndex(null)}>
-                    Close
-                  </Button>
-                </div>
+        {modalIndex !== null &&
+          (() => {
+            const items = scanResult.tiles;
+            const sorted = items.slice().sort((a, b) => {
+              if (a.y !== b.y) return a.y - b.y; // north→south
+              return a.x - b.x; // west→east
+            });
+            const selectedTile = sorted[modalIndex];
 
-                <div className='grid grid-cols-1 xl:grid-cols-3 gap-4'>
-                  {/* Large satellite image - takes up most of the space */}
-                  <div className='xl:col-span-2'>
-                    <img
-                      src={scanResult.tiles[modalIndex].url}
-                      alt='Selected satellite image'
-                      className='w-full h-auto max-h-[70vh] object-contain rounded-lg border'
-                    />
-                    <div className='mt-3 text-sm text-muted-foreground'>
-                      <div>
-                        Tile Coordinates: z={scanResult.tiles[modalIndex].z}, x=
-                        {scanResult.tiles[modalIndex].x}, y=
-                        {scanResult.tiles[modalIndex].y}
-                      </div>
+            if (!selectedTile) return null;
+
+            return (
+              <div
+                className='fixed inset-0 z-50 grid place-items-center bg-black/90 p-2'
+                onClick={() => setModalIndex(null)}
+              >
+                <div
+                  className='max-h-[95vh] w-full max-w-[95vw] overflow-auto rounded-lg border bg-background shadow-xl'
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className='p-4'>
+                    <div className='mb-4 flex items-center justify-between'>
+                      <h2 className='text-xl font-semibold'>Image Analysis</h2>
+                      <Button
+                        variant='outline'
+                        onClick={() => setModalIndex(null)}
+                      >
+                        Close
+                      </Button>
                     </div>
-                  </div>
 
-                  {/* Detection results sidebar */}
-                  <div className='xl:col-span-1'>
-                    <h3 className='font-medium mb-3'>Detection Results</h3>
-                    <div className='bg-muted rounded-lg p-4 max-h-[60vh] overflow-auto'>
-                      <pre className='whitespace-pre-wrap break-words text-sm'>
-                        {JSON.stringify(
-                          scanResult.tiles[modalIndex].detections,
-                          null,
-                          2
-                        )}
-                      </pre>
+                    <div className='grid grid-cols-1 xl:grid-cols-3 gap-4'>
+                      {/* Large satellite image - takes up most of the space */}
+                      <div className='xl:col-span-2'>
+                        <img
+                          src={selectedTile.url}
+                          alt='Selected satellite image'
+                          className='w-full h-auto max-h-[70vh] object-contain rounded-lg border'
+                        />
+                        <div className='mt-3 text-sm text-muted-foreground'>
+                          <div>
+                            Tile Coordinates: z={selectedTile.z}, x=
+                            {selectedTile.x}, y=
+                            {selectedTile.y}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Detection results sidebar */}
+                      <div className='xl:col-span-1'>
+                        <h3 className='font-medium mb-3'>Detection Results</h3>
+                        <div className='bg-muted rounded-lg p-4 max-h-[60vh] overflow-auto'>
+                          <pre className='whitespace-pre-wrap break-words text-sm'>
+                            {JSON.stringify(selectedTile.detections, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
       </div>
     </div>
   );
