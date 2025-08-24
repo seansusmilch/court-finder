@@ -20,9 +20,7 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { emoji, color } = getVisualForClass(courtClass);
-  const bgClass = `bg-${color}`;
-  const borderTopClass = `border-t-${color}`;
+  const { emoji, bgClass, borderTopClass } = getVisualForClass(courtClass);
 
   return (
     <Marker

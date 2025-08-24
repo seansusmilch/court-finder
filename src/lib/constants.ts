@@ -28,20 +28,52 @@ export const NAVIGATION_LINKS = [
   { to: '/scans', label: 'Scans' },
 ] as const;
 
-// Visuals for court classes (emoji + tailwind color token e.g. "orange-500")
-export type CourtClassVisual = { emoji: string; color: string };
+// Visuals for court classes (emoji + explicit Tailwind classes)
+export type CourtClassVisual = {
+  emoji: string;
+  bgClass: string;
+  borderTopClass: string;
+};
 
 export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
-  'basketball-court': { emoji: '🏀', color: 'orange-500' },
-  'tennis-court': { emoji: '🎾', color: 'green-500' },
-  'soccer-ball-field': { emoji: '⚽', color: 'green-500' },
-  'baseball-diamond': { emoji: '⚾', color: 'red-500' },
-  'ground-track-field': { emoji: '🏃', color: 'amber-500' },
-  'swimming-pool': { emoji: '🏊', color: 'cyan-500' },
+  'basketball-court': {
+    emoji: '🏀',
+    bgClass: 'bg-gray-300',
+    borderTopClass: 'border-t-gray-300',
+  },
+  'tennis-court': {
+    emoji: '🎾',
+    bgClass: 'bg-green-300',
+    borderTopClass: 'border-t-green-300',
+  },
+  'soccer-ball-field': {
+    emoji: '⚽',
+    bgClass: 'bg-red-300',
+    borderTopClass: 'border-t-red-300',
+  },
+  'baseball-diamond': {
+    emoji: '⚾',
+    bgClass: 'bg-yellow-300',
+    borderTopClass: 'border-t-yellow-300',
+  },
+  'ground-track-field': {
+    emoji: '🏃',
+    bgClass: 'bg-blue-300',
+    borderTopClass: 'border-t-blue-300',
+  },
+  'swimming-pool': {
+    emoji: '🏊',
+    bgClass: 'bg-cyan-300',
+    borderTopClass: 'border-t-cyan-300',
+  },
 };
 
 export function getVisualForClass(predictionClass: string): CourtClassVisual {
   return (
-    COURT_CLASS_VISUALS[predictionClass] || { emoji: '🏟️', color: 'blue-500' }
+    COURT_CLASS_VISUALS[predictionClass] || {
+      emoji: '🏟️',
+      bgClass: 'bg-blue-500',
+      borderTopClass: 'border-t-blue-500',
+    }
   );
 }
