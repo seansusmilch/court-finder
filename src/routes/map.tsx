@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import Map, {
-  Source,
-  Layer,
   GeolocateControl,
   FullscreenControl,
   ScaleControl,
