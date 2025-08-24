@@ -88,3 +88,6 @@ export function getVisualForClass(predictionClass: string): CourtClassVisual {
     }
   );
 }
+
+// Mapbox API configuration
+export const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;

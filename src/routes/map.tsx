@@ -26,9 +26,8 @@ import {
   FLY_TO_DURATION_MS,
   INFER_MODEL,
   INFER_VERSION,
+  MAPBOX_API_KEY,
 } from '@/lib/constants';
-
-const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
 
 type ViewState = {
   longitude: number;
