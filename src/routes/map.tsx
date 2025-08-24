@@ -15,17 +15,13 @@ import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
-import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
-import { Button } from '@/components/ui/button';
-import { SearchBox } from '@mapbox/search-js-react';
+import MapControls from '@/components/map/MapControls';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
   MAP_STYLE_SATELLITE,
   CLUSTER_MAX_ZOOM,
-  CLUSTER_RADIUS,
-  SEARCH_FLY_TO_ZOOM,
   FLY_TO_DURATION_MS,
   INFER_MODEL,
   INFER_VERSION,
@@ -332,44 +328,12 @@ function MapPage() {
             onClose={() => setSelectedPin(null)}
           />
         )}
-        <div className='absolute top-4 left-15 z-50'>
-          {/* @ts-expect-error - SearchBox is not typed */}
-          <SearchBox
-            accessToken={MAPBOX_API_KEY as string}
-            onRetrieve={(res: any) => {
-              const feature = res?.features?.[0];
-              const coords =
-                (feature?.geometry?.coordinates as
-                  | [number, number]
-                  | undefined) ??
-                (feature?.properties?.coordinates as
-                  | [number, number]
-                  | undefined);
-              if (coords && mapRef.current) {
-                mapRef.current.easeTo({
-                  center: coords,
-                  zoom: SEARCH_FLY_TO_ZOOM,
-                  duration: FLY_TO_DURATION_MS,
-                });
-              }
-            }}
-          />
-        </div>
-
-        {canScan && (
-          <div className='absolute top-4 right-4 z-50'>
-            <Button
-              variant='default'
-              onClick={() => scanMutation.mutate()}
-              disabled={scanMutation.isPending}
-            >
-              {scanMutation.isPending ? 'Scanning…' : 'Scan this area'}
-            </Button>
-          </div>
-        )}
       </Map>
 
-      <CourtDetectionInfo
+      <MapControls
+        className='absolute inset-0 pointer-events-none'
+        mapRef={mapRef}
+        accessToken={MAPBOX_API_KEY as string}
         zoomLevel={viewState.zoom}
         pinsVisibleFromZoom={PINS_VISIBLE_FROM_ZOOM}
         confidenceThreshold={confidenceThreshold}
@@ -377,6 +341,9 @@ function MapPage() {
         courtCount={geojson.features.length}
         availableZoomLevels={availableZoomLevels}
         isZoomSufficient={viewState.zoom >= PINS_VISIBLE_FROM_ZOOM}
+        canScan={!!canScan}
+        onScan={() => scanMutation.mutate()}
+        isScanning={scanMutation.isPending}
       />
     </div>
   );

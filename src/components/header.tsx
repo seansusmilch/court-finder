@@ -19,13 +19,30 @@ export default function Header() {
   const { signOut } = useAuthActions();
   return (
     <div>
-      <div className='flex flex-row items-center justify-between px-2 py-2'>
-        <div className='flex items-center gap-3'>
-          <nav className='hidden md:flex gap-4 text-sm'>
+      <div className='flex flex-row items-center justify-between px-4 py-2'>
+        <div className='flex items-center gap-4'>
+          <Link
+            to='/'
+            className='font-semibold text-lg tracking-tight hover:opacity-90'
+          >
+            Court Finder
+          </Link>
+          <nav className='hidden md:flex gap-1'>
             {NAVIGATION_LINKS.map(({ to, label }) => (
-              <Link key={to} to={to}>
-                {label}
-              </Link>
+              <Button
+                key={to}
+                variant='ghost'
+                size='sm'
+                className='text-muted-foreground hover:text-foreground'
+                asChild
+              >
+                <Link
+                  to={to}
+                  activeProps={{ className: 'bg-accent text-foreground' }}
+                >
+                  {label}
+                </Link>
+              </Button>
             ))}
           </nav>
         </div>
@@ -79,10 +96,14 @@ function MobileNav() {
               <Button
                 key={to}
                 variant='ghost'
-                className='justify-start'
+                className='justify-start text-muted-foreground hover:text-foreground'
                 asChild
               >
-                <Link to={to} onClick={() => setOpen(false)}>
+                <Link
+                  to={to}
+                  onClick={() => setOpen(false)}
+                  activeProps={{ className: 'bg-accent text-foreground' }}
+                >
                   {label}
                 </Link>
               </Button>
