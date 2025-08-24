@@ -20,7 +20,7 @@ import '../index.css';
 export interface RouterAppContext {
   convex: ConvexReactClient;
   me?: Doc<'users'> | null;
-  hasPermission: (permission: string) => boolean;
+  hasPermission: (permission: string) => Promise<boolean>;
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
