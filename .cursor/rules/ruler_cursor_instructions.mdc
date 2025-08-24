@@ -1,0 +1,19 @@
+---
+alwaysApply: true
+---
+---
+Source: .ruler\frontend.md
+---
+# General Rules
+
+- ALWAYS USE TANSTACK ROUTER FEATURES OVER HANDLING THINGS IN THE COMPONENT
+- Prefer using tanstack query for state management
+- For Tanstack router pages in `routes/`, keep the page component within the same file
+
+## For \*.tsx Files
+
+- NEVER EVER `import React from 'react'`. IT IS NOT NEEDED
+
+## For React Copmonents
+
+- Store components in src/components/(feature)/\*
