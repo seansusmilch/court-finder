@@ -4,6 +4,7 @@ import Loader from './components/loader';
 import { routeTree } from './routeTree.gen';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import { ConvexReactClient } from 'convex/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 const router = createRouter({
@@ -12,7 +13,14 @@ const router = createRouter({
   defaultPendingComponent: () => <Loader />,
   context: {},
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    return <ConvexAuthProvider client={convex}>{children}</ConvexAuthProvider>;
+    const queryClient = new QueryClient();
+    return (
+      <ConvexAuthProvider client={convex}>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </ConvexAuthProvider>
+    );
   },
 });
 
