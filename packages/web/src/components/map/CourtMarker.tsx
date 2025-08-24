@@ -1,5 +1,6 @@
 import { Marker } from 'react-map-gl/mapbox';
 import { getVisualForClass } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface CourtMarkerProps {
   longitude: number;
@@ -32,21 +33,26 @@ export function CourtMarker({
       }}
       style={{ cursor: 'pointer' }}
     >
-      <div className='relative group -translate-y-1'>
+      <div className='flex flex-col items-center'>
         <div
-          className={`w-9 h-9 rounded-full text-white shadow-lg ring-2 ring-white/80 flex items-center justify-center text-[18px] hover:scale-110 transition-transform duration-150 ${className}`}
+          className={cn(
+            'w-10 h-10 flex items-center justify-center rounded-full',
+            className
+          )}
         >
-          <span aria-hidden>{emoji}</span>
+          <span className='text-[20px]' aria-hidden>
+            {emoji}
+          </span>
         </div>
+        {/* Arrow pointing down */}
         <div
-          className={`absolute left-1/2 -translate-x-1/2 -bottom-[6px] w-0 h-0 border-x-[7px] border-x-transparent border-t-[9px] drop-shadow ${className}`}
+          className={cn(
+            'w-0 h-0 border-l-8 border-r-8 border-t-[12px] border-l-transparent border-r-transparent border-t-black opacity-70 -mt-1',
+            className
+          )}
+          aria-hidden
         />
-        <div className='absolute bottom-11 left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-gray-900/90 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none whitespace-nowrap'>
-          Click for details
-        </div>
       </div>
     </Marker>
   );
 }
-
-// visuals are imported from constants
