@@ -33,6 +33,7 @@ export type CourtClassVisual = {
   emoji: string;
   bgClass: string;
   borderTopClass: string;
+  displayName: string;
 };
 
 export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
@@ -40,40 +41,50 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     emoji: '🏀',
     bgClass: 'bg-gray-300',
     borderTopClass: 'border-t-gray-300',
+    displayName: 'Basketball Court',
   },
   'tennis-court': {
     emoji: '🎾',
     bgClass: 'bg-green-300',
     borderTopClass: 'border-t-green-300',
+    displayName: 'Tennis Court',
   },
   'soccer-ball-field': {
     emoji: '⚽',
     bgClass: 'bg-red-300',
     borderTopClass: 'border-t-red-300',
+    displayName: 'Soccer/Football Field',
   },
   'baseball-diamond': {
     emoji: '⚾',
     bgClass: 'bg-yellow-300',
     borderTopClass: 'border-t-yellow-300',
+    displayName: 'Baseball Field',
   },
   'ground-track-field': {
     emoji: '🏃',
     bgClass: 'bg-blue-300',
     borderTopClass: 'border-t-blue-300',
+    displayName: 'Track & Field',
   },
   'swimming-pool': {
     emoji: '🏊',
     bgClass: 'bg-cyan-300',
     borderTopClass: 'border-t-cyan-300',
+    displayName: 'Swimming Pool',
   },
 };
 
 export function getVisualForClass(predictionClass: string): CourtClassVisual {
   return (
     COURT_CLASS_VISUALS[predictionClass] || {
-      emoji: '🏟️',
+      emoji: '❓',
       bgClass: 'bg-blue-500',
       borderTopClass: 'border-t-blue-500',
+      displayName: `${predictionClass
+        .replace(/_/g, ' ')
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (l) => l.toUpperCase())}`,
     }
   );
 }

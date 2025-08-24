@@ -1,33 +1,14 @@
 import { Popup } from 'react-map-gl/mapbox';
-import { Activity, Target, Shield, Users, Navigation } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navigation } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getVisualForClass } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface CourtPopupProps {
   longitude: number;
   latitude: number;
   properties: Record<string, unknown>;
   onClose: () => void;
-}
-
-const COURT_TYPE_MAP: Record<string, { name: string; icon: typeof Activity }> =
-  {
-    'basketball-court': { name: 'Basketball Court', icon: Target },
-    'tennis-court': { name: 'Tennis Court', icon: Shield },
-    'soccer-ball-field': { name: 'Soccer/Football Field', icon: Users },
-    'baseball-diamond': { name: 'Baseball Field', icon: Target },
-    'ground-track-field': { name: 'Track & Field', icon: Activity },
-    'swimming-pool': { name: 'Swimming Pool', icon: Activity },
-  };
-
-function getCourtInfo(predictionClass: string) {
-  return (
-    COURT_TYPE_MAP[predictionClass] || {
-      name: `${predictionClass
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, (l) => l.toUpperCase())} Court`,
-      icon: Activity,
-    }
-  );
 }
 
 export function CourtPopup({
@@ -37,32 +18,53 @@ export function CourtPopup({
   onClose,
 }: CourtPopupProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const courtInfo = getCourtInfo(courtClass);
-  const IconComponent = courtInfo.icon;
+  const { emoji, displayName } = getVisualForClass(courtClass);
 
   return (
     <Popup
       longitude={longitude}
       latitude={latitude}
       onClose={onClose}
-      closeButton={true}
+      closeButton={false}
       closeOnClick={false}
-      offset={[0, -10]}
-      className='court-popup'
     >
-      <Card className='max-w-xs shadow-sm'>
-        <CardHeader className='py-3'>
+      <div className='flex flex-col items-center justify-center'>
+        <div className='max-w-xs rounded-md border border-border bg-background shadow-sm p-3 space-y-2 flex flex-col'>
           <div className='flex items-center gap-2'>
-            <IconComponent size={16} className='text-red-500' />
-            <CardTitle className='text-sm'>{courtInfo.name}</CardTitle>
+            <span className='text-base' aria-hidden>
+              {emoji}
+            </span>
+            <div className='text-sm font-semibold'>{displayName}</div>
           </div>
-        </CardHeader>
-        <CardContent className='space-y-2'>
-          <div>
+
+          <div className='space-y-1'>
             <div className='text-xs text-muted-foreground'>Location</div>
             <div className='text-xs'>
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </div>
+          </div>
+
+          {properties.confidence != null && (
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Confidence:</span>
+              <span className='ml-1 text-green-700 dark:text-green-400'>
+                {Math.round(Number(properties.confidence) * 100)}%
+              </span>
+            </div>
+          )}
+          {properties.class != null && (
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Type:</span>
+              <span className='ml-1'>{displayName}</span>
+            </div>
+          )}
+          {properties.zoom_level != null && (
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Detected at zoom:</span>
+              <span className='ml-1'>{String(properties.zoom_level)}</span>
+            </div>
+          )}
+          <Button asChild size='sm' variant='secondary' className='mt-1'>
             <a
               href={`https://maps.google.com/maps?q=${latitude},${longitude}`}
               target='_blank'
@@ -86,35 +88,20 @@ export function CourtPopup({
                   );
                 }
               }}
-              className='inline-flex items-center gap-1 text-xs text-primary underline mt-1'
               title='Open in default map application'
             >
-              <Navigation size={12} />
+              <Navigation className='size-3.5' />
               Open in Maps
             </a>
-          </div>
-          {properties.confidence != null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Confidence:</span>
-              <span className='ml-1 text-green-700 dark:text-green-400'>
-                {Math.round(Number(properties.confidence) * 100)}%
-              </span>
-            </div>
+          </Button>
+        </div>
+        <div
+          className={cn(
+            'w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-[1px] border-t-background'
           )}
-          {properties.class != null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Type:</span>
-              <span className='ml-1'>{courtInfo.name}</span>
-            </div>
-          )}
-          {properties.zoom_level != null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Detected at zoom:</span>
-              <span className='ml-1'>{String(properties.zoom_level)}</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          aria-hidden
+        />
+      </div>
     </Popup>
   );
 }

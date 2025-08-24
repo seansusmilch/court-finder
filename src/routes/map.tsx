@@ -7,6 +7,7 @@ import Map, {
 } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
