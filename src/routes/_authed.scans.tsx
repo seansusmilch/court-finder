@@ -20,16 +20,16 @@ type ScanResult = {
   }>;
 };
 
-export const Route = createFileRoute('/scans')({
+export const Route = createFileRoute('/_authed/scans')({
   component: ScansPage,
   beforeLoad: async ({ context }) => {
     if (!context.me)
-      throw redirect({ to: '/login', search: { redirect: '/scans' } });
+      throw redirect({ to: '/login', search: { redirect: '/_authed/scans' } });
   },
 });
 
 function ScansPage() {
-  const search = useSearch({ from: '/scans' }) as { scanId?: string };
+  const search = useSearch({ from: '/_authed/scans' }) as { scanId?: string };
   const scanId = (search.scanId as Id<'scans'> | undefined) ?? undefined;
   const scanResult = useQuery(
     api.scanResults.getByScanId,

@@ -20,13 +20,20 @@ import '../index.css';
 export interface RouterAppContext {
   convex: ConvexReactClient;
   me?: Doc<'users'> | null;
+  hasPermission: (permission: string) => boolean;
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
   beforeLoad: async ({ context }) => {
     const me = await context.convex.query(api.users.me, {});
-    return { me };
+    return {
+      me,
+      hasPermission: (permission: string) => {
+        if (!me) return false;
+        return me.permissions.includes(permission);
+      },
+    };
   },
   head: () => ({
     meta: [

@@ -12,7 +12,7 @@ import type { FeedbackSubmission } from '@/components/training/types';
 import { INFER_MODEL, INFER_VERSION } from '@/lib/constants';
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/training-feedback')({
+export const Route = createFileRoute('/_authed/training-feedback')({
   component: TrainingFeedbackPage,
   beforeLoad: async ({ context }) => {
     if (!context.me) {
