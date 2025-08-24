@@ -44,8 +44,9 @@ function ControlsBody({
 }: Omit<MapControlsProps, 'className'>) {
   return (
     <div className='space-y-3'>
-      {/* @ts-expect-error - SearchBox is not typed */}
       <div className='w-full'>
+        {/* @ts-expect-error - SearchBox is not typed */}
+
         <SearchBox
           accessToken={accessToken as string}
           onRetrieve={(res: any) => {
@@ -65,7 +66,6 @@ function ControlsBody({
               });
             }
           }}
-          className='w-full'
         />
       </div>
 
@@ -119,6 +119,7 @@ function ControlsBody({
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { SearchBox } from '@mapbox/search-js-react';
+import { Menu } from 'lucide-react';
 
 export function MapControls({
   className,
@@ -170,12 +171,14 @@ export function MapControls({
       <div className='md:hidden pointer-events-auto'>
         <Sheet>
           <SheetTrigger asChild>
-            <button
+            <Button
               aria-label='Open map controls'
-              className='fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center'
+              className='fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg flex items-center justify-center'
+              size='icon'
+              variant='default'
             >
-              ≡
-            </button>
+              <Menu className='size-6' aria-hidden='true' />
+            </Button>
           </SheetTrigger>
           <SheetContent side='bottom' className='h-[70vh]'>
             <SheetHeader>
