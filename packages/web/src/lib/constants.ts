@@ -27,3 +27,42 @@ export const NAVIGATION_LINKS = [
   { to: '/map', label: 'Map' },
   { to: '/scans', label: 'Scans' },
 ] as const;
+
+// Visuals for court classes (emoji + color)
+export type CourtClassVisual = { emoji: string; className: string };
+
+export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
+  'basketball-court': {
+    emoji: '🏀',
+    className: 'bg-orange-500 border-t-orange-500',
+  },
+  'tennis-court': {
+    emoji: '🎾',
+    className: 'bg-green-500 border-t-green-500',
+  },
+  'soccer-ball-field': {
+    emoji: '⚽',
+    className: 'bg-emerald-500 border-t-emerald-500',
+  },
+  'baseball-diamond': {
+    emoji: '⚾',
+    className: 'bg-red-500 border-t-red-500',
+  },
+  'ground-track-field': {
+    emoji: '🏃',
+    className: 'bg-amber-500 border-t-amber-500',
+  },
+  'swimming-pool': {
+    emoji: '🏊',
+    className: 'bg-cyan-500 border-t-cyan-500',
+  },
+};
+
+export function getVisualForClass(predictionClass: string): CourtClassVisual {
+  return (
+    COURT_CLASS_VISUALS[predictionClass] || {
+      emoji: '🏟️',
+      className: 'bg-blue-500 border-t-blue-500',
+    }
+  );
+}

@@ -14,6 +14,8 @@ import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
+import CourtClusters from '@/components/map/CourtClusters';
+import { CourtMarker } from '@/components/map/CourtMarker';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
 import { SearchBox } from '@mapbox/search-js-react';
 import {
@@ -227,7 +229,7 @@ function MapPage() {
           const b = computeBbox(e.target);
           if (b) setBbox(b);
         }}
-        interactiveLayerIds={['clusters', 'unclustered-points']}
+        interactiveLayerIds={['clusters']}
         onClick={(e) => {
           const hasFeatures = e.features && e.features.length > 0;
           if (!hasFeatures) {
@@ -236,73 +238,37 @@ function MapPage() {
           }
           const layerId = e.features![0].layer?.id;
           if (layerId === 'clusters') onClusterClick(e);
-          if (layerId === 'unclustered-points') onPointClick(e);
         }}
       >
         <GeolocateControl position='top-left' />
         <FullscreenControl position='top-left' />
         <NavigationControl position='top-left' />
         <ScaleControl />
-        {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM && (
-          <Source
-            id='courts'
-            type='geojson'
-            data={geojson}
-            cluster={true}
-            clusterMaxZoom={CLUSTER_MAX_ZOOM}
-            clusterRadius={CLUSTER_RADIUS}
-          >
-            <Layer
-              id='clusters'
-              type='circle'
-              filter={['has', 'point_count']}
-              paint={{
-                'circle-color': [
-                  'step',
-                  ['get', 'point_count'],
-                  '#51bbd6',
-                  100,
-                  '#f1f075',
-                  750,
-                  '#f28cb1',
-                ],
-                'circle-radius': [
-                  'step',
-                  ['get', 'point_count'],
-                  20,
-                  100,
-                  30,
-                  750,
-                  40,
-                ],
-              }}
-            />
-            <Layer
-              id='cluster-count'
-              type='symbol'
-              filter={['has', 'point_count']}
-              layout={{
-                'text-field': '{point_count_abbreviated}',
-                'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                'text-size': 12,
-              }}
-              paint={{
-                'text-color': '#ffffff',
-              }}
-            />
-            <Layer
-              id='unclustered-points'
-              type='circle'
-              filter={['!', ['has', 'point_count']]}
-              paint={{
-                'circle-color': '#ff0000',
-                'circle-radius': 8,
-                'circle-stroke-width': 2,
-                'circle-stroke-color': '#ffffff',
-              }}
-            />
-          </Source>
-        )}
+        {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
+          viewState.zoom <= CLUSTER_MAX_ZOOM && (
+            <CourtClusters data={geojson} />
+          )}
+
+        {/* Render individual emoji markers when sufficiently zoomed-in to avoid clutter */}
+        {viewState.zoom > CLUSTER_MAX_ZOOM &&
+          geojson.features.map((f, idx) => {
+            const geometry = f.geometry as {
+              type: 'Point';
+              coordinates: [number, number];
+            };
+            const [lng, lat] = geometry.coordinates;
+            return (
+              <CourtMarker
+                key={`court-${idx}-${lng}-${lat}`}
+                longitude={lng}
+                latitude={lat}
+                properties={f.properties}
+                onClick={(longitude, latitude, properties) =>
+                  setSelectedPin({ longitude, latitude, properties })
+                }
+              />
+            );
+          })}
 
         {selectedPin && (
           <CourtPopup
