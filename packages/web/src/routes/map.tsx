@@ -9,13 +9,13 @@ import Map, {
 } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
 import { SearchBox } from '@/components/map/SearchBox';
-import type { MapboxEvent, MapLayerMouseEvent } from 'mapbox-gl';
+import type { MapMouseEvent } from 'mapbox-gl';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
@@ -82,6 +82,16 @@ function MapPage() {
     maxLng: number;
   } | null>(null);
 
+  const moveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (moveTimeoutRef.current) {
+        clearTimeout(moveTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const [selectedPin, setSelectedPin] = useState<{
     longitude: number;
     latitude: number;
@@ -89,7 +99,7 @@ function MapPage() {
   } | null>(null);
 
   // Handle cluster clicks - zoom in to show individual markers
-  const handleClusterClick = useCallback((event: MapLayerMouseEvent) => {
+  const handleClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
     if (!features || features.length === 0) return;
 
@@ -114,7 +124,7 @@ function MapPage() {
   }, []);
 
   // Handle individual point clicks
-  const handlePointClick = useCallback((event: MapLayerMouseEvent) => {
+  const handlePointClick = useCallback((event: MapMouseEvent) => {
     event.originalEvent.stopPropagation();
     const features = event.features;
     if (!features || features.length === 0) return;
@@ -160,22 +170,31 @@ function MapPage() {
       : 'skip'
   ) as FeatureCollection | undefined;
 
-  const onMove = (evt: any) => {
+  const onMove = useCallback((evt: any) => {
     const { viewState: newViewState } = evt;
-    setViewState(newViewState);
 
-    // Calculate bbox from view state
     const bounds = evt.target?.getBounds?.();
-    if (bounds) {
-      const newBbox = {
-        minLat: bounds.getSouth(),
-        minLng: bounds.getWest(),
-        maxLat: bounds.getNorth(),
-        maxLng: bounds.getEast(),
-      };
-      setBbox(newBbox);
+    const newBbox = bounds
+      ? {
+          minLat: bounds.getSouth(),
+          minLng: bounds.getWest(),
+          maxLat: bounds.getNorth(),
+          maxLng: bounds.getEast(),
+        }
+      : null;
+
+    if (moveTimeoutRef.current) {
+      clearTimeout(moveTimeoutRef.current);
     }
-  };
+
+    moveTimeoutRef.current = setTimeout(() => {
+      console.log('[onMove]');
+      setViewState(newViewState);
+      if (newBbox) {
+        setBbox(newBbox);
+      }
+    }, 150);
+  }, []);
 
   const geojson = useMemo(() => {
     // Only show pins if zoom level is above the threshold

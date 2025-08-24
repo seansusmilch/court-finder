@@ -195,6 +195,7 @@ export const featuresByViewport = query({
     confidenceThreshold: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    console.log('[inferences.featuresByViewport]');
     const features: GeoJSONPointFeature[] = [];
 
     // Get ALL available zoom levels from database
