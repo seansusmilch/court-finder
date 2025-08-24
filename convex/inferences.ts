@@ -267,3 +267,66 @@ export const featuresByViewport = query({
     return { type: 'FeatureCollection', features } as const;
   },
 });
+
+export const getTrainingData = query({
+  args: {
+    model: v.optional(v.string()),
+    version: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Ensure user is authenticated
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get all results and filter by predictions
+    const results = await ctx.db.query('inferences').collect();
+
+    // Filter results that have predictions and match model/version if specified
+    const filteredResults = results.filter((inference) => {
+      const response = inference.response as any;
+      const hasPredictions =
+        response?.predictions &&
+        Array.isArray(response.predictions) &&
+        response.predictions.length > 0;
+
+      if (!hasPredictions) return false;
+
+      if (args.model && inference.model !== args.model) return false;
+      if (args.version && inference.version !== args.version) return false;
+
+      return true;
+    });
+
+    // Transform to training format
+    const trainingItems = filteredResults
+      .map((inference) => {
+        const response = inference.response as any;
+        return {
+          id: inference._id,
+          imageUrl: inference.imageUrl,
+          imageWidth: response?.image?.width || 640,
+          imageHeight: response?.image?.height || 640,
+          tileInfo: {
+            z: inference.z,
+            x: inference.x,
+            y: inference.y,
+          },
+          model: inference.model,
+          version: inference.version,
+          predictions: response.predictions || [],
+          requestedAt: inference.requestedAt,
+        };
+      })
+      .sort((a, b) => b.requestedAt - a.requestedAt); // Sort by most recent
+
+    // Apply limit if specified
+    if (args.limit) {
+      return trainingItems.slice(0, args.limit);
+    }
+
+    return trainingItems;
+  },
+});

@@ -26,6 +26,7 @@ export const NAVIGATION_LINKS = [
   { to: '/', label: 'Home' },
   { to: '/map', label: 'Map' },
   { to: '/scans', label: 'Scans' },
+  { to: '/training-feedback', label: 'Training' },
 ] as const;
 
 // Visuals for court classes (emoji + explicit Tailwind classes)
