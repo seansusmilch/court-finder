@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import Map, {
   Source,
   Layer,
@@ -31,6 +31,56 @@ import {
 
 const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
 
+type ViewState = {
+  longitude: number;
+  latitude: number;
+  zoom: number;
+};
+
+async function getInitialViewStateViaGeolocation(): Promise<ViewState> {
+  if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+    return {
+      longitude: DEFAULT_MAP_CENTER[0],
+      latitude: DEFAULT_MAP_CENTER[1],
+      zoom: DEFAULT_MAP_ZOOM,
+    };
+  }
+
+  return new Promise<ViewState>((resolve) => {
+    const timeoutId = window.setTimeout(() => {
+      resolve({
+        longitude: DEFAULT_MAP_CENTER[0],
+        latitude: DEFAULT_MAP_CENTER[1],
+        zoom: DEFAULT_MAP_ZOOM,
+      });
+    }, 3000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        window.clearTimeout(timeoutId);
+        resolve({
+          longitude: pos.coords.longitude,
+          latitude: pos.coords.latitude,
+          zoom: DEFAULT_MAP_ZOOM,
+        });
+      },
+      () => {
+        window.clearTimeout(timeoutId);
+        resolve({
+          longitude: DEFAULT_MAP_CENTER[0],
+          latitude: DEFAULT_MAP_CENTER[1],
+          zoom: DEFAULT_MAP_ZOOM,
+        });
+      },
+      {
+        enableHighAccuracy: false,
+        maximumAge: 600000,
+        timeout: 2500,
+      }
+    );
+  });
+}
+
 type FeatureCollection = {
   type: 'FeatureCollection';
   features: Array<{
@@ -52,36 +102,17 @@ const EMPTY_FEATURE_COLLECTION: FeatureCollection = {
 };
 
 export const Route = createFileRoute('/map')({
-  validateSearch: (search: Record<string, unknown>) => {
-    const parseNumber = (value: unknown) => {
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string') return parseFloat(value);
-      return undefined;
-    };
-
-    const lon = parseNumber((search as any).longitude);
-    const lat = parseNumber((search as any).latitude);
-    const zm = parseNumber((search as any).zoom);
-
-    return {
-      longitude: Number.isFinite(lon) ? (lon as number) : DEFAULT_MAP_CENTER[0],
-      latitude: Number.isFinite(lat) ? (lat as number) : DEFAULT_MAP_CENTER[1],
-      zoom: Number.isFinite(zm) ? (zm as number) : DEFAULT_MAP_ZOOM,
-    };
+  loader: async () => {
+    return getInitialViewStateViaGeolocation();
   },
   component: MapPage,
 });
 
 function MapPage() {
-  const search = Route.useSearch();
   const mapRef = useRef<MapRef | null>(null);
-  const navigate = useNavigate({ from: Route.fullPath });
-
-  const [viewState, setViewState] = useState({
-    longitude: search.longitude,
-    latitude: search.latitude,
-    zoom: search.zoom,
-  });
+  const initial = Route.useLoaderData() as ViewState;
+  console.log('[initial]', initial);
+  const [viewState, setViewState] = useState<ViewState>(initial);
 
   const [bbox, setBbox] = useState<{
     minLat: number;
@@ -192,6 +223,10 @@ function MapPage() {
         style={{ width: '100%', height: '100%' }}
         mapStyle={MAP_STYLE_SATELLITE}
         onMoveEnd={onMoveEnd}
+        onLoad={(e) => {
+          const b = computeBbox(e.target);
+          if (b) setBbox(b);
+        }}
         interactiveLayerIds={['clusters', 'unclustered-points']}
         onClick={(e) => {
           const hasFeatures = e.features && e.features.length > 0;
