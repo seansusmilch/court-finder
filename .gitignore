@@ -1,5 +1,4 @@
 node_modules
-.turbo
 
 
 # START Ruler Generated Files
@@ -78,4 +77,3 @@ routeTree.gen.ts
 
 
 .env.local
-_generated
