@@ -10,17 +10,17 @@ export default defineConfig({
     tailwindcss(),
     tanstackRouter({}),
     react(),
-    // VitePWA({
-    //   registerType: 'autoUpdate',
-    //   manifest: {
-    //     name: 'court-finder',
-    //     short_name: 'court-finder',
-    //     description: 'court-finder - PWA Application',
-    //     theme_color: '#0c0c0c',
-    //   },
-    //   pwaAssets: { disabled: false, config: true },
-    //   devOptions: { enabled: true },
-    // }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        name: 'court-finder',
+        short_name: 'court-finder',
+        description: 'court-finder - PWA Application',
+        theme_color: '#0c0c0c',
+      },
+      pwaAssets: { disabled: false, config: true },
+      devOptions: { enabled: true },
+    }),
   ],
   resolve: {
     alias: {
@@ -28,5 +28,8 @@ export default defineConfig({
       '@backend': path.resolve(__dirname, './convex/_generated'),
     },
     dedupe: ['convex', 'convex/react'],
+  },
+  build: {
+    sourcemap: true,
   },
 });
