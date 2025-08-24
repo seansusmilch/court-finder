@@ -13,3 +13,6 @@ Write a doc about how the authentication and permissions work in this project. M
 I want you to put the training page And relevant endpoints behind a new permission that users must have in order to view and the write to to training data
 
 update the document to detail that the permissions Strings are all stored in the constants file and All permissions should follow the same convention. After that update the files that you Just modified to follow this convention
+
+- have a tiles currency that gives you the ability to scan tiles
+- you can get more tiles by training lmao

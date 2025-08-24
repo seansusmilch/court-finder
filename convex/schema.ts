@@ -22,6 +22,7 @@ export default defineSchema({
         y: v.number(),
       })
     ),
+    userId: v.optional(v.id('users')),
   }).index('by_center', ['centerLat', 'centerLong']),
   inferences: defineTable({
     // Slippy tile coordinates
