@@ -7,6 +7,7 @@ import {
   Outlet,
   createRootRouteWithContext,
   useRouterState,
+  Link,
 } from '@tanstack/react-router';
 import { api } from '@backend/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
@@ -74,9 +75,22 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey='vite-ui-theme'
       >
-        <div className='grid grid-rows-[auto_1fr] h-svh'>
+        <div className='grid grid-rows-[auto_1fr_auto] h-svh'>
           <Header />
           {isFetching ? <Loader /> : <Outlet />}
+          <footer className='border-t text-sm text-muted-foreground'>
+            <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
+              <span>© {new Date().getFullYear()} Court Finder</span>
+              <nav className='flex gap-4'>
+                <Link to={'/terms' as any} className='hover:underline'>
+                  Terms
+                </Link>
+                <Link to={'/privacy' as any} className='hover:underline'>
+                  Privacy
+                </Link>
+              </nav>
+            </div>
+          </footer>
         </div>
         <Toaster richColors />
       </ThemeProvider>

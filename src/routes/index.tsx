@@ -1,6 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery } from 'convex/react';
+import { Authenticated, Unauthenticated, useQuery } from 'convex/react';
 import { api } from '@backend/api';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 export const Route = createFileRoute('/')({
   component: HomeComponent,
@@ -10,44 +19,122 @@ export const Route = createFileRoute('/')({
 function HomeComponent() {
   const healthCheck = useQuery(api.healthCheck.get);
   return (
-    <div className='container mx-auto max-w-3xl px-4 py-2'>
-      <div className='grid gap-6'>
-        <section className='rounded-lg border p-4'>
-          <h2 className='mb-2 font-medium'>API Status</h2>
-          <div className='flex items-center gap-2'>
-            <div
-              className={`h-2 w-2 rounded-full ${
-                healthCheck === 'OK'
-                  ? 'bg-green-500'
-                  : healthCheck === undefined
-                  ? 'bg-orange-400'
-                  : 'bg-red-500'
-              }`}
-            />
-            <span className='text-sm text-muted-foreground'>
-              {healthCheck === undefined
-                ? 'Checking...'
-                : healthCheck === 'OK'
-                ? 'Connected'
-                : 'Error'}
-            </span>
+    <div className='container mx-auto px-4 py-10 lg:py-16'>
+      <div className='mx-auto max-w-5xl'>
+        <div className='grid items-center gap-8 md:grid-cols-2'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight md:text-5xl'>
+              Find courts from space.
+            </h1>
+            <p className='mt-4 text-muted-foreground md:text-lg'>
+              AI-powered detection and review tools to discover pickleball and
+              tennis courts anywhere on Earth, then explore and validate them on
+              an interactive map.
+            </p>
+            <div className='mt-6 flex flex-wrap items-center gap-3'>
+              <Unauthenticated>
+                <Button asChild>
+                  <Link to={'/login'}>Get started</Link>
+                </Button>
+                <Button asChild variant='outline'>
+                  <Link to={'/map' as any}>Explore the map</Link>
+                </Button>
+              </Unauthenticated>
+              <Authenticated>
+                <Button asChild>
+                  <Link to={'/map' as any}>Open map</Link>
+                </Button>
+                <Button asChild variant='outline'>
+                  <Link to={'/scans'}>Run a scan</Link>
+                </Button>
+              </Authenticated>
+            </div>
           </div>
-        </section>
-        <section className='rounded-lg border p-4'>
-          <h2 className='mb-2 font-medium'>Next steps</h2>
-          <ul className='list-disc pl-5 text-sm text-muted-foreground'>
-            <li>
-              <Link to='/scans' className='text-primary underline'>
-                Run a scan
-              </Link>
-            </li>
-            <li>
-              <Link to={'/map' as any} className='text-primary underline'>
-                View detections on a map
-              </Link>
-            </li>
-          </ul>
-        </section>
+          <div className='relative order-first h-56 w-full overflow-hidden rounded-xl border bg-muted md:order-none md:h-80'>
+            <img
+              src='/logo.png'
+              alt='Court Finder'
+              className='absolute inset-0 m-auto h-24 w-24 opacity-60'
+            />
+            <div className='absolute inset-0 bg-gradient-to-br from-background/60 via-background/20 to-transparent' />
+          </div>
+        </div>
+
+        <div className='mt-12 grid gap-6 md:grid-cols-3'>
+          <Card>
+            <CardHeader>
+              <CardTitle>AI detections</CardTitle>
+              <CardDescription>
+                High-precision models tuned for courts
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='text-sm text-muted-foreground'>
+              Scan anywhere in the world and get detections with confidence
+              scores and zoom-level context.
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Interactive map</CardTitle>
+              <CardDescription>
+                Clustered pins and rich popovers
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='text-sm text-muted-foreground'>
+              Explore results with smooth clustering, emoji markers, and
+              detailed information at every zoom level.
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Review workflow</CardTitle>
+              <CardDescription>Filter by confidence and verify</CardDescription>
+            </CardHeader>
+            <CardContent className='text-sm text-muted-foreground'>
+              Adjust thresholds, inspect satellite tiles, and confirm detections
+              quickly.
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className='mt-12 grid gap-6 md:grid-cols-2'>
+          <Card className='border-destructive text-destructive-foreground'>
+            <CardHeader>
+              <CardTitle>Disclaimer</CardTitle>
+              <CardDescription className='text-destructive font-bold'>
+                Read before visiting any detected location!
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='text-sm space-y-3'>
+              <p>
+                Detections shown in this app are generated by automated models
+                and are provided on an “as is” and “as available” basis without
+                any warranty or guarantee of accuracy, completeness, or
+                suitability for any purpose.
+              </p>
+              <p>
+                Detected locations may be on private property or subject to
+                access restrictions. You are solely responsible for complying
+                with all laws, posted signage, and obtaining any required
+                permissions. Do not trespass.
+              </p>
+              <p>
+                By using this app, you assume all risk and agree that the
+                project maintainers and contributors shall not be liable for any
+                injury, damage, citation, or loss arising from your use of the
+                information. See our{' '}
+                <Link to={'/terms' as any} className='underline'>
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link to={'/privacy' as any} className='underline'>
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

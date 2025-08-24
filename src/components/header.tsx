@@ -1,4 +1,6 @@
 import { Link } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
+import { api } from '@backend/api';
 import { Authenticated, Unauthenticated } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { MenuIcon, UserIcon } from 'lucide-react';
@@ -17,6 +19,7 @@ import {
 
 export default function Header() {
   const { signOut } = useAuthActions();
+  const healthCheck = useQuery(api.healthCheck.get);
   return (
     <div>
       <div className='flex flex-row items-center justify-between px-4 py-2'>
@@ -46,7 +49,26 @@ export default function Header() {
             ))}
           </nav>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-3'>
+          <div className='hidden md:flex items-center gap-2 text-xs text-muted-foreground'>
+            <div
+              className={`h-2 w-2 rounded-full ${
+                healthCheck === 'OK'
+                  ? 'bg-green-500'
+                  : healthCheck === undefined
+                  ? 'bg-orange-400'
+                  : 'bg-red-500'
+              }`}
+              title={
+                healthCheck === undefined
+                  ? 'Checking API…'
+                  : healthCheck === 'OK'
+                  ? 'API Connected'
+                  : 'API Error'
+              }
+            />
+            <span className='hidden lg:inline'>API</span>
+          </div>
           <div className='hidden md:flex items-center gap-2'>
             <Authenticated>
               <Button variant='ghost' size='sm' onClick={() => signOut()}>
@@ -76,6 +98,7 @@ import * as React from 'react';
 
 function MobileNav() {
   const { signOut } = useAuthActions();
+  const healthCheck = useQuery(api.healthCheck.get);
   const [open, setOpen] = React.useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -109,6 +132,26 @@ function MobileNav() {
               </Button>
             ))}
           </nav>
+        </div>
+        <div className='border-t p-4 text-xs text-muted-foreground'>
+          <div className='flex items-center gap-2'>
+            <div
+              className={`h-2 w-2 rounded-full ${
+                healthCheck === 'OK'
+                  ? 'bg-green-500'
+                  : healthCheck === undefined
+                  ? 'bg-orange-400'
+                  : 'bg-red-500'
+              }`}
+            />
+            <span>
+              {healthCheck === undefined
+                ? 'Checking API…'
+                : healthCheck === 'OK'
+                ? 'API Connected'
+                : 'API Error'}
+            </span>
+          </div>
         </div>
         <div className='border-t p-4'>
           <ModeToggle onChanged={() => setOpen(false)} />
