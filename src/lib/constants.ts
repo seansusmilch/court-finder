@@ -34,7 +34,7 @@ export type CourtClassVisual = { emoji: string; color: string };
 export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
   'basketball-court': { emoji: '🏀', color: 'orange-500' },
   'tennis-court': { emoji: '🎾', color: 'green-500' },
-  'soccer-ball-field': { emoji: '⚽', color: 'emerald-500' },
+  'soccer-ball-field': { emoji: '⚽', color: 'green-500' },
   'baseball-diamond': { emoji: '⚾', color: 'red-500' },
   'ground-track-field': { emoji: '🏃', color: 'amber-500' },
   'swimming-pool': { emoji: '🏊', color: 'cyan-500' },

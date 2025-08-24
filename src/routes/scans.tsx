@@ -7,8 +7,8 @@ import {
 } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useAction, useQuery } from 'convex/react';
-import { api } from '@court-finder/backend/convex/_generated/api';
-import type { Id } from '@court-finder/backend/convex/_generated/dataModel';
+import { api } from '@backend/api';
+import type { Id } from '@backend/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
