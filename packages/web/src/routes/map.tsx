@@ -9,13 +9,13 @@ import Map, {
 } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@court-finder/backend/convex/_generated/api';
+import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
 import { SearchBox } from '@/components/map/SearchBox';
-import type { MapMouseEvent } from 'mapbox-gl';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
@@ -40,14 +40,24 @@ type FeatureCollection = {
   }>;
 };
 
+type SelectedPin = {
+  longitude: number;
+  latitude: number;
+  properties: Record<string, unknown>;
+} | null;
+
+const EMPTY_FEATURE_COLLECTION: FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [],
+};
+
 export const Route = createFileRoute('/map')({
   validateSearch: (search: Record<string, unknown>) => {
-    const parseNumber = (v: unknown) =>
-      typeof v === 'number'
-        ? v
-        : typeof v === 'string'
-        ? parseFloat(v)
-        : undefined;
+    const parseNumber = (value: unknown) => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') return parseFloat(value);
+      return undefined;
+    };
 
     const lon = parseNumber((search as any).longitude);
     const lat = parseNumber((search as any).latitude);
@@ -67,8 +77,6 @@ function MapPage() {
   const mapRef = useRef<MapRef | null>(null);
   const navigate = useNavigate({ from: Route.fullPath });
 
-  // Configurable zoom level where pins start showing
-
   const [viewState, setViewState] = useState({
     longitude: search.longitude,
     latitude: search.latitude,
@@ -82,49 +90,33 @@ function MapPage() {
     maxLng: number;
   } | null>(null);
 
-  const moveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // We update state on move end, so no debouncing needed
 
-  useEffect(() => {
-    return () => {
-      if (moveTimeoutRef.current) {
-        clearTimeout(moveTimeoutRef.current);
-      }
-    };
-  }, []);
+  const [selectedPin, setSelectedPin] = useState<SelectedPin>(null);
 
-  const [selectedPin, setSelectedPin] = useState<{
-    longitude: number;
-    latitude: number;
-    properties: Record<string, unknown>;
-  } | null>(null);
-
-  // Handle cluster clicks - zoom in to show individual markers
-  const handleClusterClick = useCallback((event: MapMouseEvent) => {
+  const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
     if (!features || features.length === 0) return;
 
     const clusterId = features[0].properties?.cluster_id;
     const mapboxSource = event.target.getSource('courts') as any;
 
-    if (clusterId && mapboxSource) {
-      // Get the cluster expansion zoom
-      mapboxSource.getClusterExpansionZoom(
-        clusterId,
-        (err: any, zoom: number) => {
-          if (err) return;
+    if (!clusterId || !mapboxSource) return;
 
-          event.target.easeTo({
-            center: [event.lngLat.lng, event.lngLat.lat],
-            zoom: zoom + 0.5, // Add some padding
-            duration: 500,
-          });
-        }
-      );
-    }
+    mapboxSource.getClusterExpansionZoom(
+      clusterId,
+      (err: any, zoom: number) => {
+        if (err) return;
+        event.target.easeTo({
+          center: [event.lngLat.lng, event.lngLat.lat],
+          zoom: zoom + 0.5,
+          duration: 500,
+        });
+      }
+    );
   }, []);
 
-  // Handle individual point clicks
-  const handlePointClick = useCallback((event: MapMouseEvent) => {
+  const onPointClick = useCallback((event: MapMouseEvent) => {
     event.originalEvent.stopPropagation();
     const features = event.features;
     if (!features || features.length === 0) return;
@@ -145,18 +137,15 @@ function MapPage() {
 
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
 
-  // Hardcode model/version for now to match backend action
   const model = INFER_MODEL;
   const version = INFER_VERSION;
 
-  // Get available zoom levels from database
   const availableZoomLevels = useQuery(api.inferences.getAvailableZoomLevels, {
     model,
     version,
   }) as number[] | undefined;
 
-  // Skip DB query when zoom is below threshold
-  const shouldQuery = bbox && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM;
+  const shouldQuery = Boolean(bbox && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM);
   const featureCollection = useQuery(
     api.inferences.featuresByViewport,
     shouldQuery
@@ -170,40 +159,28 @@ function MapPage() {
       : 'skip'
   ) as FeatureCollection | undefined;
 
-  const onMove = useCallback((evt: any) => {
+  const computeBbox = (map: any) => {
+    const bounds = map?.getBounds?.();
+    if (!bounds) return null;
+    return {
+      minLat: bounds.getSouth(),
+      minLng: bounds.getWest(),
+      maxLat: bounds.getNorth(),
+      maxLng: bounds.getEast(),
+    } as NonNullable<typeof bbox>;
+  };
+
+  const onMoveEnd = useCallback((evt: any) => {
     const { viewState: newViewState } = evt;
-
-    const bounds = evt.target?.getBounds?.();
-    const newBbox = bounds
-      ? {
-          minLat: bounds.getSouth(),
-          minLng: bounds.getWest(),
-          maxLat: bounds.getNorth(),
-          maxLng: bounds.getEast(),
-        }
-      : null;
-
-    if (moveTimeoutRef.current) {
-      clearTimeout(moveTimeoutRef.current);
-    }
-
-    moveTimeoutRef.current = setTimeout(() => {
-      console.log('[onMove]');
-      setViewState(newViewState);
-      if (newBbox) {
-        setBbox(newBbox);
-      }
-    }, 150);
+    setViewState(newViewState);
+    const newBbox = computeBbox(evt.target);
+    if (newBbox) setBbox(newBbox);
   }, []);
 
   const geojson = useMemo(() => {
-    // Only show pins if zoom level is above the threshold
-    if (viewState.zoom < PINS_VISIBLE_FROM_ZOOM) {
-      return { type: 'FeatureCollection' as const, features: [] };
-    }
-    return (
-      featureCollection ?? { type: 'FeatureCollection' as const, features: [] }
-    );
+    if (viewState.zoom < PINS_VISIBLE_FROM_ZOOM)
+      return EMPTY_FEATURE_COLLECTION;
+    return featureCollection ?? EMPTY_FEATURE_COLLECTION;
   }, [featureCollection, viewState.zoom, PINS_VISIBLE_FROM_ZOOM]);
 
   return (
@@ -214,21 +191,17 @@ function MapPage() {
         initialViewState={viewState}
         style={{ width: '100%', height: '100%' }}
         mapStyle={MAP_STYLE_SATELLITE}
-        onMove={onMove}
+        onMoveEnd={onMoveEnd}
         interactiveLayerIds={['clusters', 'unclustered-points']}
         onClick={(e) => {
-          // Handle map clicks and layer clicks
-          if (e.features && e.features.length > 0) {
-            const feature = e.features[0];
-            if (feature.layer?.id === 'clusters') {
-              handleClusterClick(e);
-            } else if (feature.layer?.id === 'unclustered-points') {
-              handlePointClick(e);
-            }
-          } else {
-            // Click on empty map area
+          const hasFeatures = e.features && e.features.length > 0;
+          if (!hasFeatures) {
             setSelectedPin(null);
+            return;
           }
+          const layerId = e.features![0].layer?.id;
+          if (layerId === 'clusters') onClusterClick(e);
+          if (layerId === 'unclustered-points') onPointClick(e);
         }}
       >
         <GeolocateControl position='top-left' />
@@ -244,7 +217,6 @@ function MapPage() {
             clusterMaxZoom={CLUSTER_MAX_ZOOM}
             clusterRadius={CLUSTER_RADIUS}
           >
-            {/* Cluster circles */}
             <Layer
               id='clusters'
               type='circle'
@@ -270,8 +242,6 @@ function MapPage() {
                 ],
               }}
             />
-
-            {/* Cluster count labels */}
             <Layer
               id='cluster-count'
               type='symbol'
@@ -285,8 +255,6 @@ function MapPage() {
                 'text-color': '#ffffff',
               }}
             />
-
-            {/* Unclustered court points */}
             <Layer
               id='unclustered-points'
               type='circle'
