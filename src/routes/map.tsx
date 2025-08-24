@@ -7,7 +7,7 @@ import Map, {
 } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@backend/api';
@@ -39,48 +39,38 @@ type ViewState = {
   zoom: number;
 };
 
-async function getInitialViewStateViaGeolocation(): Promise<ViewState> {
-  if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+const MAP_VIEW_STATE_KEY = 'map.viewState';
+
+function getInitialViewState(): ViewState {
+  if (typeof window === 'undefined') {
     return {
       longitude: DEFAULT_MAP_CENTER[0],
       latitude: DEFAULT_MAP_CENTER[1],
       zoom: DEFAULT_MAP_ZOOM,
     };
   }
-
-  return new Promise<ViewState>((resolve) => {
-    const timeoutId = window.setTimeout(() => {
-      resolve({
-        longitude: DEFAULT_MAP_CENTER[0],
-        latitude: DEFAULT_MAP_CENTER[1],
-        zoom: DEFAULT_MAP_ZOOM,
-      });
-    }, 3000);
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        window.clearTimeout(timeoutId);
-        resolve({
-          longitude: pos.coords.longitude,
-          latitude: pos.coords.latitude,
-          zoom: DEFAULT_MAP_ZOOM,
-        });
-      },
-      () => {
-        window.clearTimeout(timeoutId);
-        resolve({
-          longitude: DEFAULT_MAP_CENTER[0],
-          latitude: DEFAULT_MAP_CENTER[1],
-          zoom: DEFAULT_MAP_ZOOM,
-        });
-      },
-      {
-        enableHighAccuracy: false,
-        maximumAge: 600000,
-        timeout: 2500,
+  try {
+    const raw = window.localStorage.getItem(MAP_VIEW_STATE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<ViewState>;
+      if (
+        typeof parsed.longitude === 'number' &&
+        typeof parsed.latitude === 'number' &&
+        typeof parsed.zoom === 'number'
+      ) {
+        return {
+          longitude: parsed.longitude,
+          latitude: parsed.latitude,
+          zoom: parsed.zoom,
+        };
       }
-    );
-  });
+    }
+  } catch {}
+  return {
+    longitude: DEFAULT_MAP_CENTER[0],
+    latitude: DEFAULT_MAP_CENTER[1],
+    zoom: DEFAULT_MAP_ZOOM,
+  };
 }
 
 type FeatureCollection = {
@@ -104,9 +94,7 @@ const EMPTY_FEATURE_COLLECTION: FeatureCollection = {
 };
 
 export const Route = createFileRoute('/map')({
-  loader: async () => {
-    return getInitialViewStateViaGeolocation();
-  },
+  loader: () => getInitialViewState(),
   component: MapPage,
 });
 
@@ -115,6 +103,7 @@ function MapPage() {
   const initial = Route.useLoaderData() as ViewState;
   console.log('[initial]', initial);
   const [viewState, setViewState] = useState<ViewState>(initial);
+  const hasAutoGeolocatedRef = useRef(false);
 
   const [bbox, setBbox] = useState<{
     minLat: number;
@@ -220,8 +209,49 @@ function MapPage() {
   const onMoveEnd = useCallback((evt: any) => {
     const { viewState: newViewState } = evt;
     setViewState(newViewState);
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(
+          MAP_VIEW_STATE_KEY,
+          JSON.stringify({
+            longitude: newViewState.longitude,
+            latitude: newViewState.latitude,
+            zoom: newViewState.zoom,
+          })
+        );
+      }
+    } catch {}
     const newBbox = computeBbox(evt.target);
     if (newBbox) setBbox(newBbox);
+  }, []);
+
+  useEffect(() => {
+    if (hasAutoGeolocatedRef.current) return;
+    hasAutoGeolocatedRef.current = true;
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords: [number, number] = [
+          pos.coords.longitude,
+          pos.coords.latitude,
+        ];
+        if (mapRef.current) {
+          mapRef.current.easeTo({
+            center: coords,
+            zoom: Math.max(viewState.zoom, DEFAULT_MAP_ZOOM),
+            duration: FLY_TO_DURATION_MS,
+          });
+        }
+      },
+      () => {
+        // ignore errors; we already have a sensible initial view
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 5000,
+      }
+    );
   }, []);
 
   const geojson = useMemo(() => {
@@ -254,7 +284,17 @@ function MapPage() {
           if (layerId === 'clusters') onClusterClick(e);
         }}
       >
-        <GeolocateControl position='top-left' />
+        <GeolocateControl
+          position='top-left'
+          trackUserLocation
+          showUserHeading
+          showUserLocation
+          positionOptions={{
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 10000,
+          }}
+        />
         <FullscreenControl position='top-left' />
         <NavigationControl position='top-left' />
         <ScaleControl />

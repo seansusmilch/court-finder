@@ -5,13 +5,13 @@ export const PERMISSIONS = {
     WRITE: 'scans.write',
     EXECUTE: 'scans.execute',
   },
-  INFERENCES: {
-    PREFIX: 'inferences',
-    READ: 'inferences.read',
-    WRITE: 'inferences.write',
-    EXECUTE: 'inferences.execute',
-  },
 };
+
+export const DEFAULT_USER_PERMISSIONS = [
+  PERMISSIONS.SCANS.READ,
+  PERMISSIONS.SCANS.WRITE,
+  PERMISSIONS.SCANS.EXECUTE,
+];
 
 // Roboflow model configuration
 export const ROBOFLOW_MODEL_NAME = 'satellite-sports-facilities-bubrg';

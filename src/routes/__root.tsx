@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-router';
 import { api } from '@backend/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { ConvexReactClient, useConvexAuth } from 'convex/react';
+import { ConvexReactClient, useConvexAuth, useMutation } from 'convex/react';
 import { useEffect } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import type { Doc } from '@backend/dataModel';
@@ -52,12 +52,19 @@ function RootComponent() {
     select: (s) => s.isLoading,
   });
   const { isAuthenticated } = useConvexAuth();
+  const ensureDefaults = useMutation(api.users.ensureDefaultPermissions);
   const router = useRouter();
 
   useEffect(() => {
-    // When auth status changes (e.g., after login), re-run beforeLoad to fetch fresh `me`.
-    router.invalidate();
-  }, [isAuthenticated, router]);
+    // When auth status changes (e.g., after login)
+    if (isAuthenticated) {
+      ensureDefaults({}).finally(() => {
+        router.invalidate();
+      });
+    } else {
+      router.invalidate();
+    }
+  }, [isAuthenticated, router, ensureDefaults]);
 
   return (
     <>
