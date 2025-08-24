@@ -10,13 +10,15 @@ import Map, {
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMemo, useState, useCallback, useRef } from 'react';
-import { useQuery } from 'convex/react';
+import { useAction, useQuery } from 'convex/react';
+import { useMutation } from '@tanstack/react-query';
 import { api } from '@court-finder/backend/convex/_generated/api';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
 import { CourtDetectionInfo } from '@/components/map/CourtDetectionInfo';
+import { Button } from '@/components/ui/button';
 import { SearchBox } from '@mapbox/search-js-react';
 import {
   PINS_VISIBLE_FROM_ZOOM,
@@ -173,6 +175,20 @@ function MapPage() {
   const model = INFER_MODEL;
   const version = INFER_VERSION;
 
+  const canScan = useQuery(api.users.hasPermission, {
+    permission: 'scans.execute',
+  }) as boolean | undefined;
+  const scanArea = useAction(api.actions.scanArea);
+
+  const scanMutation = useMutation({
+    mutationKey: ['scanArea'],
+    mutationFn: async () => {
+      const center = mapRef.current?.getCenter?.();
+      if (!center) throw new Error('Map center not available');
+      return scanArea({ latitude: center.lat, longitude: center.lng });
+    },
+  });
+
   const availableZoomLevels = useQuery(api.inferences.getAvailableZoomLevels, {
     model,
     version,
@@ -301,6 +317,18 @@ function MapPage() {
             }}
           />
         </div>
+
+        {canScan && (
+          <div className='absolute top-4 right-4 z-50'>
+            <Button
+              variant='default'
+              onClick={() => scanMutation.mutate()}
+              disabled={scanMutation.isPending}
+            >
+              {scanMutation.isPending ? 'Scanning…' : 'Scan this area'}
+            </Button>
+          </div>
+        )}
       </Map>
 
       <CourtDetectionInfo
