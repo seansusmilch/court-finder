@@ -64,36 +64,89 @@ export function DetectionFeedbackItem({
   };
 
   return (
-    <div className='space-y-6' onKeyDown={handleKeyPress} tabIndex={0}>
-      {/* Header with detection info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className='flex items-center justify-between'>
-            <span className='flex items-center gap-2'>
-              <span className='text-2xl'>{visual.emoji}</span>
-              <span>Detection Feedback</span>
-            </span>
+    <div
+      className='space-y-6 lg:space-y-0'
+      onKeyDown={handleKeyPress}
+      tabIndex={0}
+    >
+      {/* Mobile Layout - Single Column */}
+      <div className='lg:hidden space-y-2'>
+        {/* Prediction Question Header */}
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <span className='text-2xl mr-2'>{visual.emoji}</span>
+              <span>
+                Is this a{' '}
+                <span className='text-accent'>
+                  {visual.displayName.toLowerCase()}
+                </span>
+                ?
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='space-y-4'>
             <div className='flex gap-2'>
               <Badge variant='outline'>{visual.displayName}</Badge>
               <Badge variant='outline'>
                 {Math.round(prediction.confidence * 100)}% confidence
               </Badge>
             </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className='text-sm text-muted-foreground'>
-            Position: ({Math.round(prediction.x)}, {Math.round(prediction.y)}) |
-            Size: {Math.round(prediction.width)} ×{' '}
-            {Math.round(prediction.height)}
-          </p>
-        </CardContent>
-      </Card>
 
-      {/* Main content area */}
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-        {/* Detection image display */}
-        <div className='lg:col-span-2'>
+            {/* Image Viewer */}
+            <DetectionImageView
+              prediction={prediction}
+              imageUrl={imageUrl}
+              imageWidth={imageWidth}
+              imageHeight={imageHeight}
+              visual={visual}
+            />
+
+            {/* Feedback Question */}
+            <div className='space-y-3'>
+              <div className='flex gap-2'>
+                <Button
+                  type='button'
+                  variant={feedback === 'no' ? 'default' : 'outline'}
+                  onClick={() => setFeedback('no')}
+                  className='flex-1'
+                >
+                  No (N)
+                </Button>
+                <Button
+                  type='button'
+                  variant={feedback === 'yes' ? 'default' : 'outline'}
+                  onClick={() => setFeedback('yes')}
+                  className='flex-1'
+                >
+                  Yes (Y)
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Desktop Layout - Two Columns */}
+      <div className='hidden lg:grid lg:grid-cols-3 lg:gap-8 lg:items-start'>
+        {/* Left Column - Image Viewer */}
+        <div className='space-y-4 col-span-2'>
+          <Card>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2'>
+                <span className='text-2xl'>{visual.emoji}</span>
+                <span>Detection View</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className='text-sm text-muted-foreground mb-4'>
+                Position: ({Math.round(prediction.x)},{' '}
+                {Math.round(prediction.y)}) | Size:{' '}
+                {Math.round(prediction.width)} × {Math.round(prediction.height)}
+              </p>
+            </CardContent>
+          </Card>
+
           <DetectionImageView
             prediction={prediction}
             imageUrl={imageUrl}
@@ -103,46 +156,45 @@ export function DetectionFeedbackItem({
           />
         </div>
 
-        {/* Feedback sidebar */}
-        <div className='space-y-4'>
-          {/* Detection details */}
+        {/* Right Column - Controls and Feedback */}
+        <div className='space-y-6'>
+          {/* Detection Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Detection Details</CardTitle>
+              <CardTitle className='flex items-center gap-2'>
+                <span className='text-2xl'>{visual.emoji}</span>
+                <span>Detection Details</span>
+              </CardTitle>
             </CardHeader>
             <CardContent className='space-y-3'>
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-2xl'>{visual.emoji}</span>
-                  <div>
-                    <p className='font-medium'>{visual.displayName}</p>
-                    <p className='text-sm text-muted-foreground'>
-                      Confidence: {Math.round(prediction.confidence * 100)}%
-                    </p>
-                  </div>
-                </div>
-                <div className='text-xs text-muted-foreground space-y-1'>
-                  <p>
-                    Position: ({Math.round(prediction.x)},{' '}
-                    {Math.round(prediction.y)})
-                  </p>
-                  <p>
-                    Size: {Math.round(prediction.width)} ×{' '}
-                    {Math.round(prediction.height)}
-                  </p>
-                </div>
+              <div className='flex items-center gap-2'>
+                <Badge variant='outline'>{visual.displayName}</Badge>
+                <Badge variant='outline'>
+                  {Math.round(prediction.confidence * 100)}% confidence
+                </Badge>
+              </div>
+              <div className='text-sm text-muted-foreground space-y-1'>
+                <p>
+                  Position: ({Math.round(prediction.x)},{' '}
+                  {Math.round(prediction.y)})
+                </p>
+                <p>
+                  Size: {Math.round(prediction.width)} ×{' '}
+                  {Math.round(prediction.height)}
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Feedback form */}
+          {/* Feedback Form */}
           <Card>
             <CardHeader>
               <CardTitle>Provide Feedback</CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
+              {/* Feedback Question */}
               <div className='space-y-3'>
-                <Label htmlFor='feedback-question'>
+                <Label htmlFor='desktop-feedback-question'>
                   Is this a court/field?
                 </Label>
                 <div className='flex gap-2'>
@@ -165,16 +217,20 @@ export function DetectionFeedbackItem({
                 </div>
               </div>
 
+              {/* Comment Field */}
               <div className='space-y-2'>
-                <Label htmlFor='comment'>Additional Comments (Optional)</Label>
+                <Label htmlFor='desktop-comment'>
+                  Additional Comments (Optional)
+                </Label>
                 <Input
-                  id='comment'
+                  id='desktop-comment'
                   placeholder='Any additional notes...'
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
               </div>
 
+              {/* Action Buttons */}
               <div className='flex gap-2'>
                 <Button
                   onClick={handleSubmit}
@@ -183,7 +239,7 @@ export function DetectionFeedbackItem({
                 >
                   Submit Feedback
                 </Button>
-                <Button variant='outline' onClick={onSkip}>
+                <Button variant='outline' onClick={onSkip} className='flex-1'>
                   Skip
                 </Button>
               </div>

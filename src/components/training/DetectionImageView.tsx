@@ -179,64 +179,49 @@ export function DetectionImageView({
   }, [prediction, imageLoaded, initialScale]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Detection View</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className='relative bg-gray-100 rounded-lg overflow-hidden'>
-          {!imageLoaded && (
-            <div className='absolute inset-0 flex items-center justify-center'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
-            </div>
-          )}
+    <div className='relative overflow-hidden rounded-lg bg-secondary'>
+      <TransformWrapper
+        ref={transformRef}
+        initialScale={initialScale}
+        minScale={0.5}
+        maxScale={4}
+        centerOnInit={false}
+        initialPositionX={0}
+        initialPositionY={0}
+        limitToBounds={false}
+        doubleClick={{ step: 1.5 }}
+        onPanningStop={(ref) => {
+          console.log(
+            'Panning stopped',
+            JSON.stringify({
+              scale: ref.state.scale,
+              positionX: ref.state.positionX,
+              positionY: ref.state.positionY,
+            })
+          );
+        }}
+      >
+        <TransformComponent
+          wrapperClass='w-full h-[400px]'
+          contentClass='w-full h-full'
+        >
+          <div className='relative w-full h-full'>
+            <img
+              src={imageUrl}
+              alt={`Image with ${visual.displayName} detection`}
+              className='w-full h-auto object-contain'
+              onLoad={() => setImageLoaded(true)}
+            />
 
-          <div className='relative overflow-hidden rounded-lg bg-gray-200 border border-gray-300'>
-            <TransformWrapper
-              ref={transformRef}
-              initialScale={initialScale}
-              minScale={0.5}
-              maxScale={4}
-              centerOnInit={false}
-              initialPositionX={0}
-              initialPositionY={0}
-              limitToBounds={false}
-              doubleClick={{ step: 1.5 }}
-              onPanningStop={(ref) => {
-                console.log(
-                  'Panning stopped',
-                  JSON.stringify({
-                    scale: ref.state.scale,
-                    positionX: ref.state.positionX,
-                    positionY: ref.state.positionY,
-                  })
-                );
-              }}
-            >
-              <TransformComponent
-                wrapperClass='w-full h-[400px]'
-                contentClass='w-full h-full'
-              >
-                <div className='relative w-full h-full'>
-                  <img
-                    src={imageUrl}
-                    alt={`Image with ${visual.displayName} detection`}
-                    className='w-full h-auto object-contain'
-                    onLoad={() => setImageLoaded(true)}
-                  />
-
-                  <BoundingBoxOverlay
-                    prediction={prediction}
-                    imageWidth={imageWidth}
-                    imageHeight={imageHeight}
-                    visual={visual}
-                  />
-                </div>
-              </TransformComponent>
-            </TransformWrapper>
+            <BoundingBoxOverlay
+              prediction={prediction}
+              imageWidth={imageWidth}
+              imageHeight={imageHeight}
+              visual={visual}
+            />
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </TransformComponent>
+      </TransformWrapper>
+    </div>
   );
 }

@@ -16,3 +16,15 @@ update the document to detail that the permissions Strings are all stored in the
 
 - have a tiles currency that gives you the ability to scan tiles
 - you can get more tiles by training lmao
+
+- figure out what is needed to upload an image to the dataset
+  - CreateML JSON looks simple https://roboflow.com/formats/createml-json
+  - COCO JSON looks widely supported https://roboflow.com/formats/coco-json
+- CreateML JSON is so much simpler to write thooooo
+
+# Uploading Images To Roboflow
+
+1. create CreateML.json for image NAME
+2. hit the .../upload endpoint
+3. roboflow will return an image ID
+4. hit the .../annotate/:image-id endpoint with createml.json
