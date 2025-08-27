@@ -30,7 +30,7 @@ export const ROBOFLOW_MODEL_NAME = 'satellite-sports-facilities-bubrg';
 export const ROBOFLOW_MODEL_VERSION = '4';
 
 // Map tile coverage configuration
-export const DEFAULT_TILE_RADIUS_KM = 1;
+export const DEFAULT_TILE_RADIUS = 1;
 
 // Environment variable names used by backend actions
 export const ENV_VARS = {

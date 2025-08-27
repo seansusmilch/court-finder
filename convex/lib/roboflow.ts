@@ -5,8 +5,8 @@ export interface RoboflowPrediction {
   height: number;
   confidence: number;
   class: string;
-  class_id?: number;
-  detection_id?: string;
+  class_id: number;
+  detection_id: string;
 }
 
 export interface RoboflowResponse {

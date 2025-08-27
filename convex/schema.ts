@@ -35,4 +35,23 @@ export default defineSchema({
     requestedAt: v.number(),
     response: v.any(),
   }).index('by_tile', ['z', 'x', 'y', 'model', 'version']),
+  inference_predictions: defineTable({
+    inferenceId: v.id('inferences'),
+    class: v.string(),
+    confidence: v.number(),
+    height: v.number(),
+    width: v.number(),
+    x: v.number(),
+    y: v.number(),
+    classId: v.optional(v.number()),
+    detectionId: v.string(),
+  })
+    .index('by_inference', ['inferenceId'])
+    .index('by_inference_and_detection', ['inferenceId', 'detectionId']),
+  feedback_submissions: defineTable({
+    inferenceId: v.id('inferences'),
+    predictionId: v.id('inference_predictions'),
+    userId: v.id('users'),
+    userResponse: v.string(),
+  }),
 });

@@ -1,12 +1,16 @@
 import { action } from './_generated/server';
 import { v } from 'convex/values';
 import { api, internal } from './_generated/api';
-import { detectObjectsWithRoboflow, tilesInRadiusFromPoint } from './lib';
+import {
+  detectObjectsWithRoboflow,
+  RoboflowResponse,
+  tilesInRadiusFromPoint,
+} from './lib';
 import {
   PERMISSIONS,
   ROBOFLOW_MODEL_NAME,
   ROBOFLOW_MODEL_VERSION,
-  DEFAULT_TILE_RADIUS_KM,
+  DEFAULT_TILE_RADIUS,
   ENV_VARS,
 } from './lib/constants';
 
@@ -42,7 +46,7 @@ export const scanArea = action({
       throw new Error('Missing ROBOFLOW_API_KEY environment variable');
     }
 
-    const radius = DEFAULT_TILE_RADIUS_KM;
+    const radius = DEFAULT_TILE_RADIUS;
     const coverage = tilesInRadiusFromPoint(
       args.latitude,
       args.longitude,
@@ -104,18 +108,15 @@ export const scanArea = action({
       });
 
       // Check if we've already scanned this tile with the same model/version
-      const cached: any = await ctx.runQuery(
-        internal.inferences.getLatestByTile,
-        {
-          z: tile.z,
-          x: tile.x,
-          y: tile.y,
-          model: MODEL_NAME,
-          version: MODEL_VERSION,
-        }
-      );
+      const existing = await ctx.runQuery(internal.inferences.getLatestByTile, {
+        z: tile.z,
+        x: tile.x,
+        y: tile.y,
+        model: MODEL_NAME,
+        version: MODEL_VERSION,
+      });
 
-      let detections: unknown = cached?.response;
+      let detections: RoboflowResponse = existing?.response;
       if (!detections) {
         detections = await detectObjectsWithRoboflow(
           tile.url,
@@ -125,17 +126,17 @@ export const scanArea = action({
         );
       }
 
-      const predictionsCount = Array.isArray((detections as any)?.predictions)
-        ? (detections as any).predictions.length
+      const predictionsCount = Array.isArray(detections.predictions)
+        ? detections.predictions.length
         : undefined;
       console.log('[scanArea] inference ready', {
         index: i + 1,
         predictionsCount,
-        reused: Boolean(cached),
+        reused: Boolean(existing),
       });
 
       // Upsert inference record
-      await ctx.runMutation(internal.inferences.upsert, {
+      const inferenceId = await ctx.runMutation(internal.inferences.upsert, {
         z: tile.z,
         x: tile.x,
         y: tile.y,
@@ -143,6 +144,21 @@ export const scanArea = action({
         model: MODEL_NAME,
         version: MODEL_VERSION,
         response: detections,
+      });
+
+      // Upsert inference predictions
+      const predictionIds = await Promise.all(
+        detections.predictions.map(async (prediction) => {
+          return await ctx.runMutation(internal.inference_predictions.upsert, {
+            inferenceId,
+            prediction,
+          });
+        })
+      );
+
+      console.log('[scanArea] upserted predictions', {
+        inferenceId,
+        predictionIds,
       });
 
       // Store tile coordinates (without URL) in scan
