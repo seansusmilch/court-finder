@@ -3,8 +3,8 @@ const ROBOFLOW_SETTINGS = {
   datasetName: 'satellite-sports-facilities-bubrg',
   workspaceName: process.env.ROBOFLOW_WORKSPACE_NAME || '',
 
-  imageId: 'S2xeqoTdXtwn7s4xTZYv',
-  imageName: '2a1302ea-0cc0-4079-8215-073a4a43909a.jpg',
+  imageId: 'RHVb27popleOc5aFCZHJ',
+  imageName: 'test-123.jpg',
 };
 
 interface CreateMLAnnotation {
