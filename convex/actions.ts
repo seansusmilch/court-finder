@@ -1,6 +1,7 @@
 import { action } from './_generated/server';
 import { v } from 'convex/values';
 import { api, internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 import {
   detectObjectsWithRoboflow,
   RoboflowResponse,
@@ -14,13 +15,175 @@ import {
   ENV_VARS,
 } from './lib/constants';
 
+// Types
+type ScanResult = {
+  z: number;
+  x: number;
+  y: number;
+  url: string;
+  detections: unknown;
+};
+
+type ScanTile = {
+  z: number;
+  x: number;
+  y: number;
+};
+
+type ScanAreaArgs = {
+  latitude: number;
+  longitude: number;
+  query?: string;
+};
+
+type ScanAreaReturn = {
+  scanId: Id<'scans'>;
+  zoom: number;
+  cols: number;
+  rows: number;
+  tiles: ScanResult[];
+};
+
+// Helper functions
+const validateEnvironmentVariables = (): {
+  mapboxToken: string;
+  roboflowKey: string;
+} => {
+  const mapboxToken = process.env[ENV_VARS.MAPBOX_API_KEY];
+  const roboflowKey = process.env[ENV_VARS.ROBOFLOW_API_KEY];
+
+  if (!mapboxToken) {
+    throw new Error('Missing MAPBOX_API_KEY environment variable');
+  }
+  if (!roboflowKey) {
+    throw new Error('Missing ROBOFLOW_API_KEY environment variable');
+  }
+
+  return { mapboxToken, roboflowKey };
+};
+
+const findOrCreateScan = async (
+  ctx: any,
+  latitude: number,
+  longitude: number,
+  query: string
+): Promise<Id<'scans'>> => {
+  const existingScans: any[] = await ctx.runQuery(internal.scans.findByCenter, {
+    centerLat: latitude,
+    centerLong: longitude,
+    query,
+  });
+
+  if (existingScans?.length) {
+    console.log('[scanArea] reusing existing scan', {
+      scanId: existingScans[0]._id,
+    });
+    return existingScans[0]._id;
+  }
+
+  const scanId: Id<'scans'> = await ctx.runMutation(internal.scans.create, {
+    centerLat: latitude,
+    centerLong: longitude,
+  });
+  console.log('[scanArea] created new scan', { scanId });
+  return scanId;
+};
+
+const processTile = async (
+  ctx: any,
+  tile: any,
+  index: number,
+  total: number,
+  roboflowKey: string
+): Promise<{ result: ScanResult; scanTile: ScanTile }> => {
+  console.log('[scanArea] processing tile', {
+    index: index + 1,
+    total,
+    z: tile.z,
+    x: tile.x,
+    y: tile.y,
+    url: tile.url,
+  });
+
+  // Check for existing inference
+  const existing = await ctx.runQuery(internal.inferences.getLatestByTile, {
+    z: tile.z,
+    x: tile.x,
+    y: tile.y,
+    model: ROBOFLOW_MODEL_NAME,
+    version: ROBOFLOW_MODEL_VERSION,
+  });
+
+  let detections: RoboflowResponse = existing?.response;
+  if (!detections) {
+    detections = await detectObjectsWithRoboflow(
+      tile.url,
+      roboflowKey,
+      ROBOFLOW_MODEL_NAME,
+      ROBOFLOW_MODEL_VERSION
+    );
+  }
+
+  const predictionsCount = Array.isArray(detections.predictions)
+    ? detections.predictions.length
+    : undefined;
+  console.log('[scanArea] inference ready', {
+    index: index + 1,
+    predictionsCount,
+    reused: Boolean(existing),
+  });
+
+  // Upsert inference record
+  const inferenceId: string = await ctx.runMutation(
+    internal.inferences.upsert,
+    {
+      z: tile.z,
+      x: tile.x,
+      y: tile.y,
+      imageUrl: tile.url,
+      model: ROBOFLOW_MODEL_NAME,
+      version: ROBOFLOW_MODEL_VERSION,
+      response: detections,
+    }
+  );
+
+  // Upsert inference predictions
+  const predictionIds = await Promise.all(
+    detections.predictions.map(async (prediction) => {
+      return await ctx.runMutation(internal.inference_predictions.upsert, {
+        inferenceId,
+        prediction,
+      });
+    })
+  );
+
+  console.log('[scanArea] upserted predictions', {
+    inferenceId,
+    predictionIds,
+  });
+
+  return {
+    result: {
+      z: tile.z,
+      x: tile.x,
+      y: tile.y,
+      url: tile.url,
+      detections,
+    },
+    scanTile: { z: tile.z, x: tile.x, y: tile.y },
+  };
+};
+
 export const scanArea = action({
   args: {
     latitude: v.number(),
     longitude: v.number(),
     query: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args: ScanAreaArgs): Promise<ScanAreaReturn> => {
+    const startTs = Date.now();
+
+    // Validate permissions
     const canScan = await ctx.runQuery(api.users.hasPermission, {
       permission: PERMISSIONS.SCANS.EXECUTE,
     });
@@ -28,34 +191,25 @@ export const scanArea = action({
       throw new Error('Unauthorized');
     }
 
-    const MODEL_NAME = ROBOFLOW_MODEL_NAME;
-    const MODEL_VERSION = ROBOFLOW_MODEL_VERSION;
-    const startTs = Date.now();
+    // Validate environment variables
+    const { mapboxToken, roboflowKey } = validateEnvironmentVariables();
+
+    // Log scan start
     console.log('[scanArea] start', {
       latitude: args.latitude,
       longitude: args.longitude,
       query: args.query ?? '',
     });
-    const mapboxToken = process.env[ENV_VARS.MAPBOX_API_KEY];
-    const roboflowKey = process.env[ENV_VARS.ROBOFLOW_API_KEY];
 
-    if (!mapboxToken) {
-      throw new Error('Missing MAPBOX_API_KEY environment variable');
-    }
-    if (!roboflowKey) {
-      throw new Error('Missing ROBOFLOW_API_KEY environment variable');
-    }
-
-    const radius = DEFAULT_TILE_RADIUS;
+    // Generate tile coverage
     const coverage = tilesInRadiusFromPoint(
       args.latitude,
       args.longitude,
-      radius,
+      DEFAULT_TILE_RADIUS,
       undefined,
-      {
-        accessToken: mapboxToken,
-      }
+      { accessToken: mapboxToken }
     );
+
     console.log('[scanArea] tiles generated', {
       zoom: coverage.zoom,
       count: coverage.tiles.length,
@@ -63,128 +217,45 @@ export const scanArea = action({
       cols: coverage.cols,
     });
 
-    // Look for an existing scan with same center & query
-    const existingScans: any[] = await ctx.runQuery(
-      internal.scans.findByCenter,
-      {
-        centerLat: args.latitude,
-        centerLong: args.longitude,
-        query: args.query ?? '',
-      }
+    // Find or create scan
+    const scanId: Id<'scans'> = await findOrCreateScan(
+      ctx,
+      args.latitude,
+      args.longitude,
+      args.query ?? ''
     );
-    let scanId: any = existingScans?.length ? existingScans[0]._id : undefined;
-    console.log('[scanArea] existing scan lookup', {
-      foundCount: existingScans?.length ?? 0,
-      reusedScanId: scanId ?? null,
-    });
 
-    if (!scanId) {
-      scanId = await ctx.runMutation(internal.scans.create, {
-        centerLat: args.latitude,
-        centerLong: args.longitude,
-      });
-      console.log('[scanArea] created new scan', { scanId });
-    }
-
-    // Build results by reusing or running inference per tile
-    const results: Array<{
-      z: number;
-      x: number;
-      y: number;
-      url: string;
-      detections: unknown;
-    }> = [];
-    const scanTiles: Array<{ z: number; x: number; y: number }> = [];
+    // Process all tiles
+    const results: ScanResult[] = [];
+    const scanTiles: ScanTile[] = [];
 
     for (let i = 0; i < coverage.tiles.length; i++) {
-      const tile = coverage.tiles[i];
-      console.log('[scanArea] processing tile', {
-        index: i + 1,
-        total: coverage.tiles.length,
-        z: tile.z,
-        x: tile.x,
-        y: tile.y,
-        url: tile.url,
-      });
-
-      // Check if we've already scanned this tile with the same model/version
-      const existing = await ctx.runQuery(internal.inferences.getLatestByTile, {
-        z: tile.z,
-        x: tile.x,
-        y: tile.y,
-        model: MODEL_NAME,
-        version: MODEL_VERSION,
-      });
-
-      let detections: RoboflowResponse = existing?.response;
-      if (!detections) {
-        detections = await detectObjectsWithRoboflow(
-          tile.url,
-          roboflowKey,
-          MODEL_NAME,
-          MODEL_VERSION
-        );
-      }
-
-      const predictionsCount = Array.isArray(detections.predictions)
-        ? detections.predictions.length
-        : undefined;
-      console.log('[scanArea] inference ready', {
-        index: i + 1,
-        predictionsCount,
-        reused: Boolean(existing),
-      });
-
-      // Upsert inference record
-      const inferenceId = await ctx.runMutation(internal.inferences.upsert, {
-        z: tile.z,
-        x: tile.x,
-        y: tile.y,
-        imageUrl: tile.url,
-        model: MODEL_NAME,
-        version: MODEL_VERSION,
-        response: detections,
-      });
-
-      // Upsert inference predictions
-      const predictionIds = await Promise.all(
-        detections.predictions.map(async (prediction) => {
-          return await ctx.runMutation(internal.inference_predictions.upsert, {
-            inferenceId,
-            prediction,
-          });
-        })
+      const { result, scanTile } = await processTile(
+        ctx,
+        coverage.tiles[i],
+        i,
+        coverage.tiles.length,
+        roboflowKey
       );
 
-      console.log('[scanArea] upserted predictions', {
-        inferenceId,
-        predictionIds,
-      });
-
-      // Store tile coordinates (without URL) in scan
-      scanTiles.push({ z: tile.z, x: tile.x, y: tile.y });
-
-      results.push({
-        z: tile.z,
-        x: tile.x,
-        y: tile.y,
-        url: tile.url,
-        detections,
-      });
+      results.push(result);
+      scanTiles.push(scanTile);
     }
 
-    // Store tile coordinates on the scan
+    // Update scan with tile coordinates
     await ctx.runMutation(internal.scans.updateTiles, {
       scanId,
       tiles: scanTiles,
     });
 
+    // Log completion and return results
     const endTs = Date.now();
     console.log('[scanArea] done', {
       scanId,
       resultsCount: results.length,
       durationMs: endTs - startTs,
     });
+
     return {
       scanId,
       zoom: coverage.zoom,
