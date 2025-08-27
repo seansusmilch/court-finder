@@ -15,13 +15,11 @@ export default defineSchema({
   scans: defineTable({
     centerLat: v.number(),
     centerLong: v.number(),
-    centerTile: v.optional(
-      v.object({
-        z: v.number(),
-        x: v.number(),
-        y: v.number(),
-      })
-    ),
+    centerTile: v.object({
+      z: v.number(),
+      x: v.number(),
+      y: v.number(),
+    }),
     tiles: v.array(
       v.object({
         z: v.number(),
@@ -30,7 +28,9 @@ export default defineSchema({
       })
     ),
     userId: v.optional(v.id('users')),
-  }).index('by_center', ['centerLat', 'centerLong']),
+  })
+    .index('by_center', ['centerLat', 'centerLong'])
+    .index('by_center_tile', ['centerTile']),
   inferences: defineTable({
     // Slippy tile coordinates
     z: v.number(),

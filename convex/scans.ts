@@ -2,19 +2,21 @@ import { api } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { PERMISSIONS } from './lib/constants';
+import { pointToTile } from './lib/tiles';
 
-export const findByCenter = internalQuery({
+export const findByCenterTile = internalQuery({
   args: {
-    centerLat: v.number(),
-    centerLong: v.number(),
+    centerTile: v.object({
+      z: v.number(),
+      x: v.number(),
+      y: v.number(),
+    }),
   },
   handler: async (ctx, args) => {
-    console.log('[scans.findByCenter] args', args);
+    console.log('[scans.findByCenterTile] args', args);
     return await ctx.db
       .query('scans')
-      .withIndex('by_center', (q) =>
-        q.eq('centerLat', args.centerLat).eq('centerLong', args.centerLong)
-      )
+      .withIndex('by_center_tile', (q) => q.eq('centerTile', args.centerTile))
       .collect();
   },
 });
@@ -31,6 +33,7 @@ export const create = internalMutation({
     const id = await ctx.db.insert('scans', {
       centerLat: args.centerLat,
       centerLong: args.centerLong,
+      centerTile: pointToTile(args.centerLat, args.centerLong),
       tiles: [],
       userId: args.userId,
     });

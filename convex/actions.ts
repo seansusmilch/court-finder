@@ -5,6 +5,7 @@ import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import {
   detectObjectsWithRoboflow,
+  pointToTile,
   RoboflowResponse,
   tilesInRadiusFromPoint,
 } from './lib';
@@ -69,9 +70,8 @@ const findOrCreateScan = async (
   longitude: number,
   userId: Id<'users'>
 ): Promise<Id<'scans'>> => {
-  const existingScans: any[] = await ctx.runQuery(internal.scans.findByCenter, {
-    centerLat: latitude,
-    centerLong: longitude,
+  const existingScans = await ctx.runQuery(internal.scans.findByCenterTile, {
+    centerTile: pointToTile(latitude, longitude),
   });
 
   if (existingScans?.length) {
