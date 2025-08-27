@@ -1,11 +1,5 @@
 import type { RoboflowPrediction } from './roboflow';
-
-export const MAPBOX_TILE_DEFAULTS = {
-  username: 'mapbox',
-  styleId: 'satellite-v9',
-  tileSize: 512 as 256 | 512,
-  zoom: 15,
-} as const;
+import { MAPBOX_TILE_DEFAULTS } from './constants';
 
 export type TileCoordinate = {
   z: number;

@@ -16,7 +16,6 @@ import type * as inference_predictions from "../inference_predictions.js";
 import type * as inferences from "../inferences.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_index from "../lib/index.js";
-import type * as lib_mapbox from "../lib/mapbox.js";
 import type * as lib_roboflow from "../lib/roboflow.js";
 import type * as lib_tiles from "../lib/tiles.js";
 import type * as migrations from "../migrations.js";
@@ -47,7 +46,6 @@ declare const fullApi: ApiFromModules<{
   inferences: typeof inferences;
   "lib/constants": typeof lib_constants;
   "lib/index": typeof lib_index;
-  "lib/mapbox": typeof lib_mapbox;
   "lib/roboflow": typeof lib_roboflow;
   "lib/tiles": typeof lib_tiles;
   migrations: typeof migrations;

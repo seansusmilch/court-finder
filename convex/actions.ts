@@ -14,6 +14,7 @@ import {
   DEFAULT_TILE_RADIUS,
   ENV_VARS,
 } from './lib/constants';
+import { getAuthUserId } from '@convex-dev/auth/server';
 
 // Types
 type ScanResult = {
@@ -33,7 +34,6 @@ type ScanTile = {
 type ScanAreaArgs = {
   latitude: number;
   longitude: number;
-  query?: string;
 };
 
 type ScanAreaReturn = {
@@ -66,12 +66,11 @@ const findOrCreateScan = async (
   ctx: any,
   latitude: number,
   longitude: number,
-  query: string
+  userId: Id<'users'>
 ): Promise<Id<'scans'>> => {
   const existingScans: any[] = await ctx.runQuery(internal.scans.findByCenter, {
     centerLat: latitude,
     centerLong: longitude,
-    query,
   });
 
   if (existingScans?.length) {
@@ -84,6 +83,7 @@ const findOrCreateScan = async (
   const scanId: Id<'scans'> = await ctx.runMutation(internal.scans.create, {
     centerLat: latitude,
     centerLong: longitude,
+    userId,
   });
   console.log('[scanArea] created new scan', { scanId });
   return scanId;
@@ -178,7 +178,6 @@ export const scanArea = action({
   args: {
     latitude: v.number(),
     longitude: v.number(),
-    query: v.optional(v.string()),
   },
   handler: async (ctx, args: ScanAreaArgs): Promise<ScanAreaReturn> => {
     const startTs = Date.now();
@@ -187,7 +186,8 @@ export const scanArea = action({
     const canScan = await ctx.runQuery(api.users.hasPermission, {
       permission: PERMISSIONS.SCANS.EXECUTE,
     });
-    if (!canScan) {
+    const userId = await getAuthUserId(ctx);
+    if (!canScan || !userId) {
       throw new Error('Unauthorized');
     }
 
@@ -198,7 +198,6 @@ export const scanArea = action({
     console.log('[scanArea] start', {
       latitude: args.latitude,
       longitude: args.longitude,
-      query: args.query ?? '',
     });
 
     // Generate tile coverage
@@ -222,7 +221,7 @@ export const scanArea = action({
       ctx,
       args.latitude,
       args.longitude,
-      args.query ?? ''
+      userId
     );
 
     // Process all tiles

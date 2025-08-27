@@ -32,6 +32,14 @@ export const ROBOFLOW_MODEL_VERSION = '4';
 // Map tile coverage configuration
 export const DEFAULT_TILE_RADIUS = 1;
 
+// Mapbox tile configuration
+export const MAPBOX_TILE_DEFAULTS = {
+  username: 'mapbox',
+  styleId: 'satellite-v9',
+  tileSize: 512 as 256 | 512,
+  zoom: 15,
+} as const;
+
 // Environment variable names used by backend actions
 export const ENV_VARS = {
   MAPBOX_API_KEY: 'MAPBOX_API_KEY',

@@ -2,12 +2,12 @@ import { api } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { PERMISSIONS } from './lib/constants';
+import { getAuthUserId } from '@convex-dev/auth/server';
 
 export const findByCenter = internalQuery({
   args: {
     centerLat: v.number(),
     centerLong: v.number(),
-    query: v.string(),
   },
   handler: async (ctx, args) => {
     console.log('[scans.findByCenter] args', args);
@@ -24,13 +24,16 @@ export const create = internalMutation({
   args: {
     centerLat: v.number(),
     centerLong: v.number(),
+    userId: v.id('users'),
   },
   handler: async (ctx, args) => {
     console.log('[scans.create] creating scan', args);
+
     const id = await ctx.db.insert('scans', {
       centerLat: args.centerLat,
       centerLong: args.centerLong,
       tiles: [],
+      userId: args.userId,
     });
     console.log('[scans.create] created', { id });
     return id;
