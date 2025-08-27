@@ -10,6 +10,7 @@
 
 import type * as actions from "../actions.js";
 import type * as auth from "../auth.js";
+import type * as feedback_submissions from "../feedback_submissions.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as inference_predictions from "../inference_predictions.js";
@@ -40,6 +41,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   auth: typeof auth;
+  feedback_submissions: typeof feedback_submissions;
   healthCheck: typeof healthCheck;
   http: typeof http;
   inference_predictions: typeof inference_predictions;

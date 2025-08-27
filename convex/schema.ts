@@ -60,5 +60,5 @@ export default defineSchema({
     predictionId: v.id('inference_predictions'),
     userId: v.id('users'),
     userResponse: v.string(),
-  }),
+  }).index('by_user_and_prediction', ['userId', 'predictionId']),
 });

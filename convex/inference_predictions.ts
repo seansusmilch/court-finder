@@ -1,5 +1,6 @@
-import { internalMutation } from './_generated/server';
+import { internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
+import { getAuthUserId } from '@convex-dev/auth/server';
 
 /**
  * Upsert an inference prediction: if a prediction with the same inferenceId and detection_id exists, update it; otherwise, insert a new one.
@@ -56,5 +57,49 @@ export const upsert = internalMutation({
       });
       return id;
     }
+  },
+});
+
+export const getNextPredictionForFeedback = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    let cursor = null;
+    do {
+      const result = await ctx.db
+        .query('inference_predictions')
+        .order('asc')
+        .paginate({ cursor, numItems: 100 });
+      for (const prediction of result.page) {
+        const feedback = await ctx.db
+          .query('feedback_submissions')
+          .withIndex('by_user_and_prediction', (q) =>
+            q.eq('userId', userId).eq('predictionId', prediction._id)
+          )
+          .first();
+
+        if (!feedback) {
+          const inference = await ctx.db.get(prediction.inferenceId);
+          if (inference) {
+            const imageWidth = inference.response?.image?.width;
+            const imageHeight = inference.response?.image?.height;
+            return {
+              prediction,
+              inference: {
+                ...inference,
+                imageWidth,
+                imageHeight,
+              },
+            };
+          }
+        }
+      }
+      cursor = result.continueCursor;
+    } while (cursor);
+
+    return null;
   },
 });
