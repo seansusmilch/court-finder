@@ -2,6 +2,7 @@ import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api.js';
 import type { DataModel } from './_generated/dataModel.js';
 import { RoboflowPrediction } from './lib/roboflow.js';
+import { pointToTile } from './lib/tiles.js';
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -25,6 +26,15 @@ export const migratePredictions = migrations.define({
   },
 });
 
+export const migrateScansCenterTile = migrations.define({
+  table: 'scans',
+  migrateOne: async (ctx, doc) => {
+    const centerTile = pointToTile(doc.centerLat, doc.centerLong);
+    return { centerTile };
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.migratePredictions,
+  internal.migrations.migrateScansCenterTile,
 ]);

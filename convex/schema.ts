@@ -15,6 +15,13 @@ export default defineSchema({
   scans: defineTable({
     centerLat: v.number(),
     centerLong: v.number(),
+    centerTile: v.optional(
+      v.object({
+        z: v.number(),
+        x: v.number(),
+        y: v.number(),
+      })
+    ),
     tiles: v.array(
       v.object({
         z: v.number(),

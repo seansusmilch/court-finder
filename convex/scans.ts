@@ -2,7 +2,6 @@ import { api } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { PERMISSIONS } from './lib/constants';
-import { getAuthUserId } from '@convex-dev/auth/server';
 
 export const findByCenter = internalQuery({
   args: {
