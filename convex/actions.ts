@@ -3,12 +3,10 @@ import { action } from './_generated/server';
 import { v } from 'convex/values';
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
-import {
-  detectObjectsWithRoboflow,
-  pointToTile,
-  RoboflowResponse,
-  tilesInRadiusFromPoint,
-} from './lib';
+import { detectObjectsWithRoboflow, pointToTile, tilesInRadiusFromPoint } from './lib';
+import type { RoboflowResponse } from './lib/roboflow';
+import type { ActionCtx } from './_generated/server';
+import type { TileCoordinate } from './lib/tiles';
 import {
   PERMISSIONS,
   ROBOFLOW_MODEL_NAME,
@@ -65,7 +63,7 @@ const validateEnvironmentVariables = (): {
 };
 
 const findOrCreateScan = async (
-  ctx: any,
+  ctx: ActionCtx,
   latitude: number,
   longitude: number,
   userId: Id<'users'>
@@ -90,9 +88,11 @@ const findOrCreateScan = async (
   return scanId;
 };
 
+type TileWithUrl = TileCoordinate & { url: string };
+
 const processTile = async (
-  ctx: any,
-  tile: any,
+  ctx: ActionCtx,
+  tile: TileWithUrl,
   index: number,
   total: number,
   roboflowKey: string
@@ -135,7 +135,7 @@ const processTile = async (
   });
 
   // Upsert inference record
-  const inferenceId: string = await ctx.runMutation(
+  const inferenceId: Id<'inferences'> = await ctx.runMutation(
     internal.inferences.upsert,
     {
       z: tile.z,

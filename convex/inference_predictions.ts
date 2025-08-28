@@ -59,5 +59,3 @@ export const upsert = internalMutation({
     }
   },
 });
-
-// Removed unused getNextPredictionForFeedback query; feedback flow lives in convex/feedback_submissions.ts

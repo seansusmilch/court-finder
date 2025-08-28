@@ -13,7 +13,7 @@ import {
 
 export const Route = createFileRoute('/')({
   component: HomeComponent,
-  beforeLoad: async ({ context }) => {},
+  beforeLoad: async () => {},
 });
 
 function HomeComponent() {
@@ -37,12 +37,12 @@ function HomeComponent() {
                   <Link to={'/login'}>Get started</Link>
                 </Button>
                 <Button asChild variant='outline'>
-                  <Link to={'/map' as any}>Explore the map</Link>
+                  <Link to={'/map'}>Explore the map</Link>
                 </Button>
               </Unauthenticated>
               <Authenticated>
                 <Button asChild>
-                  <Link to={'/map' as any}>Open map</Link>
+                  <Link to={'/map'}>Open map</Link>
                 </Button>
                 <Button asChild variant='outline'>
                   <Link to={'/scans'}>Run a scan</Link>
@@ -123,11 +123,11 @@ function HomeComponent() {
                 project maintainers and contributors shall not be liable for any
                 injury, damage, citation, or loss arising from your use of the
                 information. See our{' '}
-                <Link to={'/terms' as any} className='underline'>
+                <Link to={'/terms'} className='underline'>
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link to={'/privacy' as any} className='underline'>
+                <Link to={'/privacy'} className='underline'>
                   Privacy Policy
                 </Link>
                 .

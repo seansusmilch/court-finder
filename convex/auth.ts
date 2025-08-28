@@ -1,6 +1,7 @@
 import { convexAuth } from '@convex-dev/auth/server';
 import { Password } from '@convex-dev/auth/providers/Password';
-import { MutationCtx } from './_generated/server';
+import type { MutationCtx } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
 import {
   DEFAULT_ANONYMOUS_PERMISSIONS,
   DEFAULT_USER_PERMISSIONS,
@@ -9,7 +10,16 @@ import {
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Password],
   callbacks: {
-    async createOrUpdateUser(ctx: MutationCtx, args: any) {
+    async createOrUpdateUser(
+      ctx: MutationCtx,
+      args: {
+        existingUserId: Id<'users'> | null;
+        type: 'email' | 'credentials' | 'oauth' | 'phone' | 'verification';
+        provider: unknown;
+        profile: Record<string, unknown> & { email?: string | null };
+        shouldLink?: boolean;
+      }
+    ) {
       console.log('createOrUpdateUser', args);
       if (args.existingUserId) {
         return args.existingUserId;

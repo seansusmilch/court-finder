@@ -12,11 +12,11 @@ function RouteComponent() {
   return (
     <div className='p-4 space-y-2'>
       <Input
-        value={(search as any).query}
+        value={(search as { query?: string }).query ?? ''}
         onChange={(e) =>
           navigate({
             to: '.',
-            search: (old) => ({ ...old, query: e.target.value }),
+            search: (old: Record<string, unknown>) => ({ ...old, query: e.target.value }),
             replace: true,
             resetScroll: false,
           })

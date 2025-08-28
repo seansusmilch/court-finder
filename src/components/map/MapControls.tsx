@@ -45,25 +45,23 @@ function ControlsBody({
   return (
     <div className='space-y-3'>
       <div className='w-full'>
-        {/* @ts-expect-error - SearchBox is not typed */}
-
+        {/* SearchBox from @mapbox/search-js-react */}
+        {/** @ts-expect-error ForwardRefExoticComponent typing vs React 19 JSX inference */}
         <SearchBox
           accessToken={accessToken as string}
-          onRetrieve={(res: any) => {
-            const feature = res?.features?.[0];
-            const coords =
-              (feature?.geometry?.coordinates as
-                | [number, number]
-                | undefined) ??
-              (feature?.properties?.coordinates as
-                | [number, number]
-                | undefined);
+          onRetrieve={(res) => {
+            const feature = (res as any)?.features?.[0];
+            let coords: [number, number] | undefined;
+            const geomCoords = feature?.geometry?.coordinates;
+            if (Array.isArray(geomCoords) && geomCoords.length >= 2) {
+              coords = [Number(geomCoords[0]), Number(geomCoords[1])];
+            }
+            const propCoords = feature?.properties?.coordinates;
+            if (!coords && Array.isArray(propCoords) && propCoords.length >= 2) {
+              coords = [Number(propCoords[0]), Number(propCoords[1])];
+            }
             if (coords && mapRef.current) {
-              mapRef.current.easeTo({
-                center: coords,
-                zoom: 14,
-                duration: 800,
-              });
+              mapRef.current.easeTo({ center: coords, zoom: 14, duration: 800 });
             }
           }}
         />

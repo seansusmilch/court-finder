@@ -1,7 +1,7 @@
 import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api.js';
 import type { DataModel } from './_generated/dataModel.js';
-import { RoboflowPrediction, RoboflowResponse } from './lib/roboflow.js';
+import type { RoboflowPrediction, RoboflowResponse } from './lib/roboflow.js';
 import { pointToTile } from './lib/tiles.js';
 
 export const migrations = new Migrations<DataModel>(components.migrations);

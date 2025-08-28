@@ -94,14 +94,19 @@ function MapPage() {
     const features = event.features;
     if (!features || features.length === 0) return;
 
-    const clusterId = features[0].properties?.cluster_id;
-    const mapboxSource = event.target.getSource('courts') as any;
+    const clusterId = features[0].properties?.cluster_id as number | undefined;
+    const mapboxSource = event.target.getSource('courts') as {
+      getClusterExpansionZoom: (
+        id: number,
+        cb: (err: unknown, zoom: number) => void
+      ) => void;
+    } | null;
 
     if (!clusterId || !mapboxSource) return;
 
     mapboxSource.getClusterExpansionZoom(
       clusterId,
-      (err: any, zoom: number) => {
+      (err: unknown, zoom: number) => {
         if (err) return;
         event.target.easeTo({
           center: [event.lngLat.lng, event.lngLat.lat],
@@ -167,7 +172,12 @@ function MapPage() {
       : 'skip'
   ) as GeoJSONFeatureCollection | undefined;
 
-  const computeBbox = (map: any) => {
+  const computeBbox = (map: { getBounds?: () => {
+    getSouth: () => number;
+    getWest: () => number;
+    getNorth: () => number;
+    getEast: () => number;
+  } | undefined }) => {
     const bounds = map?.getBounds?.();
     if (!bounds) return null;
     return {
@@ -178,22 +188,33 @@ function MapPage() {
     } as NonNullable<typeof bbox>;
   };
 
-  const onMoveEnd = useCallback((evt: any) => {
-    const { viewState: newViewState } = evt;
-    setViewState(newViewState);
+  const onMoveEnd = useCallback((evt: unknown) => {
+    const { viewState, target } = evt as {
+      viewState: MapViewState;
+      target: {
+        getBounds?: () =>
+          | {
+              getSouth: () => number;
+              getWest: () => number;
+              getNorth: () => number;
+              getEast: () => number;
+            }
+          | null
+          | undefined;
+      };
+    };
+    setViewState(viewState);
     try {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           MAP_VIEW_STATE_KEY,
-          JSON.stringify({
-            longitude: newViewState.longitude,
-            latitude: newViewState.latitude,
-            zoom: newViewState.zoom,
-          })
+          JSON.stringify({ longitude: viewState.longitude, latitude: viewState.latitude, zoom: viewState.zoom })
         );
       }
     } catch {}
-    const newBbox = computeBbox(evt.target);
+    const newBbox = computeBbox({
+      getBounds: () => target.getBounds?.() ?? undefined,
+    });
     if (newBbox) setBbox(newBbox);
   }, []);
 
@@ -242,7 +263,9 @@ function MapPage() {
         mapStyle={MAP_STYLE_SATELLITE}
         onMoveEnd={onMoveEnd}
         onLoad={(e) => {
-          const b = computeBbox(e.target);
+          const b = computeBbox({
+            getBounds: () => e.target.getBounds?.() ?? undefined,
+          });
           if (b) setBbox(b);
         }}
         interactiveLayerIds={['clusters']}

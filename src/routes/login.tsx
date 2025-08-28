@@ -22,6 +22,7 @@ import { useRouter } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
 
 export const Route = createFileRoute('/login')({
+  validateSearch: (s: { redirect?: string }) => s,
   beforeLoad: async ({ context }) => {
     if (context.me) throw redirect({ to: '/' });
   },
@@ -33,9 +34,7 @@ function AuthPage() {
   const router = useRouter();
   const { signIn } = useAuthActions();
   const { isAuthenticated } = useConvexAuth();
-  const { redirect: redirectTo } = useSearch({ from: '/login' }) as {
-    redirect?: string;
-  };
+  const { redirect: redirectTo } = Route.useSearch();
   const [step, setStep] = useState<'signUp' | 'signIn'>('signIn');
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -65,7 +64,7 @@ function AuthPage() {
           // ignore malformed redirect
         }
       }
-      navigate({ to: to as any });
+      navigate({ to });
     }
   }, [isAuthenticated, navigate, router]);
 
