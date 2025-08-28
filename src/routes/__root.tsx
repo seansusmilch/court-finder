@@ -8,6 +8,7 @@ import {
   createRootRouteWithContext,
   useRouterState,
   Link,
+  useLocation,
 } from '@tanstack/react-router';
 import { api } from '@backend/_generated/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
@@ -61,6 +62,11 @@ function RootComponent() {
   const { isAuthenticated } = useConvexAuth();
   const ensureDefaults = useMutation(api.users.ensureDefaultPermissions);
   const router = useRouter();
+  const location = useLocation();
+
+  // Routes where we don't want to show the footer
+  const hideFooterRoutes = ['/map', '/training-feedback'];
+  const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
 
   useEffect(() => {
     // When auth status changes (e.g., after login)
@@ -82,22 +88,30 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey='vite-ui-theme'
       >
-        <div className='grid grid-rows-[auto_1fr_auto] h-svh'>
+        <div
+          className={`grid ${
+            shouldHideFooter
+              ? 'grid-rows-[auto_1fr]'
+              : 'grid-rows-[auto_1fr_auto]'
+          } h-dvh`}
+        >
           <Header />
           {isFetching ? <Loader /> : <Outlet />}
-          <footer className='border-t text-sm text-muted-foreground'>
-            <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
-              <span>© {new Date().getFullYear()} Court Finder</span>
-              <nav className='flex gap-4'>
-                <Link to={'/terms'} className='hover:underline'>
-                  Terms
-                </Link>
-                <Link to={'/privacy'} className='hover:underline'>
-                  Privacy
-                </Link>
-              </nav>
-            </div>
-          </footer>
+          {!shouldHideFooter && (
+            <footer className='border-t text-sm text-muted-foreground'>
+              <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
+                <span>© {new Date().getFullYear()} Court Finder</span>
+                <nav className='flex gap-4'>
+                  <Link to={'/terms'} className='hover:underline'>
+                    Terms
+                  </Link>
+                  <Link to={'/privacy'} className='hover:underline'>
+                    Privacy
+                  </Link>
+                </nav>
+              </div>
+            </footer>
+          )}
         </div>
         <Toaster richColors />
       </ThemeProvider>
