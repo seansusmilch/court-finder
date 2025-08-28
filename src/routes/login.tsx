@@ -21,7 +21,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
 
-export const Route = createFileRoute('/login' as const)({
+export const Route = createFileRoute('/login')({
   beforeLoad: async ({ context }) => {
     const ctx = context as unknown as { me?: unknown };
     if (ctx.me) throw redirect({ to: '/' });

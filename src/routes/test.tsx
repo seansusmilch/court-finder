@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Input } from '@/components/ui/input';
 
-export const Route = createFileRoute('/test' as const)({
+export const Route = createFileRoute('/test')({
   component: RouteComponent,
 });
 

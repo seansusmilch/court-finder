@@ -20,7 +20,7 @@ type ScanResult = {
   }>;
 };
 
-export const Route = createFileRoute('/_authed/scans' as const)({
+export const Route = createFileRoute('/_authed/scans')({
   component: ScansPage,
   beforeLoad: async ({ context }) => {
     if (!context.me)
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/_authed/scans' as const)({
 });
 
 function ScansPage() {
-  const search = useSearch({ from: '/_authed/scans' as const }) as {
+  const search = useSearch({ from: '/_authed/scans' }) as {
     scanId?: string;
   };
   const scanId = (search.scanId as Id<'scans'> | undefined) ?? undefined;

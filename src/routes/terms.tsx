@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-export const Route = createFileRoute('/terms' as const)({
+export const Route = createFileRoute('/terms')({
   component: TermsPage,
 });
 

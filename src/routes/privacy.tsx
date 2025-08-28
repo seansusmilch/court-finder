@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-export const Route = createFileRoute('/privacy' as const)({
+export const Route = createFileRoute('/privacy')({
   component: PrivacyPage,
 });
 

@@ -13,7 +13,7 @@ import {
 import type { Id } from '@/../convex/_generated/dataModel';
 import { getVisualForClass } from '@/lib/constants';
 
-export const Route = createFileRoute('/_authed/training-feedback' as const)({
+export const Route = createFileRoute('/_authed/training-feedback')({
   component: TrainingFeedbackPage,
   beforeLoad: async ({ context }) => {
     if (!context.me) {

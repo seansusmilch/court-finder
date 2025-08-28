@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-export const Route = createFileRoute('/' as const)({
+export const Route = createFileRoute('/')({
   component: HomeComponent,
   beforeLoad: async () => {},
 });

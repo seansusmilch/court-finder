@@ -73,7 +73,7 @@ const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   features: [],
 };
 
-export const Route = createFileRoute('/map' as const)({
+export const Route = createFileRoute('/map')({
   loader: () => getInitialViewState(),
   component: MapPage,
 });
