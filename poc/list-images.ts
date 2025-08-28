@@ -9,16 +9,9 @@ const ROBOFLOW_SETTINGS = {
 /**
  * Fetches image data from Roboflow API
  * @param imageId - The ID of the image to fetch
+ * @returns Promise with the image data
  */
-type RoboflowImageResponse = {
-  id: string;
-  name?: string;
-  height?: number;
-  width?: number;
-  [key: string]: unknown;
-};
-
-async function fetchRoboflowImage(imageId: string): Promise<RoboflowImageResponse> {
+async function fetchRoboflowImage(imageId: string): Promise<any> {
   const url = `https://api.roboflow.com/${ROBOFLOW_SETTINGS.workspaceName}/${ROBOFLOW_SETTINGS.datasetName}/images/${imageId}?api_key=${ROBOFLOW_SETTINGS.apiKey}`;
 
   try {
@@ -33,7 +26,7 @@ async function fetchRoboflowImage(imageId: string): Promise<RoboflowImageRespons
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = (await response.json()) as RoboflowImageResponse;
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error('Error fetching image from Roboflow:', error);
