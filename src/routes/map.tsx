@@ -73,7 +73,7 @@ const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   features: [],
 };
 
-export const Route = createFileRoute('/map')({
+export const Route = createFileRoute('/map' as const)({
   loader: () => getInitialViewState(),
   component: MapPage,
 });
@@ -188,32 +188,33 @@ function MapPage() {
     } as NonNullable<typeof bbox>;
   };
 
-  const onMoveEnd = useCallback((evt: {
-    viewState: MapViewState;
-    target: {
-      getBounds?: () => {
-        getSouth: () => number;
-        getWest: () => number;
-        getNorth: () => number;
-        getEast: () => number;
-      } | undefined;
+  const onMoveEnd = useCallback((evt: unknown) => {
+    const { viewState, target } = evt as {
+      viewState: MapViewState;
+      target: {
+        getBounds?: () =>
+          | {
+              getSouth: () => number;
+              getWest: () => number;
+              getNorth: () => number;
+              getEast: () => number;
+            }
+          | null
+          | undefined;
+      };
     };
-  }) => {
-    const { viewState: newViewState } = evt;
-    setViewState(newViewState);
+    setViewState(viewState);
     try {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           MAP_VIEW_STATE_KEY,
-          JSON.stringify({
-            longitude: newViewState.longitude,
-            latitude: newViewState.latitude,
-            zoom: newViewState.zoom,
-          })
+          JSON.stringify({ longitude: viewState.longitude, latitude: viewState.latitude, zoom: viewState.zoom })
         );
       }
     } catch {}
-    const newBbox = computeBbox(evt.target);
+    const newBbox = computeBbox({
+      getBounds: () => target.getBounds?.() ?? undefined,
+    });
     if (newBbox) setBbox(newBbox);
   }, []);
 
@@ -262,7 +263,9 @@ function MapPage() {
         mapStyle={MAP_STYLE_SATELLITE}
         onMoveEnd={onMoveEnd}
         onLoad={(e) => {
-          const b = computeBbox(e.target);
+          const b = computeBbox({
+            getBounds: () => e.target.getBounds?.() ?? undefined,
+          });
           if (b) setBbox(b);
         }}
         interactiveLayerIds={['clusters']}

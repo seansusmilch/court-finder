@@ -1,4 +1,4 @@
 export { DetectionFeedbackItem } from './DetectionFeedbackItem';
 export { DetectionImageView } from './DetectionImageView';
-export { FeedbackControls } from './FeedbackControls';
+// Removed: FeedbackControls does not exist
 export type { TrainingFeedbackItem, FeedbackSubmission } from './types';

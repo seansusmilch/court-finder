@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, AlertCircle, Check, X } from 'lucide-react';
 import { redirect, useNavigate } from '@tanstack/react-router';
+import type { RouterAppContext } from './__root';
 import { createFileRoute } from '@tanstack/react-router';
 import type { Id } from '@/../convex/_generated/dataModel';
 import { getVisualForClass } from '@/lib/constants';
 
-export const Route = createFileRoute('/_authed/training-feedback')({
+export const Route = createFileRoute('/_authed/training-feedback' as const)({
   component: TrainingFeedbackPage,
   beforeLoad: async ({ context }) => {
-    if (!context.me) {
+    if (!(context as RouterAppContext).me) {
       throw redirect({
         to: '/login',
         search: { redirect: '/training-feedback' },

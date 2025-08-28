@@ -1,22 +1,22 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Input } from '@/components/ui/input';
 
-export const Route = createFileRoute('/test')({
+export const Route = createFileRoute('/test' as const)({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const search = Route.useSearch<{ query?: string }>();
+  const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
   return (
     <div className='p-4 space-y-2'>
       <Input
-        value={search.query ?? ''}
+        value={(search as { query?: string }).query ?? ''}
         onChange={(e) =>
           navigate({
             to: '.',
-            search: (old) => ({ ...(old as { query?: string }), query: e.target.value }),
+            search: (old: Record<string, unknown>) => ({ ...old, query: e.target.value }),
             replace: true,
             resetScroll: false,
           })

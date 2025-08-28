@@ -13,8 +13,11 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     async createOrUpdateUser(
       ctx: MutationCtx,
       args: {
-        existingUserId?: Id<'users'>;
-        profile: { email?: string | null };
+        existingUserId: Id<'users'> | null;
+        type: 'email' | 'credentials' | 'oauth' | 'phone' | 'verification';
+        provider: unknown;
+        profile: Record<string, unknown> & { email?: string | null };
+        shouldLink?: boolean;
       }
     ) {
       console.log('createOrUpdateUser', args);
