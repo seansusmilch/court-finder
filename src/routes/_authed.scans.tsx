@@ -1,5 +1,4 @@
 import { createFileRoute, useSearch, redirect } from '@tanstack/react-router';
-import type { RouterAppContext } from './__root';
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@backend/_generated/api';
@@ -24,7 +23,7 @@ type ScanResult = {
 export const Route = createFileRoute('/_authed/scans' as const)({
   component: ScansPage,
   beforeLoad: async ({ context }) => {
-    if (!(context as RouterAppContext).me)
+    if (!context.me)
       throw redirect({ to: '/login', search: { redirect: '/_authed/scans' } });
   },
 });
