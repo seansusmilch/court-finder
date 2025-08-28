@@ -77,7 +77,11 @@ export const getFeedbackStats = query({
 export const submitFeedback = mutation({
   args: {
     predictionId: v.id('inference_predictions'),
-    userResponse: v.string(), // "yes" or "no"
+    userResponse: v.union(
+      v.literal('yes'),
+      v.literal('no'),
+      v.literal('unsure')
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

@@ -38,6 +38,10 @@ function ImageViewer({
   const [transform, setTransform] = useState({ scale: 1, x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const [pinchState, setPinchState] = useState<{
+    lastDistance: number;
+  } | null>(null);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -64,7 +68,9 @@ function ImageViewer({
     const rect = containerRef.current!.getBoundingClientRect();
     const zoomFactor = 1.1;
     const newScale =
-      e.deltaY < 0 ? transform.scale * zoomFactor : transform.scale / zoomFactor;
+      e.deltaY < 0
+        ? transform.scale * zoomFactor
+        : transform.scale / zoomFactor;
 
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -75,28 +81,76 @@ function ImageViewer({
     setTransform({ scale: newScale, x: newX, y: newY });
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
+    const rect = containerRef.current!.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    containerRef.current!.setPointerCapture(e.pointerId);
+    pointersRef.current.set(e.pointerId, { x, y });
+
+    if (pointersRef.current.size === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - transform.x, y: e.clientY - transform.y });
+    } else if (pointersRef.current.size === 2) {
+      const pts = Array.from(pointersRef.current.values());
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      const distance = Math.hypot(dx, dy);
+      setPinchState({ lastDistance: distance });
+      setIsDragging(false);
+    }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, { x, y });
+    }
+
+    if (pointersRef.current.size === 2 && pinchState) {
+      const pts = Array.from(pointersRef.current.values());
+      const midX = (pts[0].x + pts[1].x) / 2;
+      const midY = (pts[0].y + pts[1].y) / 2;
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      const distance = Math.hypot(dx, dy);
+      const scaleFactor = distance / pinchState.lastDistance;
+
+      setTransform((prev) => {
+        const newScale = prev.scale * scaleFactor;
+        const newX = midX - (midX - prev.x) * (newScale / prev.scale);
+        const newY = midY - (midY - prev.y) * (newScale / prev.scale);
+        return { scale: newScale, x: newX, y: newY };
+      });
+
+      setPinchState({ lastDistance: distance });
+      return;
+    }
+
+    if (isDragging && pointersRef.current.size === 1) {
+      e.preventDefault();
+      setTransform({
+        ...transform,
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    setTransform({
-      ...transform,
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
+  const endPointer = (e: React.PointerEvent) => {
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.delete(e.pointerId);
+    }
+    if (pointersRef.current.size < 2) {
+      setPinchState(null);
+    }
+    if (pointersRef.current.size === 0) {
+      setIsDragging(false);
+    }
   };
 
   return (
@@ -107,10 +161,10 @@ function ImageViewer({
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
       onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endPointer}
+      onPointerCancel={endPointer}
     >
       <div
         style={{
@@ -145,10 +199,12 @@ function ImageViewer({
 
 export function TrainingFeedbackPage() {
   const navigate = useNavigate();
-  const [skippedIds, setSkippedIds] = useState<Id<"inference_predictions">[]>(() => {
-    const savedSkips = localStorage.getItem('skippedIds');
-    return savedSkips ? JSON.parse(savedSkips) : [];
-  });
+  const [skippedIds, setSkippedIds] = useState<Id<'inference_predictions'>[]>(
+    () => {
+      const savedSkips = localStorage.getItem('skippedIds');
+      return savedSkips ? JSON.parse(savedSkips) : [];
+    }
+  );
 
   useEffect(() => {
     localStorage.setItem('skippedIds', JSON.stringify(skippedIds));
@@ -162,7 +218,7 @@ export function TrainingFeedbackPage() {
   const submitFeedback = useMutation(api.feedback_submissions.submitFeedback);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleFeedback = async (response: 'yes' | 'no') => {
+  const handleFeedback = async (response: 'yes' | 'no' | 'unsure') => {
     if (!feedbackData || isSubmitting) return;
     setIsSubmitting(true);
     try {
@@ -179,12 +235,15 @@ export function TrainingFeedbackPage() {
     }
   };
 
-  const handleSkip = () => {
+  const handleUnsure = async () => {
     if (!feedbackData) return;
+    await handleFeedback('unsure');
     setSkippedIds((prev) => [...prev, feedbackData.prediction._id]);
   };
 
-  const predictionsLeft = stats ? stats.totalPredictions - stats.userSubmissionCount - skippedIds.length : null;
+  const predictionsLeft = stats
+    ? stats.totalPredictions - stats.userSubmissionCount - skippedIds.length
+    : null;
 
   if (feedbackData === undefined) {
     return (
@@ -245,7 +304,7 @@ export function TrainingFeedbackPage() {
   return (
     <div className='container mx-auto px-4 py-8 flex flex-col items-center space-y-6'>
       {predictionsLeft !== null && (
-        <p className="text-center text-sm text-muted-foreground">
+        <p className='text-center text-sm text-muted-foreground'>
           {predictionsLeft} predictions left to evaluate
         </p>
       )}
@@ -273,10 +332,10 @@ export function TrainingFeedbackPage() {
         <Button
           size='lg'
           variant='outline'
-          onClick={handleSkip}
+          onClick={handleUnsure}
           disabled={isSubmitting}
         >
-          Skip
+          Unsure
         </Button>
         <Button
           size='lg'
