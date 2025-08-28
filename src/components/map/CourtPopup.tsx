@@ -3,11 +3,12 @@ import { Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import type { CourtFeatureProperties } from '@/lib/types';
 
 interface CourtPopupProps {
   longitude: number;
   latitude: number;
-  properties: Record<string, unknown>;
+  properties: CourtFeatureProperties;
   onClose: () => void;
 }
 
@@ -68,7 +69,7 @@ export function CourtPopup({
             <div className='text-xs'>
               <span className='text-muted-foreground'>Model:</span>
               <span className='text-muted-foreground'>
-                {` v${String(properties.version)}`}
+                {` v${properties.version}`}
               </span>
             </div>
           )}

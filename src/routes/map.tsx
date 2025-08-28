@@ -26,16 +26,17 @@ import {
   FLY_TO_DURATION_MS,
   MAPBOX_API_KEY,
 } from '@/lib/constants';
-
-type ViewState = {
-  longitude: number;
-  latitude: number;
-  zoom: number;
-};
+import type {
+  MapViewState,
+  GeoJSONFeatureCollection,
+  SelectedPin,
+  ViewportBbox,
+  CourtFeatureProperties,
+} from '@/lib/types';
 
 const MAP_VIEW_STATE_KEY = 'map.viewState';
 
-function getInitialViewState(): ViewState {
+function getInitialViewState(): MapViewState {
   if (typeof window === 'undefined') {
     return {
       longitude: DEFAULT_MAP_CENTER[0],
@@ -46,7 +47,7 @@ function getInitialViewState(): ViewState {
   try {
     const raw = window.localStorage.getItem(MAP_VIEW_STATE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as Partial<ViewState>;
+      const parsed = JSON.parse(raw) as Partial<MapViewState>;
       if (
         typeof parsed.longitude === 'number' &&
         typeof parsed.latitude === 'number' &&
@@ -67,22 +68,7 @@ function getInitialViewState(): ViewState {
   };
 }
 
-type FeatureCollection = {
-  type: 'FeatureCollection';
-  features: Array<{
-    type: 'Feature';
-    geometry: { type: 'Point'; coordinates: [number, number] };
-    properties: Record<string, unknown>;
-  }>;
-};
-
-type SelectedPin = {
-  longitude: number;
-  latitude: number;
-  properties: Record<string, unknown>;
-} | null;
-
-const EMPTY_FEATURE_COLLECTION: FeatureCollection = {
+const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   type: 'FeatureCollection',
   features: [],
 };
@@ -94,20 +80,15 @@ export const Route = createFileRoute('/map')({
 
 function MapPage() {
   const mapRef = useRef<MapRef | null>(null);
-  const initial = Route.useLoaderData() as ViewState;
-  const [viewState, setViewState] = useState<ViewState>(initial);
+  const initial = Route.useLoaderData() as MapViewState;
+  const [viewState, setViewState] = useState<MapViewState>(initial);
   const hasAutoGeolocatedRef = useRef(false);
 
-  const [bbox, setBbox] = useState<{
-    minLat: number;
-    minLng: number;
-    maxLat: number;
-    maxLng: number;
-  } | null>(null);
+  const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
   // We update state on move end, so no debouncing needed
 
-  const [selectedPin, setSelectedPin] = useState<SelectedPin>(null);
+  const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -143,10 +124,13 @@ function MapPage() {
     };
     const [longitude, latitude] = geometry.coordinates;
 
+    // Type assertion for properties - the convex query ensures this structure
+    const properties = feature.properties as CourtFeatureProperties;
+
     setSelectedPin({
       longitude,
       latitude,
-      properties: feature.properties || {},
+      properties,
     });
   }, []);
 
@@ -181,7 +165,7 @@ function MapPage() {
           confidenceThreshold,
         }
       : 'skip'
-  ) as FeatureCollection | undefined;
+  ) as GeoJSONFeatureCollection | undefined;
 
   const computeBbox = (map: any) => {
     const bounds = map?.getBounds?.();

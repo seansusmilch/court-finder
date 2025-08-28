@@ -1,15 +1,16 @@
 import { Marker } from 'react-map-gl/mapbox';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import type { CourtFeatureProperties } from '@/lib/types';
 
 interface CourtMarkerProps {
   longitude: number;
   latitude: number;
-  properties: Record<string, unknown>;
+  properties: CourtFeatureProperties;
   onClick: (
     longitude: number,
     latitude: number,
-    properties: Record<string, unknown>
+    properties: CourtFeatureProperties
   ) => void;
 }
 
