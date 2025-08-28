@@ -4,8 +4,12 @@ import { api } from '@/../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, AlertCircle, Check, X, HelpCircle } from 'lucide-react';
-import { redirect, useNavigate } from '@tanstack/react-router';
-import { createFileRoute } from '@tanstack/react-router';
+import {
+  redirect,
+  useNavigate,
+  Link,
+  createFileRoute,
+} from '@tanstack/react-router';
 import type { Id } from '@/../convex/_generated/dataModel';
 import { getVisualForClass } from '@/lib/constants';
 
@@ -160,7 +164,7 @@ function ImageViewer({
   return (
     <div
       ref={containerRef}
-      className='relative mx-auto rounded-lg overflow-hidden border touch-none w-full h-full max-w-[90vw] max-h-[60vh] sm:max-w-[500px] sm:max-h-[500px]'
+      className='relative mx-auto rounded-lg overflow-hidden border touch-none w-full h-full max-w-[90vw] max-h-[50vh] sm:max-w-[500px] sm:max-h-[400px]'
       style={{
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
@@ -305,9 +309,9 @@ export function TrainingFeedbackPage() {
   }
 
   return (
-    <div className='h-screen w-full flex flex-col'>
+    <div className='h-full w-full flex flex-col'>
       {/* Top section with help button and progress */}
-      <div className='flex justify-between items-center p-4 border-b'>
+      <div className='flex justify-between items-center p-4 flex-shrink-0'>
         <div className='flex items-center space-x-2'>
           {predictionsLeft !== null && (
             <span className='text-sm text-muted-foreground'>
@@ -316,66 +320,66 @@ export function TrainingFeedbackPage() {
           )}
         </div>
         <Button
+          asChild
           variant='ghost'
           size='sm'
-          onClick={() => navigate({ to: '/training-help' })}
           className='flex items-center space-x-2'
         >
-          <HelpCircle className='h-4 w-4' />
-          <span className='hidden sm:inline'>Help</span>
+          <Link to='/training-help'>
+            <HelpCircle className='h-4 w-4' />
+            <span className='hidden sm:inline'>Help</span>
+          </Link>
         </Button>
       </div>
 
-      {/* Main content area - takes remaining space */}
-      <div className='flex-1 flex flex-col items-center justify-center p-4 min-h-0'>
-        <div className='w-full h-full flex items-center justify-center'>
-          <ImageViewer
-            imageUrl={inference.imageUrl}
-            imageWidth={imageWidth}
-            imageHeight={imageHeight}
-            prediction={prediction}
-          />
-        </div>
+      {/* Main content area - fixed height for image viewer */}
+      <div className='flex flex-col items-center justify-center p-4 flex-shrink-0'>
+        <ImageViewer
+          imageUrl={inference.imageUrl}
+          imageWidth={imageWidth}
+          imageHeight={imageHeight}
+          prediction={prediction}
+        />
       </div>
 
-      {/* Bottom section with question and buttons */}
-      <div className='border-t bg-background p-4 space-y-4'>
+      {/* Bottom section with question and buttons - grows to fill remaining space */}
+      <div className='bg-background p-4 pb-20 space-y-4 flex-1 flex flex-col justify-end'>
         <div className='text-center'>
           <div className='text-lg font-medium flex items-center justify-center'>
             <span className='mr-2'>{emoji}</span> Is this a {displayName}?
           </div>
         </div>
-        
-        <div className='flex justify-center space-x-4'>
+
+        <div className='flex justify-center space-x-2 sm:space-x-4'>
           <Button
             size='lg'
             variant='outline'
-            className='bg-red-500 hover:bg-red-600 text-white flex-1 max-w-[120px]'
+            className='bg-red-500 hover:bg-red-600 text-white flex-1 max-w-[100px] sm:max-w-[120px]'
             onClick={() => handleFeedback('no')}
             disabled={isSubmitting}
           >
-            <X className='mr-2 h-6 w-6' /> No
+            <X className='mr-1 sm:mr-2 h-5 w-5 sm:h-6 sm:w-6' /> No
           </Button>
           <Button
             size='lg'
             variant='outline'
             onClick={handleUnsure}
             disabled={isSubmitting}
-            className='flex-1 max-w-[120px]'
+            className='flex-1 max-w-[100px] sm:max-w-[120px]'
           >
             Unsure
           </Button>
           <Button
             size='lg'
             variant='outline'
-            className='bg-green-500 hover:bg-green-600 text-white flex-1 max-w-[120px]'
+            className='bg-green-500 hover:bg-green-600 text-white flex-1 max-w-[100px] sm:max-w-[120px]'
             onClick={() => handleFeedback('yes')}
             disabled={isSubmitting}
           >
-            <Check className='mr-2 h-6 w-6' /> Yes
+            <Check className='mr-1 sm:mr-2 h-5 w-5 sm:h-6 sm:w-6' /> Yes
           </Button>
         </div>
-        
+
         {isSubmitting && (
           <div className='flex justify-center'>
             <Loader2 className='h-6 w-6 animate-spin' />
