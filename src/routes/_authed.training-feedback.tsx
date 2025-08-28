@@ -3,7 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, Check, X } from 'lucide-react';
+import { Loader2, AlertCircle, Check, X, HelpCircle } from 'lucide-react';
 import { redirect, useNavigate } from '@tanstack/react-router';
 import { createFileRoute } from '@tanstack/react-router';
 import type { Id } from '@/../convex/_generated/dataModel';
@@ -63,23 +63,27 @@ function ImageViewer({
     });
   }, [prediction, imageWidth, imageHeight, containerSize]);
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const rect = containerRef.current!.getBoundingClientRect();
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
     const zoomFactor = 1.1;
-    const newScale =
-      e.deltaY < 0
-        ? transform.scale * zoomFactor
-        : transform.scale / zoomFactor;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    const newX = mouseX - (mouseX - transform.x) * (newScale / transform.scale);
-    const newY = mouseY - (mouseY - transform.y) * (newScale / transform.scale);
-
-    setTransform({ scale: newScale, x: newX, y: newY });
-  };
+      setTransform((prev) => {
+        const newScale =
+          e.deltaY < 0 ? prev.scale * zoomFactor : prev.scale / zoomFactor;
+        const newX = mouseX - (mouseX - prev.x) * (newScale / prev.scale);
+        const newY = mouseY - (mouseY - prev.y) * (newScale / prev.scale);
+        return { scale: newScale, x: newX, y: newY };
+      });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [containerRef.current]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -156,11 +160,10 @@ function ImageViewer({
   return (
     <div
       ref={containerRef}
-      className='relative mx-auto rounded-lg overflow-hidden border touch-none w-[90vw] h-[90vw] sm:w-[500px] sm:h-[500px]'
+      className='relative mx-auto rounded-lg overflow-hidden border touch-none w-full h-full max-w-[90vw] max-h-[60vh] sm:max-w-[500px] sm:max-h-[500px]'
       style={{
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
-      onWheel={handleWheel}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={endPointer}
@@ -242,7 +245,7 @@ export function TrainingFeedbackPage() {
   };
 
   const predictionsLeft = stats
-    ? stats.totalPredictions - stats.userSubmissionCount - skippedIds.length
+    ? Math.max(0, stats.totalPredictions - stats.userSubmissionCount)
     : null;
 
   if (feedbackData === undefined) {
@@ -302,52 +305,83 @@ export function TrainingFeedbackPage() {
   }
 
   return (
-    <div className='container mx-auto px-4 py-8 flex flex-col items-center space-y-6'>
-      {predictionsLeft !== null && (
-        <p className='text-center text-sm text-muted-foreground'>
-          {predictionsLeft} predictions left to evaluate
-        </p>
-      )}
-      <h1 className='text-2xl font-bold text-center'>
-        {emoji} Is this a {displayName}?
-      </h1>
-
-      <ImageViewer
-        imageUrl={inference.imageUrl}
-        imageWidth={imageWidth}
-        imageHeight={imageHeight}
-        prediction={prediction}
-      />
-
-      <div className='flex space-x-4'>
+    <div className='h-screen w-full flex flex-col'>
+      {/* Top section with help button and progress */}
+      <div className='flex justify-between items-center p-4 border-b'>
+        <div className='flex items-center space-x-2'>
+          {predictionsLeft !== null && (
+            <span className='text-sm text-muted-foreground'>
+              {predictionsLeft} left
+            </span>
+          )}
+        </div>
         <Button
-          size='lg'
-          variant='outline'
-          className='bg-red-500 hover:bg-red-600 text-white'
-          onClick={() => handleFeedback('no')}
-          disabled={isSubmitting}
+          variant='ghost'
+          size='sm'
+          onClick={() => navigate({ to: '/training-help' })}
+          className='flex items-center space-x-2'
         >
-          <X className='mr-2 h-6 w-6' /> No
-        </Button>
-        <Button
-          size='lg'
-          variant='outline'
-          onClick={handleUnsure}
-          disabled={isSubmitting}
-        >
-          Unsure
-        </Button>
-        <Button
-          size='lg'
-          variant='outline'
-          className='bg-green-500 hover:bg-green-600 text-white'
-          onClick={() => handleFeedback('yes')}
-          disabled={isSubmitting}
-        >
-          <Check className='mr-2 h-6 w-6' /> Yes
+          <HelpCircle className='h-4 w-4' />
+          <span className='hidden sm:inline'>Help</span>
         </Button>
       </div>
-      {isSubmitting && <Loader2 className='h-6 w-6 animate-spin' />}
+
+      {/* Main content area - takes remaining space */}
+      <div className='flex-1 flex flex-col items-center justify-center p-4 min-h-0'>
+        <div className='w-full h-full flex items-center justify-center'>
+          <ImageViewer
+            imageUrl={inference.imageUrl}
+            imageWidth={imageWidth}
+            imageHeight={imageHeight}
+            prediction={prediction}
+          />
+        </div>
+      </div>
+
+      {/* Bottom section with question and buttons */}
+      <div className='border-t bg-background p-4 space-y-4'>
+        <div className='text-center'>
+          <div className='text-lg font-medium flex items-center justify-center'>
+            <span className='mr-2'>{emoji}</span> Is this a {displayName}?
+          </div>
+        </div>
+        
+        <div className='flex justify-center space-x-4'>
+          <Button
+            size='lg'
+            variant='outline'
+            className='bg-red-500 hover:bg-red-600 text-white flex-1 max-w-[120px]'
+            onClick={() => handleFeedback('no')}
+            disabled={isSubmitting}
+          >
+            <X className='mr-2 h-6 w-6' /> No
+          </Button>
+          <Button
+            size='lg'
+            variant='outline'
+            onClick={handleUnsure}
+            disabled={isSubmitting}
+            className='flex-1 max-w-[120px]'
+          >
+            Unsure
+          </Button>
+          <Button
+            size='lg'
+            variant='outline'
+            className='bg-green-500 hover:bg-green-600 text-white flex-1 max-w-[120px]'
+            onClick={() => handleFeedback('yes')}
+            disabled={isSubmitting}
+          >
+            <Check className='mr-2 h-6 w-6' /> Yes
+          </Button>
+        </div>
+        
+        {isSubmitting && (
+          <div className='flex justify-center'>
+            <Loader2 className='h-6 w-6 animate-spin' />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

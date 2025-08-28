@@ -24,29 +24,24 @@ The Training Feedback feature allows authenticated users to help improve the cou
 
 ### 2. Providing Feedback
 
-- **Primary Question**: "Is this a court/field?" with Yes/No buttons
-- **Secondary Input**: Optional text field for additional comments
-- **Keyboard Shortcuts**:
-  - Press `Y` for Yes
-  - Press `N` for No
-  - Press `Enter` to submit (after selecting Yes/No)
+- **Primary Question**: "Is this a court/field?" with Yes / No / Unsure buttons
+- The question appears next to the action buttons below the image
+- Submitting records feedback and automatically loads the next item
 
 ### 3. Navigation
 
-- **Previous/Next**: Navigate between different detections and inference results
-- **Skip**: Skip the current detection without providing feedback
-- **Progress**: Visual progress bar showing completion status
-- **Submit All**: Submit all collected feedback at once
+- **Auto-advance**: After answering, the next prediction is loaded automatically
+- **Unsure**: Use Unsure if you can't tell; it will move you to the next item
+- **Progress**: Text shows remaining predictions count
 
 ## Features
 
 ### Detection Image Display
 
 - **Full Image View**: Shows the complete satellite tile with detection overlay
-- **Bounding Box Overlay**: Red dashed border around detected objects
-- **Zoom & Pan**: Interactive image viewing with react-zoom-pan-pinch
-- **Auto-centering**: Automatically centers view on the current detection
-- **Detection Label**: Shows class name and confidence percentage above bounding box
+- **Bounding Box Overlay**: Red border around detected objects
+- **Zoom & Pan**: Interactive image viewing with mouse wheel, drag, and touch pinch
+- **Auto-fit**: Initial view zooms to show the detection with padding
 
 ### Progress Tracking
 
@@ -63,40 +58,15 @@ The Training Feedback feature allows authenticated users to help improve the cou
 
 ## Data Source
 
-The training data comes from the Convex `inferences` table, which contains:
+The feature reads from Convex tables and writes user feedback:
 
-- Satellite image tiles processed by the AI model
-- Model predictions with bounding box coordinates
-- Confidence scores and object classifications
-- Timestamp and model version information
+- `inference_predictions`: Individual predictions awaiting user review (with bbox, class, confidence).
+- `inferences`: Source image and metadata; provides `imageUrl`, `response.image.width`, and `response.image.height` for rendering.
+- `feedback_submissions`: Stores per-user feedback for each prediction (yes/no/unsure).
 
 ### Data Structure
 
-```typescript
-interface TrainingFeedbackItem {
-  id: string; // inference._id
-  imageUrl: string; // inference.imageUrl
-  imageWidth: number; // inference.response.image.width
-  imageHeight: number; // inference.response.image.height
-  tileInfo: {
-    z: number;
-    x: number;
-    y: number;
-  };
-  model: string;
-  version: string;
-  predictions: RoboflowPrediction[]; // from inference.response.predictions
-  requestedAt: number;
-}
-
-interface FeedbackSubmission {
-  itemId: string;
-  predictionId: string; // Format: "x-y-class"
-  isCourt: boolean;
-  comment?: string;
-  userId: string; // Currently hardcoded as 'current-user'
-}
-```
+Feedback is stored per prediction in `feedback_submissions` and linked to the authenticated user. Image dimensions come from the associated `inferences` row.
 
 ## User Experience
 
@@ -117,56 +87,50 @@ interface FeedbackSubmission {
 
 ### Components
 
-- `TrainingFeedbackPage`: Main page orchestrator with state management
-- `DetectionFeedbackItem`: Individual detection feedback interface
-- `DetectionImageView`: Image display with bounding box overlay and zoom/pan
-- `FeedbackControls`: Navigation and progress controls
-- `BoundingBoxOverlay`: SVG overlay for bounding boxes
+- `TrainingFeedbackPage` (in `src/routes/_authed.training-feedback.tsx`): Main page orchestrator with state management, data fetching, and submission.
+- `ImageViewer` (inline in `TrainingFeedbackPage`): Custom pan/zoom with mouse wheel, drag, and touch pinch; renders a red bounding box overlay.
 
 ### State Management
 
-- Local React state for current item, detection, and feedback
-- Map-based storage for submitted feedback per detection
-- Automatic navigation between detections and items
-- Progress tracking across multiple inference results
+- Local React state for skip tracking (stored in `localStorage`) and submission busy state
+- Server queries for stats and next item are handled via Convex `useQuery`
+- Auto-advance is driven by query refetch after submitting feedback
 
 ### Authentication
 
 - Uses Convex auth system
 - Redirects unauthenticated users to login
-- User ID tracking for feedback attribution (currently hardcoded)
+- Feedback is attributed to the authenticated user server-side
 
 ### Data Fetching
 
-- Uses `api.inferences.getTrainingData` Convex query
-- Filters by model and version constants
-- Limits to 50 items to prevent overwhelming users
-- Sorts by most recent inference results
+- `api.feedback_submissions.getNextPredictionForFeedback`
+- `api.feedback_submissions.getFeedbackStats`
+- `api.feedback_submissions.submitFeedback`
 
 ## Current Implementation Status
 
 ### ✅ Implemented
 
-- Complete UI for feedback collection
-- Image display with bounding box overlays
-- Navigation between detections and items
-- Progress tracking and submission
-- Keyboard shortcuts for quick feedback
-- Responsive design and mobile support
+- Auth-gated route at `/training-feedback` with redirect for unauthenticated users
+- Inline `ImageViewer` with pan/zoom and red bbox overlay
+- Yes / No / Unsure feedback; submission persists via Convex mutation
+- Auto-advance to the next prediction on submit
+- Remaining predictions count (non-negative)
+- "All Done" empty state when no more predictions
 
 ### ⚠️ Partially Implemented
 
-- **Feedback Storage**: Currently only stores in local state, not persisted to database
-- **User ID**: Hardcoded as 'current-user' instead of actual authenticated user ID
-- **Submit All**: Simulates submission with alert, no actual database persistence
+- Skips are local-only (stored in `localStorage`), not persisted server-side
+- Remaining count ignores local skips
+- No global progress bar UI
 
 ### ❌ Not Implemented
 
-- Database schema for storing user feedback
-- Feedback retrieval and analysis
-- User reputation system
-- Model retraining pipeline
-- Feedback analytics and insights
+- Keyboard shortcuts (Y/N/Enter)
+- Comment input
+- Previous/Next or batch submission controls
+- Analytics/reputation and model retraining integration
 
 ## Future Development Requirements
 
@@ -242,11 +206,9 @@ If you encounter issues or have questions about the training feedback feature:
 
 ### Key Files to Modify
 
-- `src/routes/training-feedback.tsx` - Main page logic
-- `src/components/training/DetectionFeedbackItem.tsx` - Feedback interface
-- `src/components/training/types.ts` - Type definitions
-- `convex/inferences.ts` - Database queries and mutations
-- `convex/schema.ts` - Database schema
+- `src/routes/_authed.training-feedback.tsx` — Main page logic, UI, and inline `ImageViewer`
+- `convex/feedback_submissions.ts` — Stats, next prediction, and submission
+- `convex/schema.ts` — Database schema (`inference_predictions`, `inferences`, `feedback_submissions`)
 
 ### Constants
 
