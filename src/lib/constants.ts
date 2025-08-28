@@ -7,7 +7,7 @@ export const DEFAULT_MAP_ZOOM = 15;
 export const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/satellite-v9';
 
 // Clustering
-export const CLUSTER_MAX_ZOOM = 14;
+export const CLUSTER_MAX_ZOOM = 13;
 export const CLUSTER_RADIUS = 50;
 
 // Search / geocoding (Mapbox SearchBox handles querying internally)
