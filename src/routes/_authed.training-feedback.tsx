@@ -3,7 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, Check, X, HelpCircle } from 'lucide-react';
+import { Loader2, AlertCircle, HelpCircle } from 'lucide-react';
 import {
   redirect,
   useNavigate,
@@ -358,7 +358,7 @@ export function TrainingFeedbackPage() {
             onClick={() => handleFeedback('no')}
             disabled={isSubmitting}
           >
-            <X className='mr-1 sm:mr-2 h-5 w-5 sm:h-6 sm:w-6' /> No
+            ❌ No
           </Button>
           <Button
             size='lg'
@@ -367,7 +367,7 @@ export function TrainingFeedbackPage() {
             disabled={isSubmitting}
             className='flex-1 max-w-[100px] sm:max-w-[120px]'
           >
-            Unsure
+            🤔 Unsure
           </Button>
           <Button
             size='lg'
@@ -376,7 +376,7 @@ export function TrainingFeedbackPage() {
             onClick={() => handleFeedback('yes')}
             disabled={isSubmitting}
           >
-            <Check className='mr-1 sm:mr-2 h-5 w-5 sm:h-6 sm:w-6' /> Yes
+            ✅ Yes
           </Button>
         </div>
 
