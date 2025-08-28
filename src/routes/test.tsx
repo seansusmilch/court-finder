@@ -6,17 +6,17 @@ export const Route = createFileRoute('/test')({
 });
 
 function RouteComponent() {
-  const search = Route.useSearch();
+  const search = Route.useSearch<{ query?: string }>();
   const navigate = useNavigate({ from: Route.fullPath });
 
   return (
     <div className='p-4 space-y-2'>
       <Input
-        value={(search as any).query}
+        value={search.query ?? ''}
         onChange={(e) =>
           navigate({
             to: '.',
-            search: (old) => ({ ...old, query: e.target.value }),
+            search: (old) => ({ ...(old as { query?: string }), query: e.target.value }),
             replace: true,
             resetScroll: false,
           })

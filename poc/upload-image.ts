@@ -7,7 +7,9 @@ const ROBOFLOW_SETTINGS = {
   imageName: '2a1302ea-0cc0-4079-8215-073a4a43909a.jpg',
 };
 
-async function uploadImage() {
+type UploadImageResponse = { success: boolean; id: string };
+
+async function uploadImage(): Promise<UploadImageResponse> {
   const url = `https://api.roboflow.com/dataset/${ROBOFLOW_SETTINGS.datasetName}/upload`;
 
   const params = new URLSearchParams({
@@ -26,7 +28,7 @@ async function uploadImage() {
     },
   });
 
-  const data = await response.json();
+  const data = (await response.json()) as UploadImageResponse;
   return data;
 }
 
@@ -43,3 +45,5 @@ if (require.main === module) {
   id: "zoIFUMkS8W32JBlbuoBA",
 }
  */
+
+export {};

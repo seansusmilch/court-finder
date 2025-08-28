@@ -45,11 +45,10 @@ function ControlsBody({
   return (
     <div className='space-y-3'>
       <div className='w-full'>
-        {/* @ts-expect-error - SearchBox is not typed */}
-
+        {/* @ts-expect-error - SearchBox types are not available from the lib */}
         <SearchBox
           accessToken={accessToken as string}
-          onRetrieve={(res: any) => {
+          onRetrieve={(res: { features?: Array<{ geometry?: { coordinates?: [number, number] }, properties?: { coordinates?: [number, number] } }> }) => {
             const feature = res?.features?.[0];
             const coords =
               (feature?.geometry?.coordinates as

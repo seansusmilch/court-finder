@@ -21,8 +21,8 @@ export const getByScanId = query({
       return null;
     }
 
-    const tiles = Array.isArray((scan as any).tiles)
-      ? ((scan as any).tiles as Array<{
+    const tiles = Array.isArray(scan.tiles)
+      ? (scan.tiles as Array<{
           z: number;
           x: number;
           y: number;

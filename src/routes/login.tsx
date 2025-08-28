@@ -65,7 +65,7 @@ function AuthPage() {
           // ignore malformed redirect
         }
       }
-      navigate({ to: to as any });
+      navigate({ to });
     }
   }, [isAuthenticated, navigate, router]);
 

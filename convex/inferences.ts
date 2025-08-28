@@ -10,7 +10,7 @@ import {
   tilesIntersectingBbox,
   type GeoJSONPointFeature,
 } from './lib/tiles';
-import type { RoboflowPrediction } from './lib/roboflow';
+import type { RoboflowPrediction, RoboflowResponse } from './lib/roboflow';
 import { PERMISSIONS } from './lib/constants';
 import { api } from './_generated/api';
 
@@ -135,7 +135,7 @@ export const featuresByTile = query({
     }
     match.sort((a, b) => b.requestedAt - a.requestedAt);
     const latest = match[0];
-    const response = latest.response;
+    const response = latest.response as RoboflowResponse;
     const image = response.image;
     const preds: RoboflowPrediction[] = Array.isArray(response.predictions)
       ? response.predictions
@@ -222,7 +222,7 @@ export const featuresByViewport = query({
           (a, b) => b.requestedAt - a.requestedAt
         )[0];
 
-        const response = latest.response;
+        const response = latest.response as RoboflowResponse;
         const image = response.image;
         const preds: RoboflowPrediction[] = Array.isArray(response.predictions)
           ? response.predictions
@@ -282,10 +282,10 @@ export const getTrainingData = query({
 
     // Filter results that have predictions and match model/version if specified
     const filteredResults = results.filter((inference) => {
-      const response = inference.response as any;
+      const response = inference.response as RoboflowResponse | undefined;
       const hasPredictions =
-        response?.predictions &&
-        Array.isArray(response.predictions) &&
+        !!response?.predictions &&
+        Array.isArray(response?.predictions) &&
         response.predictions.length > 0;
 
       if (!hasPredictions) return false;
@@ -299,12 +299,12 @@ export const getTrainingData = query({
     // Transform to training format
     const trainingItems = filteredResults
       .map((inference) => {
-        const response = inference.response as any;
+        const response = inference.response as RoboflowResponse | undefined;
         return {
           id: inference._id,
           imageUrl: inference.imageUrl,
-          imageWidth: response?.image?.width || 640,
-          imageHeight: response?.image?.height || 640,
+          imageWidth: response?.image?.width ?? 640,
+          imageHeight: response?.image?.height ?? 640,
           tileInfo: {
             z: inference.z,
             x: inference.x,
@@ -312,7 +312,7 @@ export const getTrainingData = query({
           },
           model: inference.model,
           version: inference.version,
-          predictions: response.predictions || [],
+          predictions: response?.predictions ?? [],
           requestedAt: inference.requestedAt,
         };
       })

@@ -90,7 +90,7 @@ export interface CreateMLAnnotation {
 export interface UploadResponse {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export async function uploadAnnotationToRoboflow({

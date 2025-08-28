@@ -94,14 +94,19 @@ function MapPage() {
     const features = event.features;
     if (!features || features.length === 0) return;
 
-    const clusterId = features[0].properties?.cluster_id;
-    const mapboxSource = event.target.getSource('courts') as any;
+    const clusterId = features[0].properties?.cluster_id as number | undefined;
+    const mapboxSource = event.target.getSource('courts') as {
+      getClusterExpansionZoom: (
+        id: number,
+        cb: (err: unknown, zoom: number) => void
+      ) => void;
+    } | null;
 
     if (!clusterId || !mapboxSource) return;
 
     mapboxSource.getClusterExpansionZoom(
       clusterId,
-      (err: any, zoom: number) => {
+      (err: unknown, zoom: number) => {
         if (err) return;
         event.target.easeTo({
           center: [event.lngLat.lng, event.lngLat.lat],
@@ -167,7 +172,12 @@ function MapPage() {
       : 'skip'
   ) as GeoJSONFeatureCollection | undefined;
 
-  const computeBbox = (map: any) => {
+  const computeBbox = (map: { getBounds?: () => {
+    getSouth: () => number;
+    getWest: () => number;
+    getNorth: () => number;
+    getEast: () => number;
+  } | undefined }) => {
     const bounds = map?.getBounds?.();
     if (!bounds) return null;
     return {
@@ -178,7 +188,17 @@ function MapPage() {
     } as NonNullable<typeof bbox>;
   };
 
-  const onMoveEnd = useCallback((evt: any) => {
+  const onMoveEnd = useCallback((evt: {
+    viewState: MapViewState;
+    target: {
+      getBounds?: () => {
+        getSouth: () => number;
+        getWest: () => number;
+        getNorth: () => number;
+        getEast: () => number;
+      } | undefined;
+    };
+  }) => {
     const { viewState: newViewState } = evt;
     setViewState(newViewState);
     try {

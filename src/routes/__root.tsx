@@ -89,10 +89,10 @@ function RootComponent() {
             <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
               <span>© {new Date().getFullYear()} Court Finder</span>
               <nav className='flex gap-4'>
-                <Link to={'/terms' as any} className='hover:underline'>
+                <Link to={'/terms'} className='hover:underline'>
                   Terms
                 </Link>
-                <Link to={'/privacy' as any} className='hover:underline'>
+                <Link to={'/privacy'} className='hover:underline'>
                   Privacy
                 </Link>
               </nav>
