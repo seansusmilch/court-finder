@@ -21,6 +21,7 @@ type ScanResult = {
 };
 
 export const Route = createFileRoute('/_authed/scans')({
+  validateSearch: (search: { scanId?: string }) => search,
   component: ScansPage,
   beforeLoad: async ({ context }) => {
     if (!context.me)
@@ -29,13 +30,11 @@ export const Route = createFileRoute('/_authed/scans')({
 });
 
 function ScansPage() {
-  const search = useSearch({ from: '/_authed/scans' }) as {
-    scanId?: string;
-  };
-  const scanId = (search.scanId as Id<'scans'> | undefined) ?? undefined;
+  const { scanId } = Route.useSearch();
+  const scanIdParam = (scanId as Id<'scans'> | undefined) ?? undefined;
   const scanResult = useQuery(
     api.scanResults.getByScanId,
-    scanId ? { scanId } : 'skip'
+    scanIdParam ? { scanId: scanIdParam } : 'skip'
   ) as ScanResult | undefined;
   const scans = useQuery(api.scans.listAll, {});
   const [searchQuery, setSearchQuery] = useState('');
