@@ -166,20 +166,9 @@ export const featuresByTile = query({
 
 // Get available zoom levels in the database
 export const getAvailableZoomLevels = query({
-  args: {
-    model: v.string(),
-    version: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const results = await ctx.db
-      .query('inferences')
-      .filter((q) =>
-        q.and(
-          q.eq(q.field('model'), args.model),
-          q.eq(q.field('version'), args.version)
-        )
-      )
-      .collect();
+  args: {},
+  handler: async (ctx) => {
+    const results = await ctx.db.query('inferences').collect();
 
     const zoomLevels = [...new Set(results.map((r) => r.z))].sort(
       (a, b) => a - b
@@ -197,24 +186,14 @@ export const featuresByViewport = query({
       maxLng: v.number(),
     }),
     zoom: v.number(),
-    model: v.string(),
-    version: v.string(),
     confidenceThreshold: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     console.log('[inferences.featuresByViewport]');
     const features: GeoJSONPointFeature[] = [];
 
-    // Get ALL available zoom levels from database
-    const allResults = await ctx.db
-      .query('inferences')
-      .filter((q) =>
-        q.and(
-          q.eq(q.field('model'), args.model),
-          q.eq(q.field('version'), args.version)
-        )
-      )
-      .collect();
+    // Get ALL inference results from database (across all models)
+    const allResults = await ctx.db.query('inferences').collect();
 
     // Group by zoom level
     const zoomGroups = new Map<number, typeof allResults>();
@@ -238,7 +217,7 @@ export const featuresByViewport = query({
 
         if (!tileMatches.length) continue;
 
-        // Get the latest result for this tile
+        // Get the latest result for this tile (across all models)
         const latest = tileMatches.sort(
           (a, b) => b.requestedAt - a.requestedAt
         )[0];
@@ -266,6 +245,14 @@ export const featuresByViewport = query({
             image.height,
             { includePolygon: false }
           );
+
+          // Add model and version info to properties for reference
+          point.properties = {
+            ...point.properties,
+            model: latest.model,
+            version: latest.version,
+          };
+
           features.push(point);
         }
       }

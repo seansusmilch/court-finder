@@ -24,8 +24,6 @@ import {
   MAP_STYLE_SATELLITE,
   CLUSTER_MAX_ZOOM,
   FLY_TO_DURATION_MS,
-  INFER_MODEL,
-  INFER_VERSION,
   MAPBOX_API_KEY,
 } from '@/lib/constants';
 
@@ -154,9 +152,6 @@ function MapPage() {
 
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
 
-  const model = INFER_MODEL;
-  const version = INFER_VERSION;
-
   const canScan = useQuery(api.users.hasPermission, {
     permission: 'scans.execute',
   }) as boolean | undefined;
@@ -171,10 +166,10 @@ function MapPage() {
     },
   });
 
-  const availableZoomLevels = useQuery(api.inferences.getAvailableZoomLevels, {
-    model,
-    version,
-  }) as number[] | undefined;
+  const availableZoomLevels = useQuery(
+    api.inferences.getAvailableZoomLevels,
+    {}
+  ) as number[] | undefined;
 
   const shouldQuery = Boolean(bbox && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM);
   const featureCollection = useQuery(
@@ -183,8 +178,6 @@ function MapPage() {
       ? {
           bbox: bbox as NonNullable<typeof bbox>,
           zoom: viewState.zoom,
-          model,
-          version,
           confidenceThreshold,
         }
       : 'skip'

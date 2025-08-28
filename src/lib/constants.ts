@@ -14,10 +14,6 @@ export const CLUSTER_RADIUS = 50;
 export const SEARCH_FLY_TO_ZOOM = 14;
 export const FLY_TO_DURATION_MS = 800;
 
-// Inference
-export const INFER_MODEL = 'satellite-sports-facilities-bubrg';
-export const INFER_VERSION = '4';
-
 // Confidence slider
 export const CONFIDENCE_SLIDER_STEP = 0.1;
 

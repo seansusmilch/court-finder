@@ -64,6 +64,14 @@ export function CourtPopup({
               <span className='ml-1'>{String(properties.zoom_level)}</span>
             </div>
           )}
+          {properties.model != null && (
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Model:</span>
+              <span className='text-muted-foreground'>
+                {` v${String(properties.version)}`}
+              </span>
+            </div>
+          )}
           <Button asChild size='sm' variant='secondary' className='mt-1'>
             <a
               href={`https://maps.google.com/maps?q=${latitude},${longitude}`}
