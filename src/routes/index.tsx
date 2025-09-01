@@ -52,7 +52,7 @@ function HomeComponent() {
           </div>
           <div className='relative order-first h-56 w-full overflow-hidden rounded-xl border bg-muted md:order-none md:h-80'>
             <img
-              src='/logo.png'
+              src='/logo.webp'
               alt='Court Finder'
               className='absolute inset-0 m-auto h-24 w-24 opacity-60'
             />
