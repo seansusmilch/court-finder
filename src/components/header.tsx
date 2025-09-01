@@ -22,34 +22,46 @@ export default function Header() {
   const healthCheck = useQuery(api.healthCheck.get);
   return (
     <div>
-      <div className='flex flex-row items-center justify-between px-4 py-2'>
-        <div className='flex items-center gap-4'>
+      <div className='grid grid-cols-2 md:grid-cols-3 items-center px-4 py-2'>
+        {/* Left: Logo */}
+        <div className='flex items-center justify-start'>
           <Link
             to='/'
-            className='font-semibold text-lg tracking-tight hover:opacity-90'
+            className='flex items-center hover:opacity-90 transition-opacity'
           >
-            Court Finder
+            <img
+              src='/logo.webp'
+              alt='Court Finder'
+              className='h-8 w-auto sm:h-10'
+            />
+            <span className='pl-4 font-semibold text-lg tracking-tight'>
+              Court Finder
+            </span>
           </Link>
-          <nav className='hidden md:flex gap-1'>
-            {NAVIGATION_LINKS.map(({ to, label }) => (
-              <Button
-                key={to}
-                variant='ghost'
-                size='sm'
-                className='text-muted-foreground hover:text-foreground'
-                asChild
-              >
-                <Link
-                  to={to}
-                  activeProps={{ className: 'bg-accent text-foreground' }}
-                >
-                  {label}
-                </Link>
-              </Button>
-            ))}
-          </nav>
         </div>
-        <div className='flex items-center gap-3'>
+
+        {/* Center: Navigation */}
+        <nav className='hidden md:flex gap-1 justify-center'>
+          {NAVIGATION_LINKS.map(({ to, label }) => (
+            <Button
+              key={to}
+              variant='ghost'
+              size='sm'
+              className='text-muted-foreground hover:text-foreground'
+              asChild
+            >
+              <Link
+                to={to}
+                activeProps={{ className: 'bg-accent text-foreground' }}
+              >
+                {label}
+              </Link>
+            </Button>
+          ))}
+        </nav>
+
+        {/* Right: Controls */}
+        <div className='flex items-center justify-end gap-3'>
           <div className='hidden md:flex items-center gap-2 text-xs text-muted-foreground'>
             <div
               className={`h-2 w-2 rounded-full ${
@@ -110,7 +122,10 @@ function MobileNav() {
       <SheetContent side='right' className='w-80 p-0'>
         <div className='p-4'>
           <SheetHeader>
-            <SheetTitle>Menu</SheetTitle>
+            <div className='flex items-center gap-3'>
+              <img src='/logo.webp' alt='Court Finder' className='h-6 w-auto' />
+              <SheetTitle>Menu</SheetTitle>
+            </div>
           </SheetHeader>
         </div>
         <div className='px-4 pb-4'>
