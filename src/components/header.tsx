@@ -22,7 +22,7 @@ export default function Header() {
   const healthCheck = useQuery(api.healthCheck.get);
   return (
     <div>
-      <div className='grid grid-cols-3 items-center px-4 py-2'>
+      <div className='grid grid-cols-2 md:grid-cols-3 items-center px-4 py-2'>
         {/* Left: Logo */}
         <div className='flex items-center justify-start'>
           <Link
@@ -34,7 +34,7 @@ export default function Header() {
               alt='Court Finder'
               className='h-8 w-auto sm:h-10'
             />
-            <span className='pl-4 lg:inline font-semibold text-lg tracking-tight'>
+            <span className='pl-4 font-semibold text-lg tracking-tight'>
               Court Finder
             </span>
           </Link>
