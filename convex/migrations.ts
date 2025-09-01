@@ -3,6 +3,11 @@ import { components, internal } from './_generated/api.js';
 import type { DataModel } from './_generated/dataModel.js';
 import type { RoboflowPrediction, RoboflowResponse } from './lib/roboflow.js';
 import { pointToTile } from './lib/tiles.js';
+import {
+  DEFAULT_TILE_RADIUS,
+  ROBOFLOW_MODEL_NAME,
+  ROBOFLOW_MODEL_VERSION,
+} from './lib/constants.js';
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -67,10 +72,45 @@ export const removeSwimmingPoolFeedback = migrations.define({
   },
 });
 
+export const migrateScansAndTilesAgain = migrations.define({
+  table: 'scans',
+  migrateOne: async (ctx, doc) => {
+    const tileCoords = doc.tiles || [];
+
+    // First, ensure all tiles exist
+    for (const tileCoord of tileCoords) {
+      const tileId = await ctx.runMutation(
+        internal.tiles.insertTileIfNotExists,
+        {
+          x: tileCoord.x,
+          y: tileCoord.y,
+          z: tileCoord.z,
+        }
+      );
+      // Then, create relationships without duplicates
+      await ctx.runMutation(
+        internal.scans_x_tiles.insertScanTileRelationshipIfNotExists,
+        {
+          scanId: doc._id,
+          tileId,
+        }
+      );
+    }
+
+    return {
+      model: ROBOFLOW_MODEL_NAME,
+      version: ROBOFLOW_MODEL_VERSION,
+      radius: DEFAULT_TILE_RADIUS,
+      tiles: undefined,
+    };
+  },
+});
+
 export const runAll = migrations.runner([
   // internal.migrations.migratePredictions,
   // internal.migrations.migrateScansCenterTile,
-  internal.migrations.removeSwimmingPoolsInferences,
-  internal.migrations.removeSwimmingPoolPredictions,
-  internal.migrations.removeSwimmingPoolFeedback,
+  // internal.migrations.removeSwimmingPoolsInferences,
+  // internal.migrations.removeSwimmingPoolPredictions,
+  // internal.migrations.removeSwimmingPoolFeedback,
+  internal.migrations.migrateScansAndTilesAgain,
 ]);

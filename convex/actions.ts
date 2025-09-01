@@ -3,7 +3,11 @@ import { action } from './_generated/server';
 import { v } from 'convex/values';
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
-import { detectObjectsWithRoboflow, pointToTile, tilesInRadiusFromPoint } from './lib';
+import {
+  detectObjectsWithRoboflow,
+  pointToTile,
+  tilesInRadiusFromPoint,
+} from './lib';
 import type { RoboflowResponse } from './lib/roboflow';
 import type { ActionCtx } from './_generated/server';
 import type { TileCoordinate } from './lib/tiles';
@@ -106,6 +110,12 @@ const processTile = async (
     url: tile.url,
   });
 
+  const tileId = await ctx.runMutation(internal.tiles.insertTileIfNotExists, {
+    x: tile.x,
+    y: tile.y,
+    z: tile.z,
+  });
+
   // Check for existing inference
   const existing = await ctx.runQuery(internal.inferences.getLatestByTile, {
     z: tile.z,
@@ -130,6 +140,7 @@ const processTile = async (
     : undefined;
   console.log('[scanArea] inference ready', {
     index: index + 1,
+    tileId,
     predictionsCount,
     reused: Boolean(existing),
   });
@@ -227,9 +238,24 @@ export const scanArea = action({
 
     // Process all tiles
     const results: ScanResult[] = [];
-    const scanTiles: ScanTile[] = [];
 
     for (let i = 0; i < coverage.tiles.length; i++) {
+      const tileId = await ctx.runMutation(
+        internal.tiles.insertTileIfNotExists,
+        {
+          x: coverage.tiles[i].x,
+          y: coverage.tiles[i].y,
+          z: coverage.tiles[i].z,
+        }
+      );
+      // Ensure scan<->tile relationship exists
+      await ctx.runMutation(
+        internal.scans_x_tiles.insertScanTileRelationshipIfNotExists,
+        {
+          scanId,
+          tileId,
+        }
+      );
       const { result, scanTile } = await processTile(
         ctx,
         coverage.tiles[i],
@@ -239,14 +265,7 @@ export const scanArea = action({
       );
 
       results.push(result);
-      scanTiles.push(scanTile);
     }
-
-    // Update scan with tile coordinates
-    await ctx.runMutation(internal.scans.updateTiles, {
-      scanId,
-      tiles: scanTiles,
-    });
 
     // Log completion and return results
     const endTs = Date.now();

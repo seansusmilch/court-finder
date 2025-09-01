@@ -1,4 +1,5 @@
-import { api } from './_generated/api';
+import { api, internal } from './_generated/api';
+import type { Id, Doc } from './_generated/dataModel';
 import { query } from './_generated/server';
 import { v } from 'convex/values';
 import {
@@ -7,9 +8,25 @@ import {
   ROBOFLOW_MODEL_VERSION,
 } from './lib/constants';
 
+type TileResultItem = {
+  z: number;
+  x: number;
+  y: number;
+  url?: string;
+  detections: unknown | null;
+};
+
+type GetByScanIdResponse = {
+  scanId: Id<'scans'>;
+  zoom: number | null;
+  cols: number;
+  rows: number;
+  tiles: TileResultItem[];
+} | null;
+
 export const getByScanId = query({
   args: { scanId: v.id('scans') },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<GetByScanIdResponse> => {
     const canViewScans = await ctx.runQuery(api.users.hasPermission, {
       permission: PERMISSIONS.SCANS.READ,
     });
@@ -21,13 +38,10 @@ export const getByScanId = query({
       return null;
     }
 
-    const tiles = Array.isArray(scan.tiles)
-      ? (scan.tiles as Array<{
-          z: number;
-          x: number;
-          y: number;
-        }>)
-      : [];
+    // Fetch tiles via join table
+    const tiles = await ctx.runQuery(internal.scans_x_tiles.getTilesForScan, {
+      scanId: args.scanId,
+    });
 
     if (!tiles.length) {
       return {
@@ -45,8 +59,8 @@ export const getByScanId = query({
     const zoom = tiles[0].z as number;
 
     // For each tile, fetch latest inference by tile coordinates
-    const resultTiles = await Promise.all(
-      tiles.map(async (t) => {
+    const resultTiles: TileResultItem[] = await Promise.all(
+      tiles.map(async (t: Doc<'tiles'>) => {
         const matches = await ctx.db
           .query('inferences')
           .withIndex('by_tile', (q) =>
@@ -75,12 +89,12 @@ export const getByScanId = query({
       })
     );
 
-    const uniqueXs = Array.from(new Set(tiles.map((t) => t.x))).sort(
-      (a, b) => a - b
-    );
-    const uniqueYs = Array.from(new Set(tiles.map((t) => t.y))).sort(
-      (a, b) => a - b
-    );
+    const uniqueXs: number[] = Array.from(
+      new Set<number>(tiles.map((t) => t.x as number))
+    ).sort((a: number, b: number) => a - b);
+    const uniqueYs: number[] = Array.from(
+      new Set<number>(tiles.map((t) => t.y as number))
+    ).sort((a: number, b: number) => a - b);
 
     return {
       scanId: args.scanId,
