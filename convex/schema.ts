@@ -44,25 +44,34 @@ export default defineSchema({
     .index('by_inference', ['inferenceId'])
     .index('by_inference_and_detection', ['inferenceId', 'detectionId']),
   inferences: defineTable({
-    imageUrl: v.string(),
+    tileId: v.optional(v.id('tiles')),
     model: v.string(),
-    requestedAt: v.float64(),
-    response: v.any(),
     version: v.string(),
+    response: v.any(),
+
+    // REMOVE BELOW
+    imageUrl: v.string(),
+    requestedAt: v.float64(),
     x: v.float64(),
     y: v.float64(),
     z: v.float64(),
-  }).index('by_tile', ['z', 'x', 'y', 'model', 'version']),
+  })
+    .index('by_tile', ['z', 'x', 'y', 'model', 'version'])
+    .index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
+    userId: v.optional(v.id('users')),
+    model: v.optional(v.string()),
+    version: v.optional(v.string()),
+    radius: v.optional(v.number()),
     centerLat: v.float64(),
     centerLong: v.float64(),
-    // REMOVE
+
+    // REMOVE BELOW
     centerTile: v.object({
       x: v.float64(),
       y: v.float64(),
       z: v.float64(),
     }),
-    // REMOVE
     tiles: v.optional(
       v.array(
         v.object({
@@ -72,10 +81,6 @@ export default defineSchema({
         })
       )
     ),
-    model: v.optional(v.string()), // NEW
-    version: v.optional(v.string()), // NEW
-    radius: v.optional(v.number()), // NEW
-    userId: v.optional(v.id('users')),
   })
     .index('by_center', ['centerLat', 'centerLong'])
     .index('by_center_tile', ['centerTile']),

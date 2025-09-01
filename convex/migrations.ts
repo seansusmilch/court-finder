@@ -1,6 +1,6 @@
 import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api.js';
-import type { DataModel } from './_generated/dataModel.js';
+import type { DataModel, Id, Doc } from './_generated/dataModel.js';
 import type { RoboflowPrediction, RoboflowResponse } from './lib/roboflow.js';
 import { pointToTile } from './lib/tiles.js';
 import {
@@ -72,7 +72,7 @@ export const removeSwimmingPoolFeedback = migrations.define({
   },
 });
 
-export const migrateScansAndTilesAgain = migrations.define({
+export const migrateScansAndTiles = migrations.define({
   table: 'scans',
   migrateOne: async (ctx, doc) => {
     const tileCoords = doc.tiles || [];
@@ -106,11 +106,29 @@ export const migrateScansAndTilesAgain = migrations.define({
   },
 });
 
+export const migrateInferenceTileId = migrations.define({
+  table: 'inferences',
+  migrateOne: async (ctx, doc: Doc<'inferences'>) => {
+    console.log('[migrateInferenceTileId] doc', doc);
+    if (doc.tileId) return;
+    const createdTileId: Id<'tiles'> = await ctx.runMutation(
+      internal.tiles.insertTileIfNotExists,
+      {
+        x: doc.x,
+        y: doc.y,
+        z: doc.z,
+      }
+    );
+    return { tileId: createdTileId };
+  },
+});
+
 export const runAll = migrations.runner([
-  // internal.migrations.migratePredictions,
-  // internal.migrations.migrateScansCenterTile,
-  // internal.migrations.removeSwimmingPoolsInferences,
-  // internal.migrations.removeSwimmingPoolPredictions,
-  // internal.migrations.removeSwimmingPoolFeedback,
-  internal.migrations.migrateScansAndTilesAgain,
+  internal.migrations.migratePredictions,
+  internal.migrations.migrateScansCenterTile,
+  internal.migrations.removeSwimmingPoolsInferences,
+  internal.migrations.removeSwimmingPoolPredictions,
+  internal.migrations.removeSwimmingPoolFeedback,
+  internal.migrations.migrateScansAndTiles,
+  internal.migrations.migrateInferenceTileId,
 ]);

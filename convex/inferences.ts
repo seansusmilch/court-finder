@@ -44,6 +44,31 @@ export const getLatestByTile = internalQuery({
   },
 });
 
+export const getLatestByTileId = internalQuery({
+  args: {
+    tileId: v.id('tiles'),
+    model: v.string(),
+    version: v.string(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[inferences.getLatestByTileId] tileId', args);
+    const matches = await ctx.db
+      .query('inferences')
+      .withIndex('by_tileId', (q) =>
+        q
+          .eq('tileId', args.tileId)
+          .eq('model', args.model)
+          .eq('version', args.version)
+      )
+      .collect();
+    if (!matches.length) return null;
+    matches.sort(
+      (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
+    );
+    return matches[0];
+  },
+});
+
 export const upsert = internalMutation({
   args: {
     z: v.number(),
@@ -95,6 +120,64 @@ export const upsert = internalMutation({
       version: args.version,
       requestedAt: Date.now(),
       response: args.response,
+    });
+    return id;
+  },
+});
+
+export const upsertByTileId = internalMutation({
+  args: {
+    tileId: v.id('tiles'),
+    imageUrl: v.string(),
+    model: v.string(),
+    version: v.string(),
+    response: v.any(),
+  },
+  handler: async (ctx, args) => {
+    console.log('[inferences.upsertByTileId] upserting', {
+      imageUrl: args.imageUrl,
+      model: args.model,
+      version: args.version,
+      tileId: args.tileId,
+    });
+
+    const matches = await ctx.db
+      .query('inferences')
+      .withIndex('by_tileId', (q) =>
+        q
+          .eq('tileId', args.tileId)
+          .eq('model', args.model)
+          .eq('version', args.version)
+      )
+      .collect();
+
+    if (matches.length > 0) {
+      matches.sort(
+        (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
+      );
+      const latest = matches[0];
+      await ctx.db.patch(latest._id, {
+        imageUrl: args.imageUrl,
+        response: args.response,
+        requestedAt: Date.now(),
+      });
+      return latest._id;
+    }
+
+    const tile = await ctx.db.get(args.tileId);
+    if (!tile) throw new Error('Tile not found for tileId');
+
+    const id = await ctx.db.insert('inferences', {
+      tileId: args.tileId,
+      imageUrl: args.imageUrl,
+      model: args.model,
+      version: args.version,
+      requestedAt: Date.now(),
+      response: args.response,
+      // include legacy fields for now to satisfy schema
+      z: tile.z,
+      x: tile.x,
+      y: tile.y,
     });
     return id;
   },

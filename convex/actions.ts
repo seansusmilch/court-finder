@@ -117,10 +117,8 @@ const processTile = async (
   });
 
   // Check for existing inference
-  const existing = await ctx.runQuery(internal.inferences.getLatestByTile, {
-    z: tile.z,
-    x: tile.x,
-    y: tile.y,
+  const existing = await ctx.runQuery(internal.inferences.getLatestByTileId, {
+    tileId,
     model: ROBOFLOW_MODEL_NAME,
     version: ROBOFLOW_MODEL_VERSION,
   });
@@ -147,11 +145,9 @@ const processTile = async (
 
   // Upsert inference record
   const inferenceId: Id<'inferences'> = await ctx.runMutation(
-    internal.inferences.upsert,
+    internal.inferences.upsertByTileId,
     {
-      z: tile.z,
-      x: tile.x,
-      y: tile.y,
+      tileId,
       imageUrl: tile.url,
       model: ROBOFLOW_MODEL_NAME,
       version: ROBOFLOW_MODEL_VERSION,

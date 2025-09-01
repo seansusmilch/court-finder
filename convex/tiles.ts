@@ -1,3 +1,4 @@
+import { Id } from './_generated/dataModel';
 import { internalMutation, internalQuery, query } from './_generated/server';
 import { v } from 'convex/values';
 
