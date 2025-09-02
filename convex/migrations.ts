@@ -1,37 +1,31 @@
 import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api.js';
-import type { DataModel, Id, Doc } from './_generated/dataModel.js';
-import type { RoboflowPrediction, RoboflowResponse } from './lib/roboflow.js';
+import type { DataModel } from './_generated/dataModel.js';
 import { pointToTile } from './lib/tiles.js';
-import {
-  DEFAULT_TILE_RADIUS,
-  ROBOFLOW_MODEL_NAME,
-  ROBOFLOW_MODEL_VERSION,
-} from './lib/constants.js';
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
-export const migratePredictions = migrations.define({
-  table: 'inferences',
-  migrateOne: async (ctx, doc) => {
-    const predictions: RoboflowPrediction[] = doc.response.predictions;
-    const predictionIds = await Promise.all(
-      predictions.map(async (prediction) => {
-        return await ctx.runMutation(internal.inference_predictions.upsert, {
-          tileId: doc.tileId as Id<'tiles'>,
-          model: doc.model ?? 'unknown',
-          version: doc.version ?? 'unknown',
-          prediction,
-        });
-      })
-    );
-    console.log('[migratePredictions] upserted predictions', {
-      inferenceId: doc._id,
-      predictionIds,
-    });
-    return doc;
-  },
-});
+// export const migratePredictions = migrations.define({
+//   table: 'inferences',
+//   migrateOne: async (ctx, doc) => {
+//     const predictions: RoboflowPrediction[] = doc.response.predictions;
+//     const predictionIds = await Promise.all(
+//       predictions.map(async (prediction) => {
+//         return await ctx.runMutation(internal.inference_predictions.upsert, {
+//           tileId: doc.tileId as Id<'tiles'>,
+//           model: doc.model ?? 'unknown',
+//           version: doc.version ?? 'unknown',
+//           prediction,
+//         });
+//       })
+//     );
+//     console.log('[migratePredictions] upserted predictions', {
+//       inferenceId: doc._id,
+//       predictionIds,
+//     });
+//     return doc;
+//   },
+// });
 
 export const migrateScansCenterTile = migrations.define({
   table: 'scans',
@@ -41,19 +35,19 @@ export const migrateScansCenterTile = migrations.define({
   },
 });
 
-export const removeSwimmingPoolsInferences = migrations.define({
-  table: 'inferences',
-  migrateOne: async (ctx, doc) => {
-    const response: RoboflowResponse = doc.response;
-    const predictions: RoboflowPrediction[] = response.predictions;
-    const filteredPredictions = predictions.filter(
-      (prediction) => prediction.class !== 'swimming-pool'
-    );
+// export const removeSwimmingPoolsInferences = migrations.define({
+//   table: 'inferences',
+//   migrateOne: async (ctx, doc) => {
+//     const response: RoboflowResponse = doc.response;
+//     const predictions: RoboflowPrediction[] = response.predictions;
+//     const filteredPredictions = predictions.filter(
+//       (prediction) => prediction.class !== 'swimming-pool'
+//     );
 
-    response.predictions = Array.from(filteredPredictions);
-    return { response };
-  },
-});
+//     response.predictions = Array.from(filteredPredictions);
+//     return { response };
+//   },
+// });
 
 export const removeSwimmingPoolPredictions = migrations.define({
   table: 'inference_predictions',
@@ -177,25 +171,25 @@ export const migrateScanUserIds = migrations.define({
 //   },
 // });
 
-export const migrateInferenceToPredictions = migrations.define({
-  table: 'inference_predictions',
-  migrateOne: async (ctx, doc) => {
-    if (!doc.inferenceId) return;
-    const inference = await ctx.db.get(doc.inferenceId);
-    if (!inference) return;
-    return {
-      inferenceId: undefined,
-      model: inference.model,
-      version: inference.version,
-      roboflowInferenceId: inference.response.inference_id,
-    };
-  },
-});
+// export const migrateInferenceToPredictions = migrations.define({
+//   table: 'inference_predictions',
+//   migrateOne: async (ctx, doc) => {
+//     if (!doc.inferenceId) return;
+//     const inference = await ctx.db.get(doc.inferenceId);
+//     if (!inference) return;
+//     return {
+//       inferenceId: undefined,
+//       model: inference.model,
+//       version: inference.version,
+//       roboflowInferenceId: inference.response.inference_id,
+//     };
+//   },
+// });
 
 export const runAll = migrations.runner([
-  internal.migrations.migratePredictions,
+  // internal.migrations.migratePredictions,
   internal.migrations.migrateScansCenterTile,
-  internal.migrations.removeSwimmingPoolsInferences,
+  // internal.migrations.removeSwimmingPoolsInferences,
   internal.migrations.removeSwimmingPoolPredictions,
   internal.migrations.removeSwimmingPoolFeedback,
   // internal.migrations.migrateScansAndTiles,
@@ -204,5 +198,5 @@ export const runAll = migrations.runner([
   // internal.migrations.migrateFeedbackSubmissionsTileandBatchId,
   internal.migrations.migrateScanUserIds,
   // internal.migrations.migrateInferencesDeletedFields,
-  internal.migrations.migrateInferenceToPredictions,
+  // internal.migrations.migrateInferenceToPredictions,
 ]);

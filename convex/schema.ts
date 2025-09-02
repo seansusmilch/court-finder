@@ -32,9 +32,6 @@ export default defineSchema({
     model: v.optional(v.string()),
     version: v.optional(v.string()),
     roboflowInferenceId: v.optional(v.string()),
-
-    // REMOVE BELOW
-    inferenceId: v.optional(v.id('inferences')),
   })
     .index('by_tile', ['tileId'])
     .index('by_tile_model_version', ['tileId', 'model', 'version'])
@@ -44,12 +41,6 @@ export default defineSchema({
       'version',
       'roboflowDetectionId',
     ]),
-  inferences: defineTable({
-    tileId: v.optional(v.id('tiles')),
-    model: v.optional(v.string()),
-    version: v.optional(v.string()),
-    response: v.any(),
-  }).index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
     userId: v.id('users'),
     model: v.string(),
