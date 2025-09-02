@@ -155,6 +155,14 @@ export const migrateFeedbackSubmissionsTileandBatchId = migrations.define({
   },
 });
 
+export const migrateScanUserIds = migrations.define({
+  table: 'scans',
+  migrateOne: async (ctx, doc) => {
+    const user = await ctx.db.query('users').order('asc').first();
+    return { userId: user?._id };
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.migratePredictions,
   internal.migrations.migrateScansCenterTile,
@@ -165,4 +173,5 @@ export const runAll = migrations.runner([
   internal.migrations.migrateInferenceTileId,
   internal.migrations.migrateInferencePredictionsTileandDetectionId,
   internal.migrations.migrateFeedbackSubmissionsTileandBatchId,
+  internal.migrations.migrateScanUserIds,
 ]);
