@@ -75,9 +75,7 @@ export const getByScanId = query({
         if (!matches.length) {
           return { z: t.z, x: t.x, y: t.y, detections: null };
         }
-        matches.sort(
-          (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
-        );
+        matches.sort((a, b) => b._creationTime - a._creationTime);
         const latest = matches[0];
         return {
           z: latest.z as number,

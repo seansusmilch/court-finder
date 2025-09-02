@@ -41,9 +41,7 @@ export const getLatestByTile = internalQuery({
       .collect();
     if (!matches.length) return null;
     // With uniqueness, there should be at most one. If multiple, pick newest.
-    matches.sort(
-      (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
-    );
+    matches.sort((a, b) => b._creationTime - a._creationTime);
     return matches[0];
   },
 });
@@ -66,9 +64,7 @@ export const getLatestByTileId = internalQuery({
       )
       .collect();
     if (!matches.length) return null;
-    matches.sort(
-      (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
-    );
+    matches.sort((a, b) => b._creationTime - a._creationTime);
     return matches[0];
   },
 });
@@ -124,14 +120,11 @@ export const upsert = internalMutation({
       .collect();
 
     if (matches.length > 0) {
-      matches.sort(
-        (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
-      );
+      matches.sort((a, b) => b._creationTime - a._creationTime);
       const latest = matches[0];
       await ctx.db.patch(latest._id, {
         imageUrl: args.imageUrl,
         response: args.response,
-        requestedAt: Date.now(),
       });
       return latest._id;
     }
@@ -175,14 +168,11 @@ export const upsertByTileId = internalMutation({
       .collect();
 
     if (matches.length > 0) {
-      matches.sort(
-        (a, b) => (b.requestedAt as number) - (a.requestedAt as number)
-      );
+      matches.sort((a, b) => b._creationTime - a._creationTime);
       const latest = matches[0];
       await ctx.db.patch(latest._id, {
         imageUrl: args.imageUrl,
         response: args.response,
-        requestedAt: Date.now(),
       });
       return latest._id;
     }
@@ -195,7 +185,6 @@ export const upsertByTileId = internalMutation({
       imageUrl: args.imageUrl,
       model: args.model,
       version: args.version,
-      requestedAt: Date.now(),
       response: args.response,
       // include legacy fields for now to satisfy schema
       z: tile.z,
