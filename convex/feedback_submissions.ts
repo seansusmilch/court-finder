@@ -2,7 +2,6 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { styleTileUrl } from './lib/tiles';
-import { MAPBOX_TILE_DEFAULTS } from './lib/constants';
 
 export const getNextPredictionForFeedback = query({
   args: {
