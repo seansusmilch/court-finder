@@ -42,9 +42,6 @@ export default defineSchema({
     width: v.float64(),
     x: v.float64(),
     y: v.float64(),
-
-    // REMOVE BELOW
-    detectionId: v.optional(v.string()),
   })
     .index('by_inference', ['inferenceId'])
     .index('by_inf_and_roboflow_detection_id', [
