@@ -73,39 +73,39 @@ export const removeSwimmingPoolFeedback = migrations.define({
   },
 });
 
-export const migrateScansAndTiles = migrations.define({
-  table: 'scans',
-  migrateOne: async (ctx, doc) => {
-    const tileCoords = doc.tiles || [];
+// export const migrateScansAndTiles = migrations.define({
+//   table: 'scans',
+//   migrateOne: async (ctx, doc) => {
+//     const tileCoords = doc.tiles || [];
 
-    // First, ensure all tiles exist
-    for (const tileCoord of tileCoords) {
-      const tileId = await ctx.runMutation(
-        internal.tiles.insertTileIfNotExists,
-        {
-          x: tileCoord.x,
-          y: tileCoord.y,
-          z: tileCoord.z,
-        }
-      );
-      // Then, create relationships without duplicates
-      await ctx.runMutation(
-        internal.scans_x_tiles.insertScanTileRelationshipIfNotExists,
-        {
-          scanId: doc._id,
-          tileId,
-        }
-      );
-    }
+//     // First, ensure all tiles exist
+//     for (const tileCoord of tileCoords) {
+//       const tileId = await ctx.runMutation(
+//         internal.tiles.insertTileIfNotExists,
+//         {
+//           x: tileCoord.x,
+//           y: tileCoord.y,
+//           z: tileCoord.z,
+//         }
+//       );
+//       // Then, create relationships without duplicates
+//       await ctx.runMutation(
+//         internal.scans_x_tiles.insertScanTileRelationshipIfNotExists,
+//         {
+//           scanId: doc._id,
+//           tileId,
+//         }
+//       );
+//     }
 
-    return {
-      model: ROBOFLOW_MODEL_NAME,
-      version: ROBOFLOW_MODEL_VERSION,
-      radius: DEFAULT_TILE_RADIUS,
-      tiles: undefined,
-    };
-  },
-});
+//     return {
+//       model: ROBOFLOW_MODEL_NAME,
+//       version: ROBOFLOW_MODEL_VERSION,
+//       radius: DEFAULT_TILE_RADIUS,
+//       tiles: undefined,
+//     };
+//   },
+// });
 
 export const migrateInferenceTileId = migrations.define({
   table: 'inferences',
@@ -169,7 +169,7 @@ export const runAll = migrations.runner([
   internal.migrations.removeSwimmingPoolsInferences,
   internal.migrations.removeSwimmingPoolPredictions,
   internal.migrations.removeSwimmingPoolFeedback,
-  internal.migrations.migrateScansAndTiles,
+  // internal.migrations.migrateScansAndTiles,
   internal.migrations.migrateInferenceTileId,
   internal.migrations.migrateInferencePredictionsTileandDetectionId,
   internal.migrations.migrateFeedbackSubmissionsTileandBatchId,

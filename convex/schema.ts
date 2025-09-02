@@ -68,27 +68,16 @@ export default defineSchema({
     .index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
     userId: v.optional(v.id('users')),
-    model: v.optional(v.string()),
-    version: v.optional(v.string()),
-    radius: v.optional(v.number()),
+    model: v.string(),
+    version: v.string(),
+    radius: v.number(),
     centerLat: v.float64(),
     centerLong: v.float64(),
-
-    // REMOVE BELOW
     centerTile: v.object({
       x: v.float64(),
       y: v.float64(),
       z: v.float64(),
     }),
-    tiles: v.optional(
-      v.array(
-        v.object({
-          x: v.float64(),
-          y: v.float64(),
-          z: v.float64(),
-        })
-      )
-    ),
   }).index('by_center_tile', ['centerTile']),
   upload_batches: defineTable({
     tileId: v.id('tiles'),
