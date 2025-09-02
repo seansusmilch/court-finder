@@ -31,18 +31,26 @@ export default defineSchema({
     .index('by_upload_status', ['uploadStatus'])
     .index('by_user_and_prediction', ['userId', 'predictionId']),
   inference_predictions: defineTable({
+    roboflowDetectionId: v.optional(v.string()),
+    tileId: v.optional(v.id('tiles')),
+    inferenceId: v.id('inferences'),
     class: v.string(),
     classId: v.optional(v.float64()),
     confidence: v.float64(),
-    detectionId: v.string(),
     height: v.float64(),
-    inferenceId: v.id('inferences'),
     width: v.float64(),
     x: v.float64(),
     y: v.float64(),
+
+    // REMOVE BELOW
+    detectionId: v.optional(v.string()),
   })
     .index('by_inference', ['inferenceId'])
-    .index('by_inference_and_detection', ['inferenceId', 'detectionId']),
+    .index('by_inference_and_detection', ['inferenceId', 'detectionId'])
+    .index('by_inf_and_roboflow_detection_id', [
+      'inferenceId',
+      'roboflowDetectionId',
+    ]),
   inferences: defineTable({
     tileId: v.optional(v.id('tiles')),
     model: v.string(),

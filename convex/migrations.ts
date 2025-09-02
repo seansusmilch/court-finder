@@ -19,6 +19,7 @@ export const migratePredictions = migrations.define({
       predictions.map(async (prediction) => {
         return await ctx.runMutation(internal.inference_predictions.upsert, {
           inferenceId: doc._id,
+          tileId: doc.tileId as Id<'tiles'>,
           prediction,
         });
       })
@@ -123,6 +124,20 @@ export const migrateInferenceTileId = migrations.define({
   },
 });
 
+export const migrateInferencePredictionsTileandDetectionId = migrations.define({
+  table: 'inference_predictions',
+  migrateOne: async (ctx, doc) => {
+    const inference = await ctx.db.get(doc.inferenceId);
+    if (!inference?.tileId) return;
+
+    return {
+      tileId: inference.tileId,
+      roboflowDetectionId: doc.detectionId,
+      detectionId: undefined,
+    };
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.migratePredictions,
   internal.migrations.migrateScansCenterTile,
@@ -131,4 +146,5 @@ export const runAll = migrations.runner([
   internal.migrations.removeSwimmingPoolFeedback,
   internal.migrations.migrateScansAndTiles,
   internal.migrations.migrateInferenceTileId,
+  internal.migrations.migrateInferencePredictionsTileandDetectionId,
 ]);

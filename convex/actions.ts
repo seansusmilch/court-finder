@@ -160,6 +160,7 @@ const processTile = async (
     detections.predictions.map(async (prediction) => {
       return await ctx.runMutation(internal.inference_predictions.upsert, {
         inferenceId,
+        tileId,
         prediction,
       });
     })

@@ -32,7 +32,7 @@ export default function Header() {
             <img
               src='/logo.webp'
               alt='Court Finder'
-              className='h-8 w-auto sm:h-10'
+              className='p-0.5 md:p-1 h-8 w-auto sm:h-10'
             />
             <span className='pl-4 font-semibold text-lg tracking-tight'>
               Court Finder
