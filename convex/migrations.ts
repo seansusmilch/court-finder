@@ -163,6 +163,19 @@ export const migrateScanUserIds = migrations.define({
   },
 });
 
+export const migrateInferencesDeletedFields = migrations.define({
+  table: 'inferences',
+  migrateOne: async (ctx, doc) => {
+    return {
+      z: undefined,
+      x: undefined,
+      y: undefined,
+      requestedAt: undefined,
+      imageUrl: undefined,
+    };
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.migratePredictions,
   internal.migrations.migrateScansCenterTile,
@@ -174,4 +187,5 @@ export const runAll = migrations.runner([
   internal.migrations.migrateInferencePredictionsTileandDetectionId,
   internal.migrations.migrateFeedbackSubmissionsTileandBatchId,
   internal.migrations.migrateScanUserIds,
+  internal.migrations.migrateInferencesDeletedFields,
 ]);

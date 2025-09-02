@@ -148,7 +148,6 @@ const processTile = async (
     internal.inferences.upsertByTileId,
     {
       tileId,
-      imageUrl: tile.url,
       model: ROBOFLOW_MODEL_NAME,
       version: ROBOFLOW_MODEL_VERSION,
       response: detections,

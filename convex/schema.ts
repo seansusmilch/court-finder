@@ -63,9 +63,7 @@ export default defineSchema({
     x: v.optional(v.float64()),
     y: v.optional(v.float64()),
     z: v.optional(v.float64()),
-  })
-    .index('by_tile', ['z', 'x', 'y', 'model', 'version'])
-    .index('by_tileId', ['tileId', 'model', 'version']),
+  }).index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
     userId: v.optional(v.id('users')),
     model: v.string(),

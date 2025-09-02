@@ -74,14 +74,12 @@ export const upsert = internalMutation({
     z: v.number(),
     x: v.number(),
     y: v.number(),
-    imageUrl: v.string(),
     model: v.string(),
     version: v.string(),
     response: v.any(),
   },
   handler: async (ctx, args) => {
     console.log('[inferences.upsert] upserting', {
-      imageUrl: args.imageUrl,
       model: args.model,
       version: args.version,
       z: args.z,
@@ -108,7 +106,6 @@ export const upsert = internalMutation({
       });
     }
 
-    // Look for existing inference using the new by_tileId index
     const matches = await ctx.db
       .query('inferences')
       .withIndex('by_tileId', (q) =>
@@ -123,7 +120,6 @@ export const upsert = internalMutation({
       matches.sort((a, b) => b._creationTime - a._creationTime);
       const latest = matches[0];
       await ctx.db.patch(latest._id, {
-        imageUrl: args.imageUrl,
         response: args.response,
       });
       return latest._id;
@@ -135,7 +131,6 @@ export const upsert = internalMutation({
       model: args.model,
       version: args.version,
       response: args.response,
-      imageUrl: args.imageUrl,
     });
     return id;
   },
@@ -144,14 +139,12 @@ export const upsert = internalMutation({
 export const upsertByTileId = internalMutation({
   args: {
     tileId: v.id('tiles'),
-    imageUrl: v.string(),
     model: v.string(),
     version: v.string(),
     response: v.any(),
   },
   handler: async (ctx, args) => {
     console.log('[inferences.upsertByTileId] upserting', {
-      imageUrl: args.imageUrl,
       model: args.model,
       version: args.version,
       tileId: args.tileId,
@@ -171,7 +164,6 @@ export const upsertByTileId = internalMutation({
       matches.sort((a, b) => b._creationTime - a._creationTime);
       const latest = matches[0];
       await ctx.db.patch(latest._id, {
-        imageUrl: args.imageUrl,
         response: args.response,
       });
       return latest._id;
@@ -182,14 +174,9 @@ export const upsertByTileId = internalMutation({
 
     const id = await ctx.db.insert('inferences', {
       tileId: args.tileId,
-      imageUrl: args.imageUrl,
       model: args.model,
       version: args.version,
       response: args.response,
-      // include legacy fields for now to satisfy schema
-      z: tile.z,
-      x: tile.x,
-      y: tile.y,
     });
     return id;
   },
@@ -199,13 +186,12 @@ export const upsertByTileId = internalMutation({
 export const getAvailableZoomLevels = query({
   args: {},
   handler: async (ctx) => {
-    const results = await ctx.db.query('inferences').collect();
+    // Get all tiles to find available zoom levels
+    const tiles = await ctx.db.query('tiles').collect();
 
-    const zoomLevels = [
-      ...new Set(
-        results.map((r) => r.z).filter((z): z is number => z !== undefined)
-      ),
-    ].sort((a, b) => a - b);
+    const zoomLevels = [...new Set(tiles.map((tile) => tile.z))].sort(
+      (a, b) => a - b
+    );
     return zoomLevels;
   },
 });

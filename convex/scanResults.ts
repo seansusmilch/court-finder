@@ -7,6 +7,7 @@ import {
   ROBOFLOW_MODEL_NAME,
   ROBOFLOW_MODEL_VERSION,
 } from './lib/constants';
+import { styleTileUrl } from './lib/tiles';
 
 type TileResultItem = {
   z: number;
@@ -61,27 +62,23 @@ export const getByScanId = query({
     // For each tile, fetch latest inference by tile coordinates
     const resultTiles: TileResultItem[] = await Promise.all(
       tiles.map(async (t: Doc<'tiles'>) => {
+        const tileUrl = styleTileUrl(t.z, t.x, t.y);
         const matches = await ctx.db
           .query('inferences')
-          .withIndex('by_tile', (q) =>
-            q
-              .eq('z', t.z as number)
-              .eq('x', t.x as number)
-              .eq('y', t.y as number)
-              .eq('model', model)
-              .eq('version', version)
+          .withIndex('by_tileId', (q) =>
+            q.eq('tileId', t._id).eq('model', model).eq('version', version)
           )
           .collect();
         if (!matches.length) {
-          return { z: t.z, x: t.x, y: t.y, detections: null };
+          return { z: t.z, x: t.x, y: t.y, url: tileUrl, detections: null };
         }
         matches.sort((a, b) => b._creationTime - a._creationTime);
         const latest = matches[0];
         return {
-          z: latest.z as number,
-          x: latest.x as number,
-          y: latest.y as number,
-          url: latest.imageUrl as string,
+          z: t.z as number,
+          x: t.x as number,
+          y: t.y as number,
+          url: tileUrl,
           detections: latest.response as unknown,
         };
       })
