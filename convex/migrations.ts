@@ -177,20 +177,20 @@ export const migrateScanUserIds = migrations.define({
 //   },
 // });
 
-export const migrateInferenceToPredictions = migrations.define({
-  table: 'inference_predictions',
-  migrateOne: async (ctx, doc) => {
-    if (!doc.inferenceId) return;
-    const inference = await ctx.db.get(doc.inferenceId);
-    if (!inference) return;
-    return {
-      inferenceId: undefined,
-      model: inference.model,
-      version: inference.version,
-      roboflowInferenceId: inference.response.inference_id,
-    };
-  },
-});
+// export const migrateInferenceToPredictions = migrations.define({
+//   table: 'inference_predictions',
+//   migrateOne: async (ctx, doc) => {
+//     if (!doc.inferenceId) return;
+//     const inference = await ctx.db.get(doc.inferenceId);
+//     if (!inference) return;
+//     return {
+//       inferenceId: undefined,
+//       model: inference.model,
+//       version: inference.version,
+//       roboflowInferenceId: inference.response.inference_id,
+//     };
+//   },
+// });
 
 export const runAll = migrations.runner([
   internal.migrations.migratePredictions,
@@ -204,5 +204,5 @@ export const runAll = migrations.runner([
   // internal.migrations.migrateFeedbackSubmissionsTileandBatchId,
   internal.migrations.migrateScanUserIds,
   // internal.migrations.migrateInferencesDeletedFields,
-  internal.migrations.migrateInferenceToPredictions,
+  // internal.migrations.migrateInferenceToPredictions,
 ]);
