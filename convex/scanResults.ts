@@ -59,27 +59,40 @@ export const getByScanId = query({
     const version = ROBOFLOW_MODEL_VERSION;
     const zoom = tiles[0].z as number;
 
-    // For each tile, fetch latest inference by tile coordinates
+    // For each tile, fetch predictions by tile/model/version
     const resultTiles: TileResultItem[] = await Promise.all(
       tiles.map(async (t: Doc<'tiles'>) => {
         const tileUrl = styleTileUrl(t.z, t.x, t.y);
-        const matches = await ctx.db
-          .query('inferences')
-          .withIndex('by_tileId', (q) =>
+        const preds = await ctx.db
+          .query('inference_predictions')
+          .withIndex('by_tile_model_version', (q) =>
             q.eq('tileId', t._id).eq('model', model).eq('version', version)
           )
           .collect();
-        if (!matches.length) {
+        if (!preds.length) {
           return { z: t.z, x: t.x, y: t.y, url: tileUrl, detections: null };
         }
-        matches.sort((a, b) => b._creationTime - a._creationTime);
-        const latest = matches[0];
+        // Build a Roboflow-like detections object for compatibility
+        const detections = {
+          image: { width: 1024, height: 1024 },
+          predictions: preds.map((p) => ({
+            x: p.x as number,
+            y: p.y as number,
+            width: p.width as number,
+            height: p.height as number,
+            confidence: p.confidence as number,
+            class: p.class,
+            class_id: p.classId as number | undefined,
+            detection_id: p.roboflowDetectionId,
+          })),
+          time: Date.now(),
+        } as const;
         return {
           z: t.z as number,
           x: t.x as number,
           y: t.y as number,
           url: tileUrl,
-          detections: latest.response as unknown,
+          detections: detections as unknown,
         };
       })
     );

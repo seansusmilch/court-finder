@@ -38,14 +38,8 @@ export const getNextPredictionForFeedback = query({
       return null; // All done
     }
 
-    const inference = await ctx.db.get(nextPrediction.inferenceId);
-
-    if (!inference) {
-      return null;
-    }
-
-    // Get the tile information to generate the imageUrl
-    const tile = await ctx.db.get(inference.tileId);
+    // Fetch the tile from prediction
+    const tile = await ctx.db.get(nextPrediction.tileId);
     if (!tile) {
       return null;
     }
@@ -53,11 +47,19 @@ export const getNextPredictionForFeedback = query({
     // Generate the imageUrl using the tile coordinates
     const imageUrl = styleTileUrl(tile.z, tile.x, tile.y);
 
+    // Provide a minimal stub for `inference` to satisfy UI expectations
+    const inference = {
+      tileId: nextPrediction.tileId,
+      model: nextPrediction.model,
+      version: nextPrediction.version,
+      response: { image: { width: 1024, height: 1024 } },
+    } as const;
+
     return {
       prediction: nextPrediction,
       inference,
       imageUrl,
-    };
+    } as const;
   },
 });
 

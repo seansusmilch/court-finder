@@ -1,4 +1,4 @@
-import { internalMutation, query } from './_generated/server';
+import { internalMutation, internalQuery, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 
@@ -8,8 +8,9 @@ import { getAuthUserId } from '@convex-dev/auth/server';
  */
 export const upsert = internalMutation({
   args: {
-    inferenceId: v.id('inferences'),
     tileId: v.id('tiles'),
+    model: v.string(),
+    version: v.string(),
     // ROBOFLOW RESPONSE
     prediction: v.object({
       x: v.number(),
@@ -25,15 +26,16 @@ export const upsert = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('inference_predictions')
-      .withIndex('by_inf_and_roboflow_detection_id', (q) =>
+      .withIndex('by_tile_model_version_detection', (q) =>
         q
-          .eq('inferenceId', args.inferenceId)
+          .eq('tileId', args.tileId)
+          .eq('model', args.model)
+          .eq('version', args.version)
           .eq('roboflowDetectionId', args.prediction.detection_id)
       )
       .unique();
 
     if (existing) {
-      // Update the existing prediction
       await ctx.db.patch(existing._id, {
         tileId: args.tileId,
         roboflowDetectionId: args.prediction.detection_id,
@@ -44,12 +46,12 @@ export const upsert = internalMutation({
         width: args.prediction.width,
         x: args.prediction.x,
         y: args.prediction.y,
+        model: args.model,
+        version: args.version,
       });
       return existing._id;
     } else {
-      // Insert a new prediction
       const id = await ctx.db.insert('inference_predictions', {
-        inferenceId: args.inferenceId,
         roboflowDetectionId: args.prediction.detection_id,
         tileId: args.tileId,
         class: args.prediction.class,
@@ -59,8 +61,41 @@ export const upsert = internalMutation({
         width: args.prediction.width,
         x: args.prediction.x,
         y: args.prediction.y,
+        model: args.model,
+        version: args.version,
       });
       return id;
     }
+  },
+});
+
+export const listByTileModelVersion = internalQuery({
+  args: {
+    tileId: v.id('tiles'),
+    model: v.string(),
+    version: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const preds = await ctx.db
+      .query('inference_predictions')
+      .withIndex('by_tile_model_version', (q) =>
+        q
+          .eq('tileId', args.tileId)
+          .eq('model', args.model)
+          .eq('version', args.version)
+      )
+      .collect();
+    return preds;
+  },
+});
+
+export const listByTile = internalQuery({
+  args: { tileId: v.id('tiles') },
+  handler: async (ctx, args) => {
+    const preds = await ctx.db
+      .query('inference_predictions')
+      .withIndex('by_tile', (q) => q.eq('tileId', args.tileId))
+      .collect();
+    return preds;
   },
 });
