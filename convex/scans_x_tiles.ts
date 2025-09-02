@@ -5,7 +5,7 @@ import {
   query,
 } from './_generated/server';
 import { v } from 'convex/values';
-import { Doc } from './_generated/dataModel';
+import type { Doc } from './_generated/dataModel';
 
 // Query to check if a scan-tile relationship already exists
 export const getScanTileRelationship = query({

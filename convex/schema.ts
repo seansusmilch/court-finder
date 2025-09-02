@@ -41,13 +41,6 @@ export default defineSchema({
     model: v.string(),
     version: v.string(),
     response: v.any(),
-
-    // REMOVE BELOW
-    imageUrl: v.optional(v.string()),
-    requestedAt: v.optional(v.float64()),
-    x: v.optional(v.float64()),
-    y: v.optional(v.float64()),
-    z: v.optional(v.float64()),
   }).index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
     userId: v.id('users'),

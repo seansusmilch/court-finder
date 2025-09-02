@@ -1,6 +1,8 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
+import { styleTileUrl } from './lib/tiles';
+import { MAPBOX_TILE_DEFAULTS } from './lib/constants';
 
 export const getNextPredictionForFeedback = query({
   args: {
@@ -43,9 +45,19 @@ export const getNextPredictionForFeedback = query({
       return null;
     }
 
+    // Get the tile information to generate the imageUrl
+    const tile = await ctx.db.get(inference.tileId);
+    if (!tile) {
+      return null;
+    }
+
+    // Generate the imageUrl using the tile coordinates
+    const imageUrl = styleTileUrl(tile.z, tile.x, tile.y);
+
     return {
       prediction: nextPrediction,
       inference,
+      imageUrl,
     };
   },
 });

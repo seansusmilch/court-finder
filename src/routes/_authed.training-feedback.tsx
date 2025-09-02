@@ -280,7 +280,7 @@ export function TrainingFeedbackPage() {
     );
   }
 
-  const { prediction, inference } = feedbackData;
+  const { prediction, inference, imageUrl } = feedbackData;
   const { displayName, emoji } = getVisualForClass(prediction.class);
 
   // Roboflow response contains image dimensions
@@ -335,7 +335,7 @@ export function TrainingFeedbackPage() {
       {/* Main content area - fixed height for image viewer */}
       <div className='flex flex-col items-center justify-center p-4 flex-shrink-0'>
         <ImageViewer
-          imageUrl={inference.imageUrl}
+          imageUrl={imageUrl}
           imageWidth={imageWidth}
           imageHeight={imageHeight}
           prediction={prediction}
