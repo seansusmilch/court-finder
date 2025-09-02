@@ -13,9 +13,15 @@ export default defineSchema({
     permissions: v.array(v.string()),
   }).index('email', ['email']),
   feedback_submissions: defineTable({
-    inferenceId: v.id('inferences'),
-    lastBatchId: v.optional(v.id('upload_batches')),
     predictionId: v.id('inference_predictions'),
+    userId: v.id('users'),
+    userResponse: v.string(),
+    tileId: v.optional(v.id('tiles')),
+    batchId: v.optional(v.id('upload_batches')),
+
+    // REMOVE BELOW
+    inferenceId: v.optional(v.id('inferences')),
+    lastBatchId: v.optional(v.id('upload_batches')),
     uploadStatus: v.optional(
       v.union(
         v.literal('pending'),
@@ -24,12 +30,7 @@ export default defineSchema({
         v.literal('failed')
       )
     ),
-    userId: v.id('users'),
-    userResponse: v.string(),
-  })
-    .index('by_inference', ['inferenceId'])
-    .index('by_upload_status', ['uploadStatus'])
-    .index('by_user_and_prediction', ['userId', 'predictionId']),
+  }).index('by_user_and_prediction', ['userId', 'predictionId']),
   inference_predictions: defineTable({
     roboflowDetectionId: v.optional(v.string()),
     tileId: v.optional(v.id('tiles')),
@@ -46,7 +47,6 @@ export default defineSchema({
     detectionId: v.optional(v.string()),
   })
     .index('by_inference', ['inferenceId'])
-    .index('by_inference_and_detection', ['inferenceId', 'detectionId'])
     .index('by_inf_and_roboflow_detection_id', [
       'inferenceId',
       'roboflowDetectionId',
@@ -89,9 +89,7 @@ export default defineSchema({
         })
       )
     ),
-  })
-    .index('by_center', ['centerLat', 'centerLong'])
-    .index('by_center_tile', ['centerTile']),
+  }).index('by_center_tile', ['centerTile']),
   upload_batches: defineTable({
     annotationCount: v.float64(),
     batchId: v.string(),
