@@ -8,71 +8,6 @@ import {
 } from './lib/tiles';
 import type { RoboflowPrediction, RoboflowResponse } from './lib/roboflow';
 
-export const getLatestByTile = internalQuery({
-  args: {
-    z: v.number(),
-    x: v.number(),
-    y: v.number(),
-    model: v.string(),
-    version: v.string(),
-  },
-  handler: async (ctx, args) => {
-    console.log('[inferences.getLatestByTile] tile', args);
-
-    const tile = await ctx.db
-      .query('tiles')
-      .withIndex('by_tile', (q) =>
-        q.eq('x', args.x).eq('y', args.y).eq('z', args.z)
-      )
-      .first();
-    if (!tile) return null;
-
-    const preds = await ctx.db
-      .query('inference_predictions')
-      .withIndex('by_tile_model_version', (q) =>
-        q
-          .eq('tileId', tile._id)
-          .eq('model', args.model)
-          .eq('version', args.version)
-      )
-      .collect();
-    if (!preds.length) return null;
-    return {
-      tileId: tile._id,
-      model: args.model,
-      version: args.version,
-      response: { predictions: preds } as unknown,
-    };
-  },
-});
-
-export const getLatestByTileId = internalQuery({
-  args: {
-    tileId: v.id('tiles'),
-    model: v.string(),
-    version: v.string(),
-  },
-  handler: async (ctx, args) => {
-    console.log('[inferences.getLatestByTileId] tileId', args);
-    const preds = await ctx.db
-      .query('inference_predictions')
-      .withIndex('by_tile_model_version', (q) =>
-        q
-          .eq('tileId', args.tileId)
-          .eq('model', args.model)
-          .eq('version', args.version)
-      )
-      .collect();
-    if (!preds.length) return null;
-    return {
-      tileId: args.tileId,
-      model: args.model,
-      version: args.version,
-      response: { predictions: preds } as unknown,
-    };
-  },
-});
-
 export const upsert = internalMutation({
   args: {
     z: v.number(),
@@ -92,19 +27,6 @@ export const upsert = internalMutation({
       )
       .first();
     return tile?._id as unknown as Id<'inferences'>;
-  },
-});
-
-export const upsertByTileId = internalMutation({
-  args: {
-    tileId: v.id('tiles'),
-    model: v.string(),
-    version: v.string(),
-    response: v.any(),
-  },
-  handler: async (ctx) => {
-    console.log('[inferences.upsertByTileId] bypassed (deprecated)');
-    return undefined as unknown as Id<'inferences'>;
   },
 });
 
