@@ -116,15 +116,33 @@ const processTile = async (
     z: tile.z,
   });
 
-  // Check for existing inference
-  const existing = await ctx.runQuery(internal.inferences.getLatestByTileId, {
-    tileId,
-    model: ROBOFLOW_MODEL_NAME,
-    version: ROBOFLOW_MODEL_VERSION,
-  });
+  // Reuse existing predictions for this tile/model/version if available
+  const existingPredictions = await ctx.runQuery(
+    internal.inference_predictions.listByTileModelVersion,
+    {
+      tileId,
+      model: ROBOFLOW_MODEL_NAME,
+      version: ROBOFLOW_MODEL_VERSION,
+    }
+  );
 
-  let detections: RoboflowResponse = existing?.response;
-  if (!detections) {
+  let detections: RoboflowResponse;
+  if (existingPredictions.length > 0) {
+    detections = {
+      image: { width: 1024, height: 1024 },
+      predictions: existingPredictions.map((p) => ({
+        x: p.x as number,
+        y: p.y as number,
+        width: p.width as number,
+        height: p.height as number,
+        confidence: p.confidence as number,
+        class: p.class,
+        class_id: p.classId as number | undefined,
+        detection_id: p.roboflowDetectionId,
+      })),
+      time: Date.now(),
+    } as RoboflowResponse;
+  } else {
     detections = await detectObjectsWithRoboflow(
       tile.url,
       roboflowKey,
@@ -136,37 +154,26 @@ const processTile = async (
   const predictionsCount = Array.isArray(detections.predictions)
     ? detections.predictions.length
     : undefined;
-  console.log('[scanArea] inference ready', {
+  console.log('[scanArea] predictions ready', {
     index: index + 1,
     tileId,
     predictionsCount,
-    reused: Boolean(existing),
+    reused: existingPredictions.length > 0,
   });
-
-  // Upsert inference record
-  const inferenceId: Id<'inferences'> = await ctx.runMutation(
-    internal.inferences.upsertByTileId,
-    {
-      tileId,
-      model: ROBOFLOW_MODEL_NAME,
-      version: ROBOFLOW_MODEL_VERSION,
-      response: detections,
-    }
-  );
 
   // Upsert inference predictions
   const predictionIds = await Promise.all(
     detections.predictions.map(async (prediction) => {
       return await ctx.runMutation(internal.inference_predictions.upsert, {
-        inferenceId,
         tileId,
+        model: ROBOFLOW_MODEL_NAME,
+        version: ROBOFLOW_MODEL_VERSION,
         prediction,
       });
     })
   );
 
   console.log('[scanArea] upserted predictions', {
-    inferenceId,
     predictionIds,
   });
 

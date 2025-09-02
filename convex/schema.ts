@@ -22,7 +22,6 @@ export default defineSchema({
   inference_predictions: defineTable({
     roboflowDetectionId: v.string(),
     tileId: v.id('tiles'),
-    inferenceId: v.id('inferences'),
     class: v.string(),
     classId: v.optional(v.float64()),
     confidence: v.float64(),
@@ -30,16 +29,25 @@ export default defineSchema({
     width: v.float64(),
     x: v.float64(),
     y: v.float64(),
+    model: v.optional(v.string()),
+    version: v.optional(v.string()),
+    roboflowInferenceId: v.optional(v.string()),
+
+    // REMOVE BELOW
+    inferenceId: v.optional(v.id('inferences')),
   })
-    .index('by_inference', ['inferenceId'])
-    .index('by_inf_and_roboflow_detection_id', [
-      'inferenceId',
+    .index('by_tile', ['tileId'])
+    .index('by_tile_model_version', ['tileId', 'model', 'version'])
+    .index('by_tile_model_version_detection', [
+      'tileId',
+      'model',
+      'version',
       'roboflowDetectionId',
     ]),
   inferences: defineTable({
-    tileId: v.id('tiles'),
-    model: v.string(),
-    version: v.string(),
+    tileId: v.optional(v.id('tiles')),
+    model: v.optional(v.string()),
+    version: v.optional(v.string()),
     response: v.any(),
   }).index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
@@ -58,8 +66,8 @@ export default defineSchema({
   upload_batches: defineTable({
     tileId: v.id('tiles'),
     roboflowName: v.string(),
-    roboflowImageId: v.string(),
-    roboflowAnnotationId: v.string(),
+    roboflowImageId: v.optional(v.string()),
+    roboflowAnnotationId: v.optional(v.string()),
   }),
   tiles: defineTable({
     x: v.float64(),
