@@ -73,84 +73,105 @@ export const removeSwimmingPoolFeedback = migrations.define({
   },
 });
 
-export const migrateScansAndTiles = migrations.define({
+// export const migrateScansAndTiles = migrations.define({
+//   table: 'scans',
+//   migrateOne: async (ctx, doc) => {
+//     const tileCoords = doc.tiles || [];
+
+//     // First, ensure all tiles exist
+//     for (const tileCoord of tileCoords) {
+//       const tileId = await ctx.runMutation(
+//         internal.tiles.insertTileIfNotExists,
+//         {
+//           x: tileCoord.x,
+//           y: tileCoord.y,
+//           z: tileCoord.z,
+//         }
+//       );
+//       // Then, create relationships without duplicates
+//       await ctx.runMutation(
+//         internal.scans_x_tiles.insertScanTileRelationshipIfNotExists,
+//         {
+//           scanId: doc._id,
+//           tileId,
+//         }
+//       );
+//     }
+
+//     return {
+//       model: ROBOFLOW_MODEL_NAME,
+//       version: ROBOFLOW_MODEL_VERSION,
+//       radius: DEFAULT_TILE_RADIUS,
+//       tiles: undefined,
+//     };
+//   },
+// });
+
+// export const migrateInferenceTileId = migrations.define({
+//   table: 'inferences',
+//   migrateOne: async (ctx, doc: Doc<'inferences'>) => {
+//     console.log('[migrateInferenceTileId] doc', doc);
+//     if (doc.tileId) return;
+//     const createdTileId: Id<'tiles'> = await ctx.runMutation(
+//       internal.tiles.insertTileIfNotExists,
+//       {
+//         x: doc.x,
+//         y: doc.y,
+//         z: doc.z,
+//       }
+//     );
+//     return { tileId: createdTileId };
+//   },
+// });
+
+// export const migrateInferencePredictionsTileandDetectionId = migrations.define({
+//   table: 'inference_predictions',
+//   migrateOne: async (ctx, doc) => {
+//     const inference = await ctx.db.get(doc.inferenceId);
+//     if (!inference?.tileId) return;
+
+//     return {
+//       tileId: inference.tileId,
+//       roboflowDetectionId: doc.detectionId,
+//       detectionId: undefined,
+//     };
+//   },
+// });
+
+// export const migrateFeedbackSubmissionsTileandBatchId = migrations.define({
+//   table: 'feedback_submissions',
+//   migrateOne: async (ctx, doc) => {
+//     const prediction = await ctx.db.get(doc.predictionId);
+//     const tileId = prediction?.tileId;
+//     const batchId = doc.lastBatchId;
+
+//     return {
+//       tileId,
+//       batchId,
+//       inferenceId: undefined,
+//       lastBatchId: undefined,
+//       uploadStatus: undefined,
+//     };
+//   },
+// });
+
+export const migrateScanUserIds = migrations.define({
   table: 'scans',
   migrateOne: async (ctx, doc) => {
-    const tileCoords = doc.tiles || [];
-
-    // First, ensure all tiles exist
-    for (const tileCoord of tileCoords) {
-      const tileId = await ctx.runMutation(
-        internal.tiles.insertTileIfNotExists,
-        {
-          x: tileCoord.x,
-          y: tileCoord.y,
-          z: tileCoord.z,
-        }
-      );
-      // Then, create relationships without duplicates
-      await ctx.runMutation(
-        internal.scans_x_tiles.insertScanTileRelationshipIfNotExists,
-        {
-          scanId: doc._id,
-          tileId,
-        }
-      );
-    }
-
-    return {
-      model: ROBOFLOW_MODEL_NAME,
-      version: ROBOFLOW_MODEL_VERSION,
-      radius: DEFAULT_TILE_RADIUS,
-      tiles: undefined,
-    };
+    const user = await ctx.db.query('users').order('asc').first();
+    return { userId: user?._id };
   },
 });
 
-export const migrateInferenceTileId = migrations.define({
+export const migrateInferencesDeletedFields = migrations.define({
   table: 'inferences',
-  migrateOne: async (ctx, doc: Doc<'inferences'>) => {
-    console.log('[migrateInferenceTileId] doc', doc);
-    if (doc.tileId) return;
-    const createdTileId: Id<'tiles'> = await ctx.runMutation(
-      internal.tiles.insertTileIfNotExists,
-      {
-        x: doc.x,
-        y: doc.y,
-        z: doc.z,
-      }
-    );
-    return { tileId: createdTileId };
-  },
-});
-
-export const migrateInferencePredictionsTileandDetectionId = migrations.define({
-  table: 'inference_predictions',
   migrateOne: async (ctx, doc) => {
-    const inference = await ctx.db.get(doc.inferenceId);
-    if (!inference?.tileId) return;
-
     return {
-      tileId: inference.tileId,
-      roboflowDetectionId: doc.detectionId,
-      detectionId: undefined,
-    };
-  },
-});
-
-export const migrateFeedbackSubmissionsTileandBatchId = migrations.define({
-  table: 'feedback_submissions',
-  migrateOne: async (ctx, doc) => {
-    const prediction = await ctx.db.get(doc.predictionId);
-    const tileId = prediction?.tileId;
-    const batchId = doc.lastBatchId;
-
-    return {
-      tileId,
-      batchId,
-      inferenceId: undefined,
-      lastBatchId: undefined,
-      uploadStatus: undefined,
+      z: undefined,
+      x: undefined,
+      y: undefined,
+      requestedAt: undefined,
+      imageUrl: undefined,
     };
   },
 });
@@ -161,8 +182,10 @@ export const runAll = migrations.runner([
   internal.migrations.removeSwimmingPoolsInferences,
   internal.migrations.removeSwimmingPoolPredictions,
   internal.migrations.removeSwimmingPoolFeedback,
-  internal.migrations.migrateScansAndTiles,
-  internal.migrations.migrateInferenceTileId,
-  internal.migrations.migrateInferencePredictionsTileandDetectionId,
-  internal.migrations.migrateFeedbackSubmissionsTileandBatchId,
+  // internal.migrations.migrateScansAndTiles,
+  // internal.migrations.migrateInferenceTileId,
+  // internal.migrations.migrateInferencePredictionsTileandDetectionId,
+  // internal.migrations.migrateFeedbackSubmissionsTileandBatchId,
+  internal.migrations.migrateScanUserIds,
+  internal.migrations.migrateInferencesDeletedFields,
 ]);

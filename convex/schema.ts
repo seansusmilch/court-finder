@@ -18,18 +18,6 @@ export default defineSchema({
     userResponse: v.string(),
     tileId: v.optional(v.id('tiles')),
     batchId: v.optional(v.id('upload_batches')),
-
-    // REMOVE BELOW
-    inferenceId: v.optional(v.id('inferences')),
-    lastBatchId: v.optional(v.id('upload_batches')),
-    uploadStatus: v.optional(
-      v.union(
-        v.literal('pending'),
-        v.literal('batched'),
-        v.literal('uploaded'),
-        v.literal('failed')
-      )
-    ),
   }).index('by_user_and_prediction', ['userId', 'predictionId']),
   inference_predictions: defineTable({
     roboflowDetectionId: v.optional(v.string()),
@@ -42,9 +30,6 @@ export default defineSchema({
     width: v.float64(),
     x: v.float64(),
     y: v.float64(),
-
-    // REMOVE BELOW
-    detectionId: v.optional(v.string()),
   })
     .index('by_inference', ['inferenceId'])
     .index('by_inf_and_roboflow_detection_id', [
@@ -52,43 +37,30 @@ export default defineSchema({
       'roboflowDetectionId',
     ]),
   inferences: defineTable({
-    tileId: v.optional(v.id('tiles')),
+    tileId: v.id('tiles'),
     model: v.string(),
     version: v.string(),
     response: v.any(),
 
     // REMOVE BELOW
-    imageUrl: v.string(),
-    requestedAt: v.float64(),
-    x: v.float64(),
-    y: v.float64(),
-    z: v.float64(),
-  })
-    .index('by_tile', ['z', 'x', 'y', 'model', 'version'])
-    .index('by_tileId', ['tileId', 'model', 'version']),
+    imageUrl: v.optional(v.string()),
+    requestedAt: v.optional(v.float64()),
+    x: v.optional(v.float64()),
+    y: v.optional(v.float64()),
+    z: v.optional(v.float64()),
+  }).index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
     userId: v.optional(v.id('users')),
-    model: v.optional(v.string()),
-    version: v.optional(v.string()),
-    radius: v.optional(v.number()),
+    model: v.string(),
+    version: v.string(),
+    radius: v.number(),
     centerLat: v.float64(),
     centerLong: v.float64(),
-
-    // REMOVE BELOW
     centerTile: v.object({
       x: v.float64(),
       y: v.float64(),
       z: v.float64(),
     }),
-    tiles: v.optional(
-      v.array(
-        v.object({
-          x: v.float64(),
-          y: v.float64(),
-          z: v.float64(),
-        })
-      )
-    ),
   }).index('by_center_tile', ['centerTile']),
   upload_batches: defineTable({
     tileId: v.id('tiles'),
