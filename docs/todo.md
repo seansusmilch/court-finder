@@ -22,7 +22,7 @@ update the document to detail that the permissions Strings are all stored in the
   - COCO JSON looks widely supported https://roboflow.com/formats/coco-json
 - CreateML JSON is so much simpler to write thooooo
 
-# Uploading Images To Roboflow
+## Uploading Images To Roboflow
 
 1. create CreateML.json for image NAME
 2. hit the .../upload endpoint
@@ -43,3 +43,9 @@ Let's show the user how many predictions they have left to evaluate this number 
   - implementing a currency system?
   - allowing users to set the radius of their scan (gotta store the radius)
   - having the scan radius larger in production
+
+## Support different map styles
+
+- the satellite view is sometimes too much
+- having support for the street map (light and dark!) would be nice
+- should just have to change a string in the mapbox api request

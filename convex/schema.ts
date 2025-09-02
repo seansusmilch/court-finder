@@ -12,53 +12,97 @@ export default defineSchema({
     isAnonymous: v.optional(v.boolean()),
     permissions: v.array(v.string()),
   }).index('email', ['email']),
-  scans: defineTable({
-    centerLat: v.number(),
-    centerLong: v.number(),
-    centerTile: v.object({
-      z: v.number(),
-      x: v.number(),
-      y: v.number(),
-    }),
-    tiles: v.array(
-      v.object({
-        z: v.number(),
-        x: v.number(),
-        y: v.number(),
-      })
-    ),
-    userId: v.optional(v.id('users')),
-  })
-    .index('by_center', ['centerLat', 'centerLong'])
-    .index('by_center_tile', ['centerTile']),
-  inferences: defineTable({
-    // Slippy tile coordinates
-    z: v.number(),
-    x: v.number(),
-    y: v.number(),
-    imageUrl: v.string(),
-    model: v.string(),
-    version: v.string(),
-    requestedAt: v.number(),
-    response: v.any(),
-  }).index('by_tile', ['z', 'x', 'y', 'model', 'version']),
-  inference_predictions: defineTable({
-    inferenceId: v.id('inferences'),
-    class: v.string(),
-    confidence: v.number(),
-    height: v.number(),
-    width: v.number(),
-    x: v.number(),
-    y: v.number(),
-    classId: v.optional(v.number()),
-    detectionId: v.string(),
-  })
-    .index('by_inference', ['inferenceId'])
-    .index('by_inference_and_detection', ['inferenceId', 'detectionId']),
   feedback_submissions: defineTable({
-    inferenceId: v.id('inferences'),
     predictionId: v.id('inference_predictions'),
     userId: v.id('users'),
     userResponse: v.string(),
+    tileId: v.optional(v.id('tiles')),
+    batchId: v.optional(v.id('upload_batches')),
+
+    // REMOVE BELOW
+    inferenceId: v.optional(v.id('inferences')),
+    lastBatchId: v.optional(v.id('upload_batches')),
+    uploadStatus: v.optional(
+      v.union(
+        v.literal('pending'),
+        v.literal('batched'),
+        v.literal('uploaded'),
+        v.literal('failed')
+      )
+    ),
   }).index('by_user_and_prediction', ['userId', 'predictionId']),
+  inference_predictions: defineTable({
+    roboflowDetectionId: v.optional(v.string()),
+    tileId: v.optional(v.id('tiles')),
+    inferenceId: v.id('inferences'),
+    class: v.string(),
+    classId: v.optional(v.float64()),
+    confidence: v.float64(),
+    height: v.float64(),
+    width: v.float64(),
+    x: v.float64(),
+    y: v.float64(),
+
+    // REMOVE BELOW
+    detectionId: v.optional(v.string()),
+  })
+    .index('by_inference', ['inferenceId'])
+    .index('by_inf_and_roboflow_detection_id', [
+      'inferenceId',
+      'roboflowDetectionId',
+    ]),
+  inferences: defineTable({
+    tileId: v.optional(v.id('tiles')),
+    model: v.string(),
+    version: v.string(),
+    response: v.any(),
+
+    // REMOVE BELOW
+    imageUrl: v.string(),
+    requestedAt: v.float64(),
+    x: v.float64(),
+    y: v.float64(),
+    z: v.float64(),
+  })
+    .index('by_tile', ['z', 'x', 'y', 'model', 'version'])
+    .index('by_tileId', ['tileId', 'model', 'version']),
+  scans: defineTable({
+    userId: v.optional(v.id('users')),
+    model: v.optional(v.string()),
+    version: v.optional(v.string()),
+    radius: v.optional(v.number()),
+    centerLat: v.float64(),
+    centerLong: v.float64(),
+
+    // REMOVE BELOW
+    centerTile: v.object({
+      x: v.float64(),
+      y: v.float64(),
+      z: v.float64(),
+    }),
+    tiles: v.optional(
+      v.array(
+        v.object({
+          x: v.float64(),
+          y: v.float64(),
+          z: v.float64(),
+        })
+      )
+    ),
+  }).index('by_center_tile', ['centerTile']),
+  upload_batches: defineTable({
+    tileId: v.id('tiles'),
+    roboflowName: v.string(),
+    roboflowImageId: v.string(),
+    roboflowAnnotationId: v.string(),
+  }),
+  tiles: defineTable({
+    x: v.float64(),
+    y: v.float64(),
+    z: v.float64(),
+  }).index('by_tile', ['x', 'y', 'z']),
+  scans_x_tiles: defineTable({
+    scanId: v.id('scans'),
+    tileId: v.id('tiles'),
+  }).index('by_scan_and_tile', ['scanId', 'tileId']),
 });

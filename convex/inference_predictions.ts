@@ -9,6 +9,8 @@ import { getAuthUserId } from '@convex-dev/auth/server';
 export const upsert = internalMutation({
   args: {
     inferenceId: v.id('inferences'),
+    tileId: v.id('tiles'),
+    // ROBOFLOW RESPONSE
     prediction: v.object({
       x: v.number(),
       y: v.number(),
@@ -23,16 +25,18 @@ export const upsert = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query('inference_predictions')
-      .withIndex('by_inference_and_detection', (q) =>
+      .withIndex('by_inf_and_roboflow_detection_id', (q) =>
         q
           .eq('inferenceId', args.inferenceId)
-          .eq('detectionId', args.prediction.detection_id)
+          .eq('roboflowDetectionId', args.prediction.detection_id)
       )
       .unique();
 
     if (existing) {
       // Update the existing prediction
       await ctx.db.patch(existing._id, {
+        tileId: args.tileId,
+        roboflowDetectionId: args.prediction.detection_id,
         class: args.prediction.class,
         classId: args.prediction.class_id,
         confidence: args.prediction.confidence,
@@ -46,7 +50,8 @@ export const upsert = internalMutation({
       // Insert a new prediction
       const id = await ctx.db.insert('inference_predictions', {
         inferenceId: args.inferenceId,
-        detectionId: args.prediction.detection_id,
+        roboflowDetectionId: args.prediction.detection_id,
+        tileId: args.tileId,
         class: args.prediction.class,
         classId: args.prediction.class_id,
         confidence: args.prediction.confidence,
