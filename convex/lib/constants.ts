@@ -1,3 +1,9 @@
+// Environment variable names used by backend actions
+export const ENV_VARS = {
+  MAPBOX_API_KEY: 'MAPBOX_API_KEY',
+  ROBOFLOW_API_KEY: 'ROBOFLOW_API_KEY',
+} as const;
+
 export const PERMISSIONS = {
   SCANS: {
     PREFIX: 'scans',
@@ -38,10 +44,5 @@ export const MAPBOX_TILE_DEFAULTS = {
   styleId: 'satellite-v9',
   tileSize: 512 as 256 | 512,
   zoom: 15,
-} as const;
-
-// Environment variable names used by backend actions
-export const ENV_VARS = {
-  MAPBOX_API_KEY: 'MAPBOX_API_KEY',
-  ROBOFLOW_API_KEY: 'ROBOFLOW_API_KEY',
+  accessToken: process.env[ENV_VARS.MAPBOX_API_KEY],
 } as const;

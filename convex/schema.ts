@@ -16,12 +16,12 @@ export default defineSchema({
     predictionId: v.id('inference_predictions'),
     userId: v.id('users'),
     userResponse: v.string(),
-    tileId: v.optional(v.id('tiles')),
+    tileId: v.id('tiles'),
     batchId: v.optional(v.id('upload_batches')),
   }).index('by_user_and_prediction', ['userId', 'predictionId']),
   inference_predictions: defineTable({
-    roboflowDetectionId: v.optional(v.string()),
-    tileId: v.optional(v.id('tiles')),
+    roboflowDetectionId: v.string(),
+    tileId: v.id('tiles'),
     inferenceId: v.id('inferences'),
     class: v.string(),
     classId: v.optional(v.float64()),
@@ -41,16 +41,9 @@ export default defineSchema({
     model: v.string(),
     version: v.string(),
     response: v.any(),
-
-    // REMOVE BELOW
-    imageUrl: v.optional(v.string()),
-    requestedAt: v.optional(v.float64()),
-    x: v.optional(v.float64()),
-    y: v.optional(v.float64()),
-    z: v.optional(v.float64()),
   }).index('by_tileId', ['tileId', 'model', 'version']),
   scans: defineTable({
-    userId: v.optional(v.id('users')),
+    userId: v.id('users'),
     model: v.string(),
     version: v.string(),
     radius: v.number(),
