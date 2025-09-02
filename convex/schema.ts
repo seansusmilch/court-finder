@@ -18,18 +18,6 @@ export default defineSchema({
     userResponse: v.string(),
     tileId: v.optional(v.id('tiles')),
     batchId: v.optional(v.id('upload_batches')),
-
-    // REMOVE BELOW
-    inferenceId: v.optional(v.id('inferences')),
-    lastBatchId: v.optional(v.id('upload_batches')),
-    uploadStatus: v.optional(
-      v.union(
-        v.literal('pending'),
-        v.literal('batched'),
-        v.literal('uploaded'),
-        v.literal('failed')
-      )
-    ),
   }).index('by_user_and_prediction', ['userId', 'predictionId']),
   inference_predictions: defineTable({
     roboflowDetectionId: v.optional(v.string()),

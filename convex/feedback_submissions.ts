@@ -109,7 +109,6 @@ export const submitFeedback = mutation({
 
     await ctx.db.insert('feedback_submissions', {
       tileId: prediction.tileId,
-      inferenceId: prediction.inferenceId,
       predictionId: args.predictionId,
       userId: userId,
       userResponse: args.userResponse,
