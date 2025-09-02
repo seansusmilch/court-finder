@@ -1,4 +1,4 @@
-import { internalQuery, internalMutation, query } from './_generated/server';
+import { query } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import {
@@ -6,29 +6,7 @@ import {
   tilesIntersectingBbox,
   type GeoJSONPointFeature,
 } from './lib/tiles';
-import type { RoboflowPrediction, RoboflowResponse } from './lib/roboflow';
-
-export const upsert = internalMutation({
-  args: {
-    z: v.number(),
-    x: v.number(),
-    y: v.number(),
-    model: v.string(),
-    version: v.string(),
-    response: v.any(),
-  },
-  handler: async (ctx, args) => {
-    console.log('[inferences.upsert] bypassed (deprecated)');
-    // No-op to keep API stable for now; predictions are stored directly
-    const tile = await ctx.db
-      .query('tiles')
-      .withIndex('by_tile', (q) =>
-        q.eq('x', args.x).eq('y', args.y).eq('z', args.z)
-      )
-      .first();
-    return tile?._id as unknown as Id<'inferences'>;
-  },
-});
+import type { RoboflowPrediction } from './lib/roboflow';
 
 // Get available zoom levels in the database
 export const getAvailableZoomLevels = query({
