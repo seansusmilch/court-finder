@@ -107,22 +107,22 @@ export const removeSwimmingPoolFeedback = migrations.define({
 //   },
 // });
 
-export const migrateInferenceTileId = migrations.define({
-  table: 'inferences',
-  migrateOne: async (ctx, doc: Doc<'inferences'>) => {
-    console.log('[migrateInferenceTileId] doc', doc);
-    if (doc.tileId) return;
-    const createdTileId: Id<'tiles'> = await ctx.runMutation(
-      internal.tiles.insertTileIfNotExists,
-      {
-        x: doc.x,
-        y: doc.y,
-        z: doc.z,
-      }
-    );
-    return { tileId: createdTileId };
-  },
-});
+// export const migrateInferenceTileId = migrations.define({
+//   table: 'inferences',
+//   migrateOne: async (ctx, doc: Doc<'inferences'>) => {
+//     console.log('[migrateInferenceTileId] doc', doc);
+//     if (doc.tileId) return;
+//     const createdTileId: Id<'tiles'> = await ctx.runMutation(
+//       internal.tiles.insertTileIfNotExists,
+//       {
+//         x: doc.x,
+//         y: doc.y,
+//         z: doc.z,
+//       }
+//     );
+//     return { tileId: createdTileId };
+//   },
+// });
 
 export const migrateInferencePredictionsTileandDetectionId = migrations.define({
   table: 'inference_predictions',
@@ -170,7 +170,7 @@ export const runAll = migrations.runner([
   internal.migrations.removeSwimmingPoolPredictions,
   internal.migrations.removeSwimmingPoolFeedback,
   // internal.migrations.migrateScansAndTiles,
-  internal.migrations.migrateInferenceTileId,
+  // internal.migrations.migrateInferenceTileId,
   internal.migrations.migrateInferencePredictionsTileandDetectionId,
   internal.migrations.migrateFeedbackSubmissionsTileandBatchId,
   internal.migrations.migrateScanUserIds,

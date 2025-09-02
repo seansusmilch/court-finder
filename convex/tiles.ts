@@ -37,29 +37,6 @@ export const insertTileIfNotExists = internalMutation({
   },
 });
 
-// Alternative: Upsert pattern (insert or update)
-export const upsertTile = internalMutation({
-  args: {
-    x: v.float64(),
-    y: v.float64(),
-    z: v.float64(),
-  },
-  handler: async (ctx, { x, y, z }) => {
-    // Check if tile already exists
-    const existingTile = await ctx.db
-      .query('tiles')
-      .withIndex('by_tile', (q) => q.eq('x', x).eq('y', y).eq('z', z))
-      .unique();
-
-    if (existingTile) {
-      return existingTile._id;
-    }
-
-    // Insert new tile
-    return await ctx.db.insert('tiles', { x, y, z });
-  },
-});
-
 // Get all tiles (useful for debugging)
 export const getAllTiles = internalQuery({
   handler: async (ctx) => {

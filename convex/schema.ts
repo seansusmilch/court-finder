@@ -52,17 +52,17 @@ export default defineSchema({
       'roboflowDetectionId',
     ]),
   inferences: defineTable({
-    tileId: v.optional(v.id('tiles')),
+    tileId: v.id('tiles'),
     model: v.string(),
     version: v.string(),
     response: v.any(),
 
     // REMOVE BELOW
-    imageUrl: v.string(),
-    requestedAt: v.float64(),
-    x: v.float64(),
-    y: v.float64(),
-    z: v.float64(),
+    imageUrl: v.optional(v.string()),
+    requestedAt: v.optional(v.float64()),
+    x: v.optional(v.float64()),
+    y: v.optional(v.float64()),
+    z: v.optional(v.float64()),
   })
     .index('by_tile', ['z', 'x', 'y', 'model', 'version'])
     .index('by_tileId', ['tileId', 'model', 'version']),
