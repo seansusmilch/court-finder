@@ -91,35 +91,11 @@ export default defineSchema({
     ),
   }).index('by_center_tile', ['centerTile']),
   upload_batches: defineTable({
-    annotationCount: v.float64(),
-    batchId: v.string(),
-    createdAt: v.optional(v.float64()),
-    createdBy: v.optional(v.id('users')),
-    feedbackCount: v.float64(),
-    imageUrl: v.string(),
-    inferenceId: v.id('inferences'),
-    reviewNotes: v.optional(v.string()),
-    reviewedAt: v.optional(v.float64()),
-    reviewedBy: v.optional(v.id('users')),
-    roboflowAnnotationId: v.optional(v.string()),
-    roboflowImageId: v.optional(v.string()),
-    status: v.union(
-      v.literal('pending'),
-      v.literal('processing'),
-      v.literal('uploaded'),
-      v.literal('failed'),
-      v.literal('approved'),
-      v.literal('rejected')
-    ),
-    tileCoordinates: v.object({
-      x: v.float64(),
-      y: v.float64(),
-      z: v.float64(),
-    }),
-  })
-    .index('by_inference', ['inferenceId'])
-    .index('by_status', ['status'])
-    .index('by_tile', ['tileCoordinates']),
+    tileId: v.id('tiles'),
+    roboflowName: v.string(),
+    roboflowImageId: v.string(),
+    roboflowAnnotationId: v.string(),
+  }),
   tiles: defineTable({
     x: v.float64(),
     y: v.float64(),
