@@ -11,11 +11,13 @@
 import type * as actions from "../actions.js";
 import type * as auth from "../auth.js";
 import type * as feedback_submissions from "../feedback_submissions.js";
+import type * as geocoding from "../geocoding.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as inference_predictions from "../inference_predictions.js";
 import type * as inferences from "../inferences.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_geocoding from "../lib/geocoding.js";
 import type * as lib_index from "../lib/index.js";
 import type * as lib_roboflow from "../lib/roboflow.js";
 import type * as lib_tiles from "../lib/tiles.js";
@@ -24,6 +26,7 @@ import type * as scanResults from "../scanResults.js";
 import type * as scans from "../scans.js";
 import type * as scans_x_tiles from "../scans_x_tiles.js";
 import type * as tiles from "../tiles.js";
+import type * as upload_batches from "../upload_batches.js";
 import type * as users from "../users.js";
 
 import type {
@@ -44,11 +47,13 @@ declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   auth: typeof auth;
   feedback_submissions: typeof feedback_submissions;
+  geocoding: typeof geocoding;
   healthCheck: typeof healthCheck;
   http: typeof http;
   inference_predictions: typeof inference_predictions;
   inferences: typeof inferences;
   "lib/constants": typeof lib_constants;
+  "lib/geocoding": typeof lib_geocoding;
   "lib/index": typeof lib_index;
   "lib/roboflow": typeof lib_roboflow;
   "lib/tiles": typeof lib_tiles;
@@ -57,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   scans: typeof scans;
   scans_x_tiles: typeof scans_x_tiles;
   tiles: typeof tiles;
+  upload_batches: typeof upload_batches;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

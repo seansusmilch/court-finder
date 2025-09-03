@@ -168,6 +168,7 @@ const processTile = async (
         tileId,
         model: ROBOFLOW_MODEL_NAME,
         version: ROBOFLOW_MODEL_VERSION,
+        inference_id: detections.inference_id,
         prediction,
       });
     })

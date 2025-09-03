@@ -59,11 +59,12 @@ export default defineSchema({
     roboflowName: v.string(),
     roboflowImageId: v.optional(v.string()),
     roboflowAnnotationId: v.optional(v.string()),
-  }),
+  }).index('by_tile', ['tileId']),
   tiles: defineTable({
     x: v.float64(),
     y: v.float64(),
     z: v.float64(),
+    reverseGeocode: v.optional(v.string()),
   }).index('by_tile', ['x', 'y', 'z']),
   scans_x_tiles: defineTable({
     scanId: v.id('scans'),

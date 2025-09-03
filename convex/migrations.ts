@@ -1,7 +1,7 @@
 import { Migrations } from '@convex-dev/migrations';
-import { components, internal } from './_generated/api.js';
-import type { DataModel } from './_generated/dataModel.js';
-import { pointToTile } from './lib/tiles.js';
+import { components, internal } from './_generated/api';
+import type { DataModel } from './_generated/dataModel';
+import { pointToTile, tileCenterLatLng } from './lib/tiles';
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -186,6 +186,21 @@ export const migrateScanUserIds = migrations.define({
 //   },
 // });
 
+export const migrateTilesReverseGeocode = migrations.define({
+  table: 'tiles',
+  migrateOne: async (ctx, doc) => {
+    if (doc.reverseGeocode && !parseInt(doc.reverseGeocode[0])) return;
+    const { lat, lng } = tileCenterLatLng(doc.z, doc.x, doc.y);
+
+    // Schedule the geocoding action to run after the migration completes
+    await ctx.scheduler.runAfter(0, internal.geocoding.revGeocode, {
+      lat,
+      lng,
+      tileId: doc._id,
+    });
+  },
+});
+
 export const runAll = migrations.runner([
   // internal.migrations.migratePredictions,
   internal.migrations.migrateScansCenterTile,
@@ -199,4 +214,5 @@ export const runAll = migrations.runner([
   internal.migrations.migrateScanUserIds,
   // internal.migrations.migrateInferencesDeletedFields,
   // internal.migrations.migrateInferenceToPredictions,
+  internal.migrations.migrateTilesReverseGeocode,
 ]);

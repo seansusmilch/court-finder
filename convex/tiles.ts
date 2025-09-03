@@ -1,6 +1,7 @@
-import type { Id } from './_generated/dataModel';
+import { internal } from './_generated/api';
 import { internalMutation, internalQuery, query } from './_generated/server';
 import { v } from 'convex/values';
+import { tileCenterLatLng } from './lib/tiles';
 
 // Query to check if a tile already exists
 export const getTileByCoordinates = query({
@@ -33,7 +34,19 @@ export const insertTileIfNotExists = internalMutation({
 
     if (existingTile) return existingTile._id;
 
-    return await ctx.db.insert('tiles', { x, y, z });
+    const { lat, lng } = tileCenterLatLng(z, x, y);
+    const reverseGeocode: string = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+    const tileId = await ctx.db.insert('tiles', { x, y, z, reverseGeocode });
+
+    // Schedule the geocoding action to run after the mutation completes
+    await ctx.scheduler.runAfter(0, internal.geocoding.revGeocode, {
+      lat,
+      lng,
+      tileId,
+    });
+
+    return tileId;
   },
 });
 
@@ -41,5 +54,16 @@ export const insertTileIfNotExists = internalMutation({
 export const getAllTiles = internalQuery({
   handler: async (ctx) => {
     return await ctx.db.query('tiles').collect();
+  },
+});
+
+// Update tile with geocoded location
+export const updateTileGeocode = internalMutation({
+  args: {
+    tileId: v.id('tiles'),
+    reverseGeocode: v.string(),
+  },
+  handler: async (ctx, { tileId, reverseGeocode }) => {
+    await ctx.db.patch(tileId, { reverseGeocode });
   },
 });

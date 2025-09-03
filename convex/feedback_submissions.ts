@@ -2,6 +2,7 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { styleTileUrl } from './lib/tiles';
+import { RANDOMIZE_PREDICTION_FEEDBACK } from './lib/constants';
 
 export const getNextPredictionForFeedback = query({
   args: {
@@ -24,13 +25,29 @@ export const getNextPredictionForFeedback = query({
     const skippedPredictionIds = new Set(skipIds?.map((id) => id.toString()));
 
     let nextPrediction = null;
-    for await (const prediction of ctx.db.query('inference_predictions')) {
-      if (
-        !submittedPredictionIds.has(prediction._id.toString()) &&
-        !skippedPredictionIds.has(prediction._id.toString())
-      ) {
-        nextPrediction = prediction;
-        break;
+    if (RANDOMIZE_PREDICTION_FEEDBACK) {
+      const allPredictions = await ctx.db.query('inference_predictions').collect();
+      const candidatePredictions = allPredictions.filter(
+        (prediction) =>
+          !submittedPredictionIds.has(prediction._id.toString()) &&
+          !skippedPredictionIds.has(prediction._id.toString())
+      );
+
+      if (candidatePredictions.length > 0) {
+        const randomIndex = Math.floor(
+          Math.random() * candidatePredictions.length
+        );
+        nextPrediction = candidatePredictions[randomIndex];
+      }
+    } else {
+      for await (const prediction of ctx.db.query('inference_predictions')) {
+        if (
+          !submittedPredictionIds.has(prediction._id.toString()) &&
+          !skippedPredictionIds.has(prediction._id.toString())
+        ) {
+          nextPrediction = prediction;
+          break;
+        }
       }
     }
 
@@ -59,6 +76,7 @@ export const getNextPredictionForFeedback = query({
       prediction: nextPrediction,
       inference,
       imageUrl,
+      tile,
     } as const;
   },
 });
