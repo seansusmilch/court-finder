@@ -46,3 +46,6 @@ export const MAPBOX_TILE_DEFAULTS = {
   zoom: 15,
   accessToken: process.env[ENV_VARS.MAPBOX_API_KEY],
 } as const;
+
+// Toggle for randomizing prediction feedback
+export const RANDOMIZE_PREDICTION_FEEDBACK = true;

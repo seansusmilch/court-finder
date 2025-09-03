@@ -280,7 +280,7 @@ export function TrainingFeedbackPage() {
     );
   }
 
-  const { prediction, inference, imageUrl } = feedbackData;
+  const { prediction, inference, imageUrl, tile } = feedbackData;
   const { displayName, emoji } = getVisualForClass(prediction.class);
 
   // Roboflow response contains image dimensions
@@ -379,12 +379,12 @@ export function TrainingFeedbackPage() {
             ✅ Yes
           </Button>
         </div>
-
-        {isSubmitting && (
-          <div className='flex justify-center'>
-            <Loader2 className='h-6 w-6 animate-spin' />
-          </div>
-        )}
+        <div className='text-center text-xs text-muted-foreground pt-4'>
+          <p>Prediction ID: {prediction._id}</p>
+          <p>
+            Tile: {tile.z}/{tile.x}/{tile.y}
+          </p>
+        </div>
       </div>
     </div>
   );
