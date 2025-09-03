@@ -24,6 +24,7 @@ import type * as scanResults from "../scanResults.js";
 import type * as scans from "../scans.js";
 import type * as scans_x_tiles from "../scans_x_tiles.js";
 import type * as tiles from "../tiles.js";
+import type * as upload_batches from "../upload_batches.js";
 import type * as users from "../users.js";
 
 import type {
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   scans: typeof scans;
   scans_x_tiles: typeof scans_x_tiles;
   tiles: typeof tiles;
+  upload_batches: typeof upload_batches;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

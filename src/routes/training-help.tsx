@@ -19,7 +19,7 @@ export function TrainingHelpPage() {
           <Button
             variant='ghost'
             size='sm'
-            onClick={() => navigate({ to: '/training-feedback' })}
+            onClick={() => navigate({ to: '/training' })}
             className='flex items-center gap-2 hover:bg-accent'
           >
             <ArrowLeft className='h-4 w-4' />
@@ -223,7 +223,7 @@ export function TrainingHelpPage() {
         {/* Call to Action */}
         <div className='flex justify-center pt-6'>
           <Button
-            onClick={() => navigate({ to: '/training-feedback' })}
+            onClick={() => navigate({ to: '/training' })}
             size='lg'
             className='px-8 py-3 text-base font-medium'
           >

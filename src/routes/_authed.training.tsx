@@ -13,13 +13,13 @@ import {
 import type { Id } from '@/../convex/_generated/dataModel';
 import { getVisualForClass } from '@/lib/constants';
 
-export const Route = createFileRoute('/_authed/training-feedback')({
+export const Route = createFileRoute('/_authed/training')({
   component: TrainingFeedbackPage,
   beforeLoad: async ({ context }) => {
     if (!context.me) {
       throw redirect({
         to: '/login',
-        search: { redirect: '/training-feedback' },
+        search: { redirect: '/training' },
       });
     }
   },

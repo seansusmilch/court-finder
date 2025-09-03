@@ -11,6 +11,7 @@ export const upsert = internalMutation({
     tileId: v.id('tiles'),
     model: v.string(),
     version: v.string(),
+    inference_id: v.string(),
     // ROBOFLOW RESPONSE
     prediction: v.object({
       x: v.number(),
@@ -35,35 +36,26 @@ export const upsert = internalMutation({
       )
       .unique();
 
+    const updateData = {
+      roboflowInferenceId: args.inference_id,
+      roboflowDetectionId: args.prediction.detection_id,
+      tileId: args.tileId,
+      class: args.prediction.class,
+      classId: args.prediction.class_id,
+      confidence: args.prediction.confidence,
+      height: args.prediction.height,
+      width: args.prediction.width,
+      x: args.prediction.x,
+      y: args.prediction.y,
+      model: args.model,
+      version: args.version,
+    };
+
     if (existing) {
-      await ctx.db.patch(existing._id, {
-        tileId: args.tileId,
-        roboflowDetectionId: args.prediction.detection_id,
-        class: args.prediction.class,
-        classId: args.prediction.class_id,
-        confidence: args.prediction.confidence,
-        height: args.prediction.height,
-        width: args.prediction.width,
-        x: args.prediction.x,
-        y: args.prediction.y,
-        model: args.model,
-        version: args.version,
-      });
+      await ctx.db.patch(existing._id, updateData);
       return existing._id;
     } else {
-      const id = await ctx.db.insert('inference_predictions', {
-        roboflowDetectionId: args.prediction.detection_id,
-        tileId: args.tileId,
-        class: args.prediction.class,
-        classId: args.prediction.class_id,
-        confidence: args.prediction.confidence,
-        height: args.prediction.height,
-        width: args.prediction.width,
-        x: args.prediction.x,
-        y: args.prediction.y,
-        model: args.model,
-        version: args.version,
-      });
+      const id = await ctx.db.insert('inference_predictions', updateData);
       return id;
     }
   },
