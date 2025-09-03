@@ -59,7 +59,7 @@ export default defineSchema({
     roboflowName: v.string(),
     roboflowImageId: v.optional(v.string()),
     roboflowAnnotationId: v.optional(v.string()),
-  }),
+  }).index('by_tile', ['tileId']),
   tiles: defineTable({
     x: v.float64(),
     y: v.float64(),
