@@ -82,6 +82,7 @@ function MapPage() {
   const mapRef = useRef<MapRef | null>(null);
   const initial = Route.useLoaderData() as MapViewState;
   const [viewState, setViewState] = useState<MapViewState>(initial);
+  const [mapStyle, setMapStyle] = useState(MAP_STYLE_SATELLITE);
   const hasAutoGeolocatedRef = useRef(false);
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
@@ -260,7 +261,7 @@ function MapPage() {
         mapboxAccessToken={MAPBOX_API_KEY}
         initialViewState={viewState}
         style={{ width: '100%', height: '100%' }}
-        mapStyle={MAP_STYLE_SATELLITE}
+        mapStyle={mapStyle}
         onMoveEnd={onMoveEnd}
         onLoad={(e) => {
           const b = computeBbox({
@@ -343,6 +344,8 @@ function MapPage() {
         canScan={!!canScan}
         onScan={() => scanMutation.mutate()}
         isScanning={scanMutation.isPending}
+        mapStyle={mapStyle}
+        onMapStyleChange={setMapStyle}
       />
     </div>
   );

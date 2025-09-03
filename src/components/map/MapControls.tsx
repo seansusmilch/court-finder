@@ -10,6 +10,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { ConfidenceSlider } from './ConfidenceSlider';
+import { MapStyleControl } from './MapStyleControl';
 import { cn } from '@/lib/utils';
 
 interface MapControlsProps {
@@ -26,6 +27,8 @@ interface MapControlsProps {
   canScan?: boolean;
   onScan?: () => void;
   isScanning?: boolean;
+  mapStyle: string;
+  onMapStyleChange: (style: string) => void;
 }
 
 function ControlsBody({
@@ -41,6 +44,8 @@ function ControlsBody({
   canScan,
   onScan,
   isScanning,
+  mapStyle,
+  onMapStyleChange,
 }: Omit<MapControlsProps, 'className'>) {
   return (
     <div className='space-y-3'>
@@ -75,6 +80,11 @@ function ControlsBody({
       <ConfidenceSlider
         confidenceThreshold={confidenceThreshold}
         onConfidenceChange={onConfidenceChange}
+      />
+
+      <MapStyleControl
+        mapStyle={mapStyle}
+        onMapStyleChange={onMapStyleChange}
       />
 
       {isZoomSufficient ? (
@@ -133,6 +143,8 @@ export function MapControls({
   canScan,
   onScan,
   isScanning,
+  mapStyle,
+  onMapStyleChange,
 }: MapControlsProps) {
   const card = (
     <Card className='bg-background/90 backdrop-blur shadow-sm w-80 max-w-[92vw]'>
@@ -153,6 +165,8 @@ export function MapControls({
           canScan={canScan}
           onScan={onScan}
           isScanning={isScanning}
+          mapStyle={mapStyle}
+          onMapStyleChange={onMapStyleChange}
         />
       </CardContent>
     </Card>
@@ -196,6 +210,8 @@ export function MapControls({
                 canScan={canScan}
                 onScan={onScan}
                 isScanning={isScanning}
+                mapStyle={mapStyle}
+                onMapStyleChange={onMapStyleChange}
               />
             </div>
           </SheetContent>

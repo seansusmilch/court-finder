@@ -4,7 +4,8 @@ export const PINS_VISIBLE_FROM_ZOOM = 12;
 // Map defaults
 export const DEFAULT_MAP_CENTER: [number, number] = [-87.6952, 41.9442];
 export const DEFAULT_MAP_ZOOM = 15;
-export const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/satellite-v9';
+export const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/standard-satellite';
+export const MAP_STYLE_STANDARD = 'mapbox://styles/mapbox/standard';
 
 // Clustering
 export const CLUSTER_MAX_ZOOM = 13;
