@@ -1,10 +1,13 @@
+import { v } from 'convex/values';
 import { query } from './_generated/server';
 import { ROBOFLOW_MODEL_NAME, ROBOFLOW_MODEL_VERSION } from './lib/constants';
-import { v } from 'convex/values';
 
 export const getPendingBatches = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    onlyLatestModelVersion: v.optional(v.boolean()),
+    includeEmpty: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
     // Get all tiles that are in upload_batches
     const uploadedTiles = await ctx.db.query('upload_batches').collect();
 
@@ -15,52 +18,57 @@ export const getPendingBatches = query({
     );
 
     // Get all tiles NOT in upload_batches, ordered by creation time descending for stable ordering
-    const allTiles = await ctx.db.query('tiles').order('desc').collect();
+    const allTiles = await ctx.db.query('tiles').collect();
     const pendingTiles = allTiles.filter(
       (tile) => !uploadedTileIds.has(tile._id)
     );
 
+    console.log({
+      uploadedTileIds,
+      allTilesCount: allTiles.length,
+      pendingTilesCount: pendingTiles.length,
+    });
+
     // For each pending tile, get predictions and feedback
-    const result = [] as Array<{
-      tile: any;
-      predictions: Array<{
-        prediction: any;
-        feedback: any[];
-        feedbackCount: number;
-      }>;
-      predictionsCount: number;
-      feedbackCount: number;
-      coveragePct: number;
-      covered: number;
-      missing: number;
-    }>;
+    const result = [];
 
     for (const tile of pendingTiles) {
       // Get predictions for this tile from the latest model/version
-      const predictions = await ctx.db
-        .query('inference_predictions')
-        .withIndex('by_tile_model_version', (q) =>
-          q
-            .eq('tileId', tile._id)
-            .eq('model', ROBOFLOW_MODEL_NAME)
-            .eq('version', ROBOFLOW_MODEL_VERSION)
-        )
+      const predictions = args.onlyLatestModelVersion
+        ? await ctx.db
+            .query('inference_predictions')
+            .withIndex('by_tile_model_version', (q) =>
+              q
+                .eq('tileId', tile._id)
+                .eq('model', ROBOFLOW_MODEL_NAME)
+                .eq('version', ROBOFLOW_MODEL_VERSION)
+            )
+            .collect()
+        : await ctx.db
+            .query('inference_predictions')
+            .withIndex('by_tile', (q) => q.eq('tileId', tile._id))
+            .collect();
+
+      if (!predictions.length && !args.includeEmpty) continue;
+
+      console.log({ tileId: tile._id, predictionsCount: predictions.length });
+
+      const feedbacks = await ctx.db
+        .query('feedback_submissions')
+        .withIndex('by_tile', (q) => q.eq('tileId', tile._id))
         .collect();
 
-      // For each prediction, get feedback
-      const predictionsWithFeedback = [];
-      for (const prediction of predictions) {
-        const feedback = await ctx.db
-          .query('feedback_submissions')
-          .filter((q) => q.eq(q.field('predictionId'), prediction._id))
-          .collect();
+      const predictionsWithFeedback = predictions.map((prediction) => {
+        const feedback = feedbacks.filter(
+          (f) => f.predictionId === prediction._id
+        );
 
-        predictionsWithFeedback.push({
+        return {
           prediction,
           feedback,
           feedbackCount: feedback.length,
-        });
-      }
+        };
+      });
 
       const totalFeedbackCount = predictionsWithFeedback.reduce(
         (acc, curr) => acc + curr.feedbackCount,
@@ -88,9 +96,9 @@ export const getPendingBatches = query({
     }
 
     // Sort all results by coverage percentage (lowest first - tiles needing attention)
-    const sortedByCoveragePct = result
-      .sort((a, b) => a.coveragePct - b.coveragePct)
-      .reverse();
+    const sortedByCoveragePct = result.sort(
+      (a, b) => b.coveragePct - a.coveragePct
+    );
 
     return sortedByCoveragePct;
   },

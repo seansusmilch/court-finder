@@ -29,8 +29,12 @@ export const Route = createFileRoute('/_authed/training-data')({
 function RouteComponent() {
   const { data } = Route.useLoaderData();
 
+  const feedbackCount = data.reduce((acc, item) => acc + item.feedbackCount, 0);
+
   return (
     <div className='p-4'>
+      <h1 className='text-2xl font-bold'>Training Data</h1>
+      <p>{feedbackCount} feedback submissions</p>
       <div className='grid grid-cols-1 gap-3 md:grid-cols-3'>
         {data.map((item, idx) => {
           const { tile, predictionsCount, covered, missing, coveragePct } =

@@ -18,7 +18,10 @@ export default defineSchema({
     userResponse: v.string(),
     tileId: v.id('tiles'),
     batchId: v.optional(v.id('upload_batches')),
-  }).index('by_user_and_prediction', ['userId', 'predictionId']),
+  })
+    .index('by_user_and_prediction', ['userId', 'predictionId'])
+    .index('by_tile', ['tileId']),
+
   inference_predictions: defineTable({
     roboflowDetectionId: v.string(),
     tileId: v.id('tiles'),

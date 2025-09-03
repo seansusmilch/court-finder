@@ -5,10 +5,8 @@ import { styleTileUrl } from './lib/tiles';
 import { RANDOMIZE_PREDICTION_FEEDBACK } from './lib/constants';
 
 export const getNextPredictionForFeedback = query({
-  args: {
-    skipIds: v.optional(v.array(v.id('inference_predictions'))),
-  },
-  handler: async (ctx, { skipIds }) => {
+  args: {},
+  handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return null;
@@ -22,15 +20,14 @@ export const getNextPredictionForFeedback = query({
     const submittedPredictionIds = new Set(
       userSubmissions.map((s) => s.predictionId.toString())
     );
-    const skippedPredictionIds = new Set(skipIds?.map((id) => id.toString()));
 
     let nextPrediction = null;
     if (RANDOMIZE_PREDICTION_FEEDBACK) {
-      const allPredictions = await ctx.db.query('inference_predictions').collect();
+      const allPredictions = await ctx.db
+        .query('inference_predictions')
+        .collect();
       const candidatePredictions = allPredictions.filter(
-        (prediction) =>
-          !submittedPredictionIds.has(prediction._id.toString()) &&
-          !skippedPredictionIds.has(prediction._id.toString())
+        (prediction) => !submittedPredictionIds.has(prediction._id.toString())
       );
 
       if (candidatePredictions.length > 0) {
@@ -41,10 +38,7 @@ export const getNextPredictionForFeedback = query({
       }
     } else {
       for await (const prediction of ctx.db.query('inference_predictions')) {
-        if (
-          !submittedPredictionIds.has(prediction._id.toString()) &&
-          !skippedPredictionIds.has(prediction._id.toString())
-        ) {
+        if (!submittedPredictionIds.has(prediction._id.toString())) {
           nextPrediction = prediction;
           break;
         }
