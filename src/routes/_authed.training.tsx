@@ -206,21 +206,11 @@ function ImageViewer({
 
 export function TrainingFeedbackPage() {
   const navigate = useNavigate();
-  const [skippedIds, setSkippedIds] = useState<Id<'inference_predictions'>[]>(
-    () => {
-      const savedSkips = localStorage.getItem('skippedIds');
-      return savedSkips ? JSON.parse(savedSkips) : [];
-    }
-  );
-
-  useEffect(() => {
-    localStorage.setItem('skippedIds', JSON.stringify(skippedIds));
-  }, [skippedIds]);
 
   const stats = useQuery(api.feedback_submissions.getFeedbackStats);
   const feedbackData = useQuery(
     api.feedback_submissions.getNextPredictionForFeedback,
-    { skipIds: skippedIds }
+    {}
   );
   const submitFeedback = useMutation(api.feedback_submissions.submitFeedback);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -240,12 +230,6 @@ export function TrainingFeedbackPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleUnsure = async () => {
-    if (!feedbackData) return;
-    await handleFeedback('unsure');
-    setSkippedIds((prev) => [...prev, feedbackData.prediction._id]);
   };
 
   const predictionsLeft = stats
@@ -363,7 +347,7 @@ export function TrainingFeedbackPage() {
           <Button
             size='lg'
             variant='outline'
-            onClick={handleUnsure}
+            onClick={() => handleFeedback('unsure')}
             disabled={isSubmitting}
             className='flex-1 max-w-[100px] sm:max-w-[120px]'
           >
