@@ -1,5 +1,5 @@
 // Map rendering thresholds
-export const PINS_VISIBLE_FROM_ZOOM = 12;
+export const PINS_VISIBLE_FROM_ZOOM = 11;
 
 // Map defaults
 export const DEFAULT_MAP_CENTER: [number, number] = [-87.6952, 41.9442];
@@ -8,7 +8,7 @@ export const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/standard-satellite';
 export const MAP_STYLE_STANDARD = 'mapbox://styles/mapbox/standard';
 
 // Clustering
-export const CLUSTER_MAX_ZOOM = 13;
+export const CLUSTER_MAX_ZOOM = 12;
 export const CLUSTER_RADIUS = 50;
 
 // Search / geocoding (Mapbox SearchBox handles querying internally)
