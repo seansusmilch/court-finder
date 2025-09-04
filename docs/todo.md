@@ -29,7 +29,7 @@ update the document to detail that the permissions Strings are all stored in the
 3. roboflow will return an image ID
 4. hit the .../annotate/:image-id endpoint with createml.json
 
-## storing user training data
+## DONE: storing user training data
 
 I want the training feedback page to be extremely simple on mobile where it just asks the user a question along with a satellite image: Is this a basketball court? And the user can say yes or no and then submit their feedback. After they submit their feedback they should be shown a new question. Each time they're shown a question the satellite image should zoom in on the relevant area. The user should be able to do this until they have given feedback on every entry in "inference_predictions". Store the results in the convex table "feedback_submissions". Use as many existing components as you can
 
@@ -44,7 +44,7 @@ Let's show the user how many predictions they have left to evaluate this number 
   - allowing users to set the radius of their scan (gotta store the radius)
   - having the scan radius larger in production
 
-## Support different map styles
+## DONE: Support different map styles
 
 - the satellite view is sometimes too much
 - having support for the street map (light and dark!) would be nice
