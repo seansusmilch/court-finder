@@ -71,7 +71,7 @@ export const getNextPredictionForFeedback = query({
       inference,
       imageUrl,
       tile,
-    } as const;
+    };
   },
 });
 

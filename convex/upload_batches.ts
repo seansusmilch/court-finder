@@ -112,6 +112,172 @@ export const getPendingBatches = query({
   },
 });
 
+export const getProcessedBatches = query({
+  args: {
+    onlyLatestModelVersion: v.optional(v.boolean()),
+    includeEmpty: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    // All created batches (i.e., already processed/started)
+    const batches = await ctx.db.query('upload_batches').collect();
+
+    const results = [] as Array<{
+      batch: any;
+      tile: any;
+      predictionsCount: number;
+      feedbackCount: number;
+      coveragePct: number;
+      covered: number;
+      missing: number;
+      imageUploaded: boolean;
+      annotated: boolean;
+    }>;
+
+    for (const batch of batches) {
+      const tile = await ctx.db.get(batch.tileId);
+      if (!tile) continue;
+
+      const predictions = args.onlyLatestModelVersion
+        ? await ctx.db
+            .query('inference_predictions')
+            .withIndex('by_tile_model_version', (q) =>
+              q
+                .eq('tileId', tile._id)
+                .eq('model', ROBOFLOW_MODEL_NAME)
+                .eq('version', ROBOFLOW_MODEL_VERSION)
+            )
+            .collect()
+        : await ctx.db
+            .query('inference_predictions')
+            .withIndex('by_tile', (q) => q.eq('tileId', tile._id))
+            .collect();
+
+      if (!predictions.length && !args.includeEmpty) continue;
+
+      const feedbacks = await ctx.db
+        .query('feedback_submissions')
+        .withIndex('by_tile', (q) => q.eq('tileId', tile._id))
+        .collect();
+
+      const predictionsWithFeedback = predictions.map((prediction) => {
+        const feedback = feedbacks.filter(
+          (f) => f.predictionId === prediction._id
+        );
+        return {
+          prediction,
+          feedback,
+          feedbackCount: feedback.length,
+        };
+      });
+
+      const totalFeedbackCount = predictionsWithFeedback.reduce(
+        (acc, curr) => acc + curr.feedbackCount,
+        0
+      );
+      const covered = predictionsWithFeedback.filter(
+        (p) => p.feedbackCount > 0
+      ).length;
+      const predictionsCount = predictionsWithFeedback.length;
+      const coveragePct =
+        predictionsCount > 0
+          ? Math.round((covered / predictionsCount) * 100)
+          : 0;
+      const missing = predictionsCount - covered;
+
+      results.push({
+        batch,
+        tile,
+        predictionsCount,
+        feedbackCount: totalFeedbackCount,
+        coveragePct,
+        covered,
+        missing,
+        imageUploaded: Boolean(batch.roboflowImageId),
+        annotated: Boolean(batch.roboflowAnnotatedAt),
+      });
+    }
+
+    // Newest first
+    results.sort(
+      (a, b) => (b.batch._creationTime ?? 0) - (a.batch._creationTime ?? 0)
+    );
+    return results;
+  },
+});
+
+export const getTileBatchDetails = query({
+  args: {
+    tileId: v.optional(v.id('tiles')),
+    batchId: v.optional(v.id('upload_batches')),
+  },
+  handler: async (ctx, args) => {
+    const batch = args.batchId
+      ? await ctx.db.get(args.batchId)
+      : args.tileId
+      ? await ctx.db
+          .query('upload_batches')
+          .withIndex('by_tile', (q) => q.eq('tileId', args.tileId!))
+          .unique()
+      : null;
+
+    const tileId = batch?.tileId ?? args.tileId;
+    if (!tileId) throw new Error('tileId or batchId required');
+
+    const tile = await ctx.db.get(tileId);
+    if (!tile) throw new Error('Tile not found');
+
+    const predictions = await ctx.db
+      .query('inference_predictions')
+      .withIndex('by_tile', (q) => q.eq('tileId', tile._id))
+      .collect();
+
+    const feedbacks = await ctx.db
+      .query('feedback_submissions')
+      .withIndex('by_tile', (q) => q.eq('tileId', tile._id))
+      .collect();
+
+    // Enrich feedback with user emails
+    const uniqueUserIds = Array.from(
+      new Set(feedbacks.map((f) => f.userId as Id<'users'>))
+    );
+    const userDocs = await Promise.all(
+      uniqueUserIds.map((id) => ctx.db.get(id))
+    );
+    const userIdToEmail = new Map(
+      userDocs
+        .filter((u): u is NonNullable<typeof u> => Boolean(u))
+        .map((u) => [u._id, u.email])
+    );
+
+    const imageUrl: string = await ctx.runQuery(
+      api.tiles.getImageUrlFromTileId,
+      {
+        tileId: tile._id,
+      }
+    );
+
+    const byPrediction = predictions.map((prediction) => {
+      const fbs = feedbacks
+        .filter((f) => f.predictionId === prediction._id)
+        .map((f) => ({
+          ...f,
+          userEmail: userIdToEmail.get(f.userId as Id<'users'>) ?? null,
+        }));
+      return {
+        prediction,
+        feedback: fbs,
+      };
+    });
+
+    return {
+      tile,
+      batch: batch ?? null,
+      imageUrl,
+      byPrediction,
+    };
+  },
+});
+
 export const getBatchById = query({
   args: {
     batchId: v.optional(v.id('upload_batches')),
