@@ -4,9 +4,12 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAction } from 'convex/react';
 
 export const Route = createFileRoute('/_authed/training-data')({
   beforeLoad: async ({ context }) => {
@@ -28,6 +31,7 @@ export const Route = createFileRoute('/_authed/training-data')({
 
 function RouteComponent() {
   const { data } = Route.useLoaderData();
+  const processNewBatch = useAction(api.upload_batches.processNewBatch);
 
   const feedbackCount = data.reduce((acc, item) => acc + item.feedbackCount, 0);
 
@@ -68,6 +72,17 @@ function RouteComponent() {
                   </div>
                 </div>
               </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={() => {
+                    processNewBatch({
+                      tileId: tile._id,
+                    });
+                  }}
+                >
+                  Process
+                </Button>
+              </CardFooter>
             </Card>
           );
         })}

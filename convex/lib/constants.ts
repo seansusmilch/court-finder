@@ -2,6 +2,7 @@
 export const ENV_VARS = {
   MAPBOX_API_KEY: 'MAPBOX_API_KEY',
   ROBOFLOW_API_KEY: 'ROBOFLOW_API_KEY',
+  ROBOFLOW_BATCH: 'ROBOFLOW_BATCH',
 } as const;
 
 export const PERMISSIONS = {

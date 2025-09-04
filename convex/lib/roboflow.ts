@@ -1,3 +1,6 @@
+import { CreateMLAnnotation } from './createml';
+import { ENV_VARS, ROBOFLOW_MODEL_NAME } from './constants';
+
 export interface RoboflowPrediction {
   x: number;
   y: number;
@@ -36,19 +39,23 @@ export async function detectObjectsWithRoboflow(
 
 export async function uploadImageToRoboflow({
   imageUrl,
-  apiKey,
-  datasetName,
   imageName,
+  apiKey = process.env[ENV_VARS.ROBOFLOW_API_KEY] || '',
+  datasetName = ROBOFLOW_MODEL_NAME || '',
   split = 'train',
-  batch = 'User Contributed',
+  batch = process.env[ENV_VARS.ROBOFLOW_BATCH] || 'User Contributed',
 }: {
   imageUrl: string;
-  apiKey: string;
-  datasetName: string;
   imageName: string;
+  apiKey?: string;
+  datasetName?: string;
   split?: string;
   batch?: string;
 }): Promise<{ success: boolean; id: string }> {
+  if (!apiKey || !datasetName) {
+    throw new Error('Roboflow API key and dataset name are required');
+  }
+
   const url = `https://api.roboflow.com/dataset/${datasetName}/upload`;
 
   const params = new URLSearchParams({
@@ -74,20 +81,7 @@ export async function uploadImageToRoboflow({
   return data;
 }
 
-export interface CreateMLAnnotation {
-  image: string;
-  annotations: Array<{
-    label: string;
-    coordinates: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    };
-  }>;
-}
-
-export interface UploadResponse {
+export interface AnnotationUploadResponse {
   success: boolean;
   message: string;
   data?: unknown;
@@ -95,19 +89,19 @@ export interface UploadResponse {
 
 export async function uploadAnnotationToRoboflow({
   imageId,
-  apiKey,
-  datasetName,
   annotation,
+  apiKey = process.env[ENV_VARS.ROBOFLOW_API_KEY] || '',
+  datasetName = ROBOFLOW_MODEL_NAME || '',
   format = 'createml-json',
   name,
 }: {
   imageId: string;
-  apiKey: string;
-  datasetName: string;
   annotation: CreateMLAnnotation;
+  apiKey?: string;
+  datasetName?: string;
   format?: string;
   name?: string;
-}): Promise<UploadResponse> {
+}): Promise<AnnotationUploadResponse> {
   try {
     // Convert to CreateML JSON format
     const annotationJson = JSON.stringify([annotation], null, 2);
