@@ -11,12 +11,12 @@ import ImageViewer from '@/components/training/ImageViewer';
 import { useMutation } from '@tanstack/react-query';
 import { getVisualForClass } from '@/lib/constants';
 
-export const Route = createFileRoute('/_authed/training-data/$tileId')({
+export const Route = createFileRoute('/_authed/admin/review/$tileId')({
   beforeLoad: async ({ context }) => {
     if (!context.me)
       throw redirect({
         to: '/login',
-        search: { redirect: '/training-data' },
+        search: { redirect: '/admin/review' },
       });
   },
   loader: async ({ context, params }) => {

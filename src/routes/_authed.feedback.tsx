@@ -14,13 +14,13 @@ import type { Id } from '@/../convex/_generated/dataModel';
 import { getVisualForClass } from '@/lib/constants';
 import ImageViewer from '@/components/training/ImageViewer';
 
-export const Route = createFileRoute('/_authed/training')({
+export const Route = createFileRoute('/_authed/feedback')({
   component: TrainingFeedbackPage,
   beforeLoad: async ({ context }) => {
     if (!context.me) {
       throw redirect({
         to: '/login',
-        search: { redirect: '/training' },
+        search: { redirect: '/feedback' },
       });
     }
   },
@@ -132,7 +132,7 @@ export function TrainingFeedbackPage() {
           size='sm'
           className='flex items-center space-x-2'
         >
-          <Link to='/training-help'>
+          <Link to='/feedback/help'>
             <HelpCircle className='h-4 w-4' />
             <span className='hidden sm:inline'>Help</span>
           </Link>

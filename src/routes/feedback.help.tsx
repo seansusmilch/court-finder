@@ -4,7 +4,7 @@ import { ArrowLeft, HelpCircle, Check, X, Minus } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/training-help')({
+export const Route = createFileRoute('/feedback/help')({
   component: TrainingHelpPage,
 });
 

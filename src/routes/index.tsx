@@ -61,11 +61,6 @@ function HomeComponent() {
                     Open Map <Map className='ml-2 h-4 w-4' />
                   </Link>
                 </Button>
-                <Button asChild variant='outline' size='lg'>
-                  <Link to={'/scans'}>
-                    Run a Scan <ScanEye className='ml-2 h-4 w-4' />
-                  </Link>
-                </Button>
               </Authenticated>
             </div>
           </div>

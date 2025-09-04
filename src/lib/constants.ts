@@ -20,11 +20,9 @@ export const CONFIDENCE_SLIDER_STEP = 0.1;
 
 // Navigation
 export const NAVIGATION_LINKS = [
-  { to: '/', label: 'Home' },
   { to: '/map', label: 'Map' },
-  { to: '/scans', label: 'Scans' },
-  { to: '/training', label: 'Training' },
-  { to: '/training-data', label: 'Training Data' },
+  { to: '/feedback', label: 'Feedback' },
+  { to: '/admin', label: 'Admin' },
 ] as const;
 
 // Visuals for court classes (emoji + explicit Tailwind classes)

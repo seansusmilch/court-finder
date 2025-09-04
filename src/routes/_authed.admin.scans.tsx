@@ -20,7 +20,7 @@ type ScanResult = {
   }>;
 };
 
-export const Route = createFileRoute('/_authed/scans')({
+export const Route = createFileRoute('/_authed/admin/scans')({
   validateSearch: (search: { scanId?: string }) => search,
   component: ScansPage,
   beforeLoad: async ({ context }) => {
