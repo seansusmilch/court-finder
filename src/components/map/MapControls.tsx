@@ -210,7 +210,7 @@ function ControlsBody({
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { SearchBox } from '@mapbox/search-js-react';
-import { Menu } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 export function MapControls({
   className,
@@ -277,13 +277,10 @@ export function MapControls({
               size='icon'
               variant='default'
             >
-              <Menu className='size-6' aria-hidden='true' />
+              <Search className='size-6' aria-hidden='true' />
             </Button>
           </SheetTrigger>
           <SheetContent side='bottom' className='h-[70vh]'>
-            <SheetHeader>
-              <SheetTitle>Map Controls</SheetTitle>
-            </SheetHeader>
             <div className='pt-4'>
               <ControlsBody
                 accessToken={accessToken}

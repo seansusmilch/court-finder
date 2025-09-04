@@ -23,7 +23,6 @@ import {
   DEFAULT_MAP_ZOOM,
   MAP_STYLE_SATELLITE,
   CLUSTER_MAX_ZOOM,
-  FLY_TO_DURATION_MS,
   MAPBOX_API_KEY,
   COURT_CLASS_VISUALS,
 } from '@/lib/constants';
@@ -84,7 +83,6 @@ function MapPage() {
   const initial = Route.useLoaderData() as MapViewState;
   const [viewState, setViewState] = useState<MapViewState>(initial);
   const [mapStyle, setMapStyle] = useState(MAP_STYLE_SATELLITE);
-  const hasAutoGeolocatedRef = useRef(false);
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
@@ -230,35 +228,6 @@ function MapPage() {
       getBounds: () => target.getBounds?.() ?? undefined,
     });
     if (newBbox) setBbox(newBbox);
-  }, []);
-
-  useEffect(() => {
-    if (hasAutoGeolocatedRef.current) return;
-    hasAutoGeolocatedRef.current = true;
-    if (typeof window === 'undefined' || !('geolocation' in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords: [number, number] = [
-          pos.coords.longitude,
-          pos.coords.latitude,
-        ];
-        if (mapRef.current) {
-          mapRef.current.easeTo({
-            center: coords,
-            zoom: Math.max(viewState.zoom, DEFAULT_MAP_ZOOM),
-            duration: FLY_TO_DURATION_MS,
-          });
-        }
-      },
-      () => {
-        // ignore errors; we already have a sensible initial view
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 5000,
-      }
-    );
   }, []);
 
   // Keep previous pins visible during refetches to avoid flicker on pan/zoom/filters
