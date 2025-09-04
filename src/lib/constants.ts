@@ -49,7 +49,7 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     displayName: 'Tennis Court',
   },
   'soccer-ball-field': {
-    emoji: '⚽',
+    emoji: '🏈',
     bgClass: 'bg-red-300',
     borderTopClass: 'border-t-red-300',
     displayName: 'Soccer/Football Field',

@@ -3,7 +3,7 @@ const ROBOFLOW_SETTINGS = {
   datasetName: 'satellite-sports-facilities-bubrg',
   workspaceName: process.env.ROBOFLOW_WORKSPACE_NAME || '',
 
-  imageId: 'RHVb27popleOc5aFCZHJ',
+  imageId: '30IcD5GafBXCWQb1v1am',
   imageName: 'test-123.jpg',
 };
 
@@ -40,7 +40,7 @@ class RoboflowAnnotationUploader {
   /**
    * Creates a mock annotation for testing purposes
    */
-  private createMockAnnotation(imageId: string): CreateMLAnnotation {
+  private createMockAnnotation(): CreateMLAnnotation {
     return {
       image: ROBOFLOW_SETTINGS.imageName,
       annotations: [
@@ -71,7 +71,7 @@ class RoboflowAnnotationUploader {
    */
   async uploadAnnotation(imageId: string): Promise<UploadResponse> {
     try {
-      const annotation = this.createMockAnnotation(imageId);
+      const annotation = this.createMockAnnotation();
 
       // Convert to CreateML JSON format
       const annotationJson = JSON.stringify([annotation], null, 2);

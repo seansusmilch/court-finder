@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as inference_predictions from "../inference_predictions.js";
 import type * as inferences from "../inferences.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_createml from "../lib/createml.js";
 import type * as lib_geocoding from "../lib/geocoding.js";
 import type * as lib_index from "../lib/index.js";
 import type * as lib_roboflow from "../lib/roboflow.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   inference_predictions: typeof inference_predictions;
   inferences: typeof inferences;
   "lib/constants": typeof lib_constants;
+  "lib/createml": typeof lib_createml;
   "lib/geocoding": typeof lib_geocoding;
   "lib/index": typeof lib_index;
   "lib/roboflow": typeof lib_roboflow;

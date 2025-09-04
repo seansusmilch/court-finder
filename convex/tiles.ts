@@ -1,7 +1,7 @@
 import { internal } from './_generated/api';
 import { internalMutation, internalQuery, query } from './_generated/server';
 import { v } from 'convex/values';
-import { tileCenterLatLng } from './lib/tiles';
+import { styleTileUrl, tileCenterLatLng } from './lib/tiles';
 
 // Query to check if a tile already exists
 export const getTileByCoordinates = query({
@@ -65,5 +65,18 @@ export const updateTileGeocode = internalMutation({
   },
   handler: async (ctx, { tileId, reverseGeocode }) => {
     await ctx.db.patch(tileId, { reverseGeocode });
+  },
+});
+
+export const getImageUrlFromTileId = query({
+  args: {
+    tileId: v.id('tiles'),
+  },
+  handler: async (ctx, { tileId }) => {
+    const tile = await ctx.db.get(tileId);
+    if (!tile) {
+      throw new Error('Tile not found');
+    }
+    return styleTileUrl(tile.z, tile.x, tile.y);
   },
 });
