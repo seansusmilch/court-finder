@@ -271,7 +271,7 @@ function MapPage() {
   ]);
 
   return (
-    <div className='h-[calc(100vh-3rem)] w-full relative'>
+    <div className='h-[calc(100vh-4rem)] w-full relative'>
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}

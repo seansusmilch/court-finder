@@ -17,6 +17,10 @@ export const PERMISSIONS = {
     READ: 'training.read',
     WRITE: 'training.write',
   },
+  ADMIN: {
+    PREFIX: 'admin',
+    ACCESS: 'admin.access',
+  },
 };
 
 export const DEFAULT_USER_PERMISSIONS = [

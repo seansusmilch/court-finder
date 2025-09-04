@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  redirect,
-  useRouter,
-  Link,
-} from '@tanstack/react-router';
+import { createFileRoute, useRouter, Link } from '@tanstack/react-router';
 import { api } from '@backend/_generated/api';
 import {
   Card,
