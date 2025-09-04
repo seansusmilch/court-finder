@@ -23,8 +23,8 @@ import {
   DEFAULT_MAP_ZOOM,
   MAP_STYLE_SATELLITE,
   CLUSTER_MAX_ZOOM,
-  FLY_TO_DURATION_MS,
   MAPBOX_API_KEY,
+  COURT_CLASS_VISUALS,
 } from '@/lib/constants';
 import type {
   MapViewState,
@@ -83,13 +83,16 @@ function MapPage() {
   const initial = Route.useLoaderData() as MapViewState;
   const [viewState, setViewState] = useState<MapViewState>(initial);
   const [mapStyle, setMapStyle] = useState(MAP_STYLE_SATELLITE);
-  const hasAutoGeolocatedRef = useRef(false);
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
   // We update state on move end, so no debouncing needed
 
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
+  // Category filtering (null means all categories enabled)
+  const [enabledCategories, setEnabledCategories] = useState<string[] | null>(
+    null
+  );
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -173,12 +176,16 @@ function MapPage() {
       : 'skip'
   ) as GeoJSONFeatureCollection | undefined;
 
-  const computeBbox = (map: { getBounds?: () => {
-    getSouth: () => number;
-    getWest: () => number;
-    getNorth: () => number;
-    getEast: () => number;
-  } | undefined }) => {
+  const computeBbox = (map: {
+    getBounds?: () =>
+      | {
+          getSouth: () => number;
+          getWest: () => number;
+          getNorth: () => number;
+          getEast: () => number;
+        }
+      | undefined;
+  }) => {
     const bounds = map?.getBounds?.();
     if (!bounds) return null;
     return {
@@ -209,7 +216,11 @@ function MapPage() {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
           MAP_VIEW_STATE_KEY,
-          JSON.stringify({ longitude: viewState.longitude, latitude: viewState.latitude, zoom: viewState.zoom })
+          JSON.stringify({
+            longitude: viewState.longitude,
+            latitude: viewState.latitude,
+            zoom: viewState.zoom,
+          })
         );
       }
     } catch {}
@@ -219,43 +230,48 @@ function MapPage() {
     if (newBbox) setBbox(newBbox);
   }, []);
 
+  // Keep previous pins visible during refetches to avoid flicker on pan/zoom/filters
+  const [stableFeatureCollection, setStableFeatureCollection] =
+    useState<GeoJSONFeatureCollection | null>(null);
+
   useEffect(() => {
-    if (hasAutoGeolocatedRef.current) return;
-    hasAutoGeolocatedRef.current = true;
-    if (typeof window === 'undefined' || !('geolocation' in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords: [number, number] = [
-          pos.coords.longitude,
-          pos.coords.latitude,
-        ];
-        if (mapRef.current) {
-          mapRef.current.easeTo({
-            center: coords,
-            zoom: Math.max(viewState.zoom, DEFAULT_MAP_ZOOM),
-            duration: FLY_TO_DURATION_MS,
-          });
-        }
-      },
-      () => {
-        // ignore errors; we already have a sensible initial view
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 5000,
-      }
-    );
+    if (featureCollection) {
+      setStableFeatureCollection(featureCollection);
+    }
+  }, [featureCollection]);
+
+  const availableCategories = useMemo(() => {
+    return Object.keys(COURT_CLASS_VISUALS).sort();
   }, []);
 
   const geojson = useMemo(() => {
     if (viewState.zoom < PINS_VISIBLE_FROM_ZOOM)
       return EMPTY_FEATURE_COLLECTION;
-    return featureCollection ?? EMPTY_FEATURE_COLLECTION;
-  }, [featureCollection, viewState.zoom, PINS_VISIBLE_FROM_ZOOM]);
+    const source =
+      featureCollection ?? stableFeatureCollection ?? EMPTY_FEATURE_COLLECTION;
+    if (enabledCategories === null) return source;
+    if (enabledCategories.length === 0)
+      return {
+        type: 'FeatureCollection',
+        features: [],
+      } as GeoJSONFeatureCollection;
+    const allowed = new Set(enabledCategories);
+    return {
+      type: 'FeatureCollection',
+      features: source.features.filter((f) =>
+        allowed.has(String(f.properties.class))
+      ),
+    } as GeoJSONFeatureCollection;
+  }, [
+    featureCollection,
+    stableFeatureCollection,
+    enabledCategories,
+    viewState.zoom,
+    PINS_VISIBLE_FROM_ZOOM,
+  ]);
 
   return (
-    <div className='h-[calc(100vh-3rem)] w-full relative'>
+    <div className='h-[calc(100vh-4rem)] w-full relative'>
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}
@@ -346,6 +362,9 @@ function MapPage() {
         isScanning={scanMutation.isPending}
         mapStyle={mapStyle}
         onMapStyleChange={setMapStyle}
+        categories={availableCategories}
+        enabledCategories={enabledCategories ?? availableCategories}
+        onCategoriesChange={(cats: string[]) => setEnabledCategories(cats)}
       />
     </div>
   );

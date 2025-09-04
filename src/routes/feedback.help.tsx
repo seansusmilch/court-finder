@@ -4,7 +4,7 @@ import { ArrowLeft, HelpCircle, Check, X, Minus } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/training-help')({
+export const Route = createFileRoute('/feedback/help')({
   component: TrainingHelpPage,
 });
 
@@ -19,18 +19,18 @@ export function TrainingHelpPage() {
           <Button
             variant='ghost'
             size='sm'
-            onClick={() => navigate({ to: '/training' })}
+            onClick={() => navigate({ to: '/feedback' })}
             className='flex items-center gap-2 hover:bg-accent'
           >
             <ArrowLeft className='h-4 w-4' />
-            <span className='hidden sm:inline'>Back to Training</span>
+            <span className='hidden sm:inline'>Back to Feedback</span>
           </Button>
         </div>
 
         <div className='flex items-center gap-3'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl'>
-              Training Help
+              Providing Feedback
             </h1>
             <p className='text-muted-foreground mt-1'>
               Learn how to provide effective feedback to improve our court
@@ -223,11 +223,11 @@ export function TrainingHelpPage() {
         {/* Call to Action */}
         <div className='flex justify-center pt-6'>
           <Button
-            onClick={() => navigate({ to: '/training' })}
+            onClick={() => navigate({ to: '/feedback' })}
             size='lg'
             className='px-8 py-3 text-base font-medium'
           >
-            Start Training
+            Provide Feedback
           </Button>
         </div>
       </div>

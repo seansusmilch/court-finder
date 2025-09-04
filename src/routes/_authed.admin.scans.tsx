@@ -1,4 +1,4 @@
-import { createFileRoute, useSearch, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@backend/_generated/api';
@@ -20,13 +20,9 @@ type ScanResult = {
   }>;
 };
 
-export const Route = createFileRoute('/_authed/scans')({
+export const Route = createFileRoute('/_authed/admin/scans')({
   validateSearch: (search: { scanId?: string }) => search,
   component: ScansPage,
-  beforeLoad: async ({ context }) => {
-    if (!context.me)
-      throw redirect({ to: '/login', search: { redirect: '/_authed/scans' } });
-  },
 });
 
 function ScansPage() {

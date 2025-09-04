@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { api } from '@backend/_generated/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,7 @@ import ImageViewer from '@/components/training/ImageViewer';
 import { useMutation } from '@tanstack/react-query';
 import { getVisualForClass } from '@/lib/constants';
 
-export const Route = createFileRoute('/_authed/training-data/$tileId')({
-  beforeLoad: async ({ context }) => {
-    if (!context.me)
-      throw redirect({
-        to: '/login',
-        search: { redirect: '/training-data' },
-      });
-  },
+export const Route = createFileRoute('/_authed/admin/review/$tileId')({
   loader: async ({ context, params }) => {
     const details = await context.convex.query(
       api.upload_batches.getTileBatchDetails,

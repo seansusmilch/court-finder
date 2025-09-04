@@ -97,21 +97,6 @@ function RootComponent() {
         >
           <Header />
           {isFetching ? <Loader /> : <Outlet />}
-          {!shouldHideFooter && (
-            <footer className='border-t text-sm text-muted-foreground'>
-              <div className='container mx-auto px-4 py-4 flex items-center justify-between'>
-                <span>© {new Date().getFullYear()} Court Finder</span>
-                <nav className='flex gap-4'>
-                  <Link to={'/terms'} className='hover:underline'>
-                    Terms
-                  </Link>
-                  <Link to={'/privacy'} className='hover:underline'>
-                    Privacy
-                  </Link>
-                </nav>
-              </div>
-            </footer>
-          )}
         </div>
         <Toaster richColors />
       </ThemeProvider>

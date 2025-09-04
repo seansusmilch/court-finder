@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  redirect,
-  useRouter,
-  Link,
-} from '@tanstack/react-router';
+import { createFileRoute, useRouter, Link } from '@tanstack/react-router';
 import { api } from '@backend/_generated/api';
 import {
   Card,
@@ -22,14 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Image as ImageIcon, Clock } from 'lucide-react';
 import type { Id } from '@backend/_generated/dataModel';
 
-export const Route = createFileRoute('/_authed/training-data/')({
-  beforeLoad: async ({ context }) => {
-    if (!context.me)
-      throw redirect({
-        to: '/login',
-        search: { redirect: '/_authed/training-data' },
-      });
-  },
+export const Route = createFileRoute('/_authed/admin/review/')({
   loader: async ({ context }) => {
     const [pending, processed] = await Promise.all([
       context.convex.query(api.upload_batches.getPendingBatches, {}),
@@ -73,7 +61,7 @@ function RouteComponent() {
               return (
                 <Card key={tile._id} className='h-full hover:shadow'>
                   <Link
-                    to={'/training-data/$tileId'}
+                    to={'/admin/review/$tileId'}
                     params={{ tileId: String(tile._id) }}
                     className='block focus:outline-none focus:ring-2 focus:ring-ring'
                   >
@@ -156,7 +144,7 @@ function RouteComponent() {
               return (
                 <Card key={batch._id} className='h-full hover:shadow'>
                   <Link
-                    to={'/training-data/$tileId'}
+                    to={'/admin/review/$tileId'}
                     params={{ tileId: String(tile._id) }}
                     className='block focus:outline-none focus:ring-2 focus:ring-ring'
                   >

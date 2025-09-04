@@ -1,13 +1,13 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authed')({
-  component: AuthedLayout,
+  beforeLoad: async ({ context, location }) => {
+    if (!context.me) {
+      throw redirect({
+        to: '/login',
+        search: { redirect: location.href },
+      });
+    }
+  },
+  component: () => <Outlet />,
 });
-
-function AuthedLayout() {
-  return (
-    <div className='w-full h-full'>
-      <Outlet />
-    </div>
-  );
-}

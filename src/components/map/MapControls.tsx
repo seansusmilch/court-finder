@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import {
 import { ConfidenceSlider } from './ConfidenceSlider';
 import { MapStyleControl } from './MapStyleControl';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { getVisualForClass } from '@/lib/constants';
 
 interface MapControlsProps {
   className?: string;
@@ -29,6 +31,9 @@ interface MapControlsProps {
   isScanning?: boolean;
   mapStyle: string;
   onMapStyleChange: (style: string) => void;
+  categories: string[];
+  enabledCategories: string[];
+  onCategoriesChange: (categories: string[]) => void;
 }
 
 function ControlsBody({
@@ -46,10 +51,32 @@ function ControlsBody({
   isScanning,
   mapStyle,
   onMapStyleChange,
-}: Omit<MapControlsProps, 'className'>) {
+  categories,
+  enabledCategories,
+  onCategoriesChange,
+  shouldBlurSearchOnMount,
+}: Omit<MapControlsProps, 'className'> & {
+  shouldBlurSearchOnMount?: boolean;
+}) {
+  const searchBoxContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!shouldBlurSearchOnMount) return;
+    // Defer to allow any internal focus to occur, then blur
+    const t = setTimeout(() => {
+      const input = searchBoxContainerRef.current?.querySelector('input');
+      if (input && document.activeElement === input) {
+        (input as HTMLInputElement).blur();
+      }
+    }, 0);
+    return () => clearTimeout(t);
+  }, [shouldBlurSearchOnMount]);
+
+  const allSelected = enabledCategories.length === categories.length;
+
   return (
     <div className='space-y-3'>
-      <div className='w-full'>
+      <div className='w-full' ref={searchBoxContainerRef}>
         {/* SearchBox from @mapbox/search-js-react */}
         {/** @ts-expect-error ForwardRefExoticComponent typing vs React 19 JSX inference */}
         <SearchBox
@@ -62,11 +89,19 @@ function ControlsBody({
               coords = [Number(geomCoords[0]), Number(geomCoords[1])];
             }
             const propCoords = feature?.properties?.coordinates;
-            if (!coords && Array.isArray(propCoords) && propCoords.length >= 2) {
+            if (
+              !coords &&
+              Array.isArray(propCoords) &&
+              propCoords.length >= 2
+            ) {
               coords = [Number(propCoords[0]), Number(propCoords[1])];
             }
             if (coords && mapRef.current) {
-              mapRef.current.easeTo({ center: coords, zoom: 14, duration: 800 });
+              mapRef.current.easeTo({
+                center: coords,
+                zoom: 14,
+                duration: 800,
+              });
             }
           }}
         />
@@ -87,6 +122,54 @@ function ControlsBody({
         onMapStyleChange={onMapStyleChange}
       />
 
+      <div className='space-y-2'>
+        <div className='text-xs font-medium'>Filter categories</div>
+        <div className='flex gap-2'>
+          <Button
+            size='sm'
+            variant='secondary'
+            onClick={() => onCategoriesChange(categories)}
+            disabled={categories.length === 0 || allSelected}
+          >
+            Select all
+          </Button>
+          <Button
+            size='sm'
+            variant='secondary'
+            onClick={() => onCategoriesChange([])}
+            disabled={enabledCategories.length === 0}
+          >
+            Clear all
+          </Button>
+        </div>
+        <div className='max-h-44 overflow-auto rounded border p-2'>
+          <div className='grid grid-cols-2 gap-2'>
+            {categories.map((cat) => {
+              const checked = enabledCategories.includes(cat);
+              const visual = getVisualForClass(cat);
+              return (
+                <label key={cat} className='flex items-center gap-2 text-xs'>
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(val) => {
+                      const isChecked = Boolean(val);
+                      if (isChecked && !checked) {
+                        onCategoriesChange([...enabledCategories, cat]);
+                      } else if (!isChecked && checked) {
+                        onCategoriesChange(
+                          enabledCategories.filter((c) => c !== cat)
+                        );
+                      }
+                    }}
+                  />
+                  <span className='truncate'>{visual.displayName}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {isZoomSufficient ? (
         <div className='space-y-1 text-xs'>
           <div className='text-green-700 dark:text-green-400'>
@@ -95,11 +178,6 @@ function ControlsBody({
           <div className='text-green-700 dark:text-green-400'>
             Showing all available data
           </div>
-          {availableZoomLevels && availableZoomLevels.length > 0 && (
-            <div className='text-muted-foreground'>
-              Data from zooms: {availableZoomLevels.join(', ')}
-            </div>
-          )}
         </div>
       ) : (
         <div className='text-xs text-destructive'>
@@ -127,7 +205,7 @@ function ControlsBody({
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { SearchBox } from '@mapbox/search-js-react';
-import { Menu } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 export function MapControls({
   className,
@@ -145,12 +223,14 @@ export function MapControls({
   isScanning,
   mapStyle,
   onMapStyleChange,
+  categories,
+  enabledCategories,
+  onCategoriesChange,
 }: MapControlsProps) {
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   const card = (
     <Card className='bg-background/90 backdrop-blur shadow-sm w-80 max-w-[92vw]'>
-      <CardHeader className='pb-2'>
-        <CardTitle className='text-sm'>Map Controls</CardTitle>
-      </CardHeader>
       <CardContent>
         <ControlsBody
           accessToken={accessToken}
@@ -167,6 +247,9 @@ export function MapControls({
           isScanning={isScanning}
           mapStyle={mapStyle}
           onMapStyleChange={onMapStyleChange}
+          categories={categories}
+          enabledCategories={enabledCategories}
+          onCategoriesChange={onCategoriesChange}
         />
       </CardContent>
     </Card>
@@ -181,7 +264,7 @@ export function MapControls({
 
       {/* Mobile: FAB + bottom sheet */}
       <div className='md:hidden pointer-events-auto'>
-        <Sheet>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <Button
               aria-label='Open map controls'
@@ -189,13 +272,10 @@ export function MapControls({
               size='icon'
               variant='default'
             >
-              <Menu className='size-6' aria-hidden='true' />
+              <Search className='size-6' aria-hidden='true' />
             </Button>
           </SheetTrigger>
           <SheetContent side='bottom' className='h-[70vh]'>
-            <SheetHeader>
-              <SheetTitle>Map Controls</SheetTitle>
-            </SheetHeader>
             <div className='pt-4'>
               <ControlsBody
                 accessToken={accessToken}
@@ -212,6 +292,10 @@ export function MapControls({
                 isScanning={isScanning}
                 mapStyle={mapStyle}
                 onMapStyleChange={onMapStyleChange}
+                categories={categories}
+                enabledCategories={enabledCategories}
+                onCategoriesChange={onCategoriesChange}
+                shouldBlurSearchOnMount={sheetOpen}
               />
             </div>
           </SheetContent>
