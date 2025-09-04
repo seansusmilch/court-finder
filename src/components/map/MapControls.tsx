@@ -178,11 +178,6 @@ function ControlsBody({
           <div className='text-green-700 dark:text-green-400'>
             Showing all available data
           </div>
-          {availableZoomLevels && availableZoomLevels.length > 0 && (
-            <div className='text-muted-foreground'>
-              Data from zooms: {availableZoomLevels.join(', ')}
-            </div>
-          )}
         </div>
       ) : (
         <div className='text-xs text-destructive'>
