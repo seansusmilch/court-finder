@@ -16,14 +16,6 @@ import ImageViewer from '@/components/training/ImageViewer';
 
 export const Route = createFileRoute('/_authed/feedback')({
   component: TrainingFeedbackPage,
-  beforeLoad: async ({ context }) => {
-    if (!context.me) {
-      throw redirect({
-        to: '/login',
-        search: { redirect: '/feedback' },
-      });
-    }
-  },
 });
 
 export function TrainingFeedbackPage() {

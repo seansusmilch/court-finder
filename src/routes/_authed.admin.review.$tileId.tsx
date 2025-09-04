@@ -12,13 +12,6 @@ import { useMutation } from '@tanstack/react-query';
 import { getVisualForClass } from '@/lib/constants';
 
 export const Route = createFileRoute('/_authed/admin/review/$tileId')({
-  beforeLoad: async ({ context }) => {
-    if (!context.me)
-      throw redirect({
-        to: '/login',
-        search: { redirect: '/admin/review' },
-      });
-  },
   loader: async ({ context, params }) => {
     const details = await context.convex.query(
       api.upload_batches.getTileBatchDetails,

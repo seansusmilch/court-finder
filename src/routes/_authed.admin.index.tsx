@@ -6,15 +6,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardAction,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ChevronRight } from 'lucide-react';
 
 export const Route = createFileRoute('/_authed/admin/')({
-  beforeLoad: async ({ context }) => {
-    if (!context.me)
-      throw redirect({ to: '/login', search: { redirect: '/_authed/admin' } });
-  },
   loader: async ({ context }) => {
     const [pending, processed, scans] = await Promise.all([
       context.convex.query(api.upload_batches.getPendingBatches, {
@@ -76,6 +74,9 @@ function RouteComponent() {
               <CardDescription>
                 Pending tiles needing processing
               </CardDescription>
+              <CardAction>
+                <ChevronRight className='size-5 text-muted-foreground' />
+              </CardAction>
             </CardHeader>
             <CardContent>
               <div className='flex items-baseline gap-2'>
@@ -96,6 +97,9 @@ function RouteComponent() {
             <CardHeader>
               <CardTitle>Processed Batches</CardTitle>
               <CardDescription>Batches already created</CardDescription>
+              <CardAction>
+                <ChevronRight className='size-5 text-muted-foreground' />
+              </CardAction>
             </CardHeader>
             <CardContent>
               <div className='text-3xl font-semibold'>
@@ -113,6 +117,9 @@ function RouteComponent() {
             <CardHeader>
               <CardTitle>Scans</CardTitle>
               <CardDescription>Total recorded scans</CardDescription>
+              <CardAction>
+                <ChevronRight className='size-5 text-muted-foreground' />
+              </CardAction>
             </CardHeader>
             <CardContent>
               <div className='text-3xl font-semibold'>{metrics.scansCount}</div>
@@ -128,6 +135,9 @@ function RouteComponent() {
             <CardHeader>
               <CardTitle>Feedback</CardTitle>
               <CardDescription>All user training responses</CardDescription>
+              <CardAction>
+                <ChevronRight className='size-5 text-muted-foreground' />
+              </CardAction>
             </CardHeader>
             <CardContent>
               <div className='text-3xl font-semibold'>
@@ -148,10 +158,20 @@ function RouteComponent() {
             <CardContent>
               <div className='flex flex-wrap gap-2'>
                 <Button asChild size='sm'>
-                  <Link to={'/admin/review'}>Review Training Data</Link>
+                  <Link to={'/admin/review'}>
+                    <span className='inline-flex items-center gap-1'>
+                      Review Training Data
+                      <ChevronRight className='size-4' />
+                    </span>
+                  </Link>
                 </Button>
                 <Button asChild variant='secondary' size='sm'>
-                  <Link to={'/admin/scans'}>Browse Scans</Link>
+                  <Link to={'/admin/scans'}>
+                    <span className='inline-flex items-center gap-1'>
+                      Browse Scans
+                      <ChevronRight className='size-4' />
+                    </span>
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -165,10 +185,20 @@ function RouteComponent() {
             <CardContent>
               <ul className='list-inside list-disc text-sm text-muted-foreground'>
                 <li>
-                  <Link to={'/feedback/help'}>How feedback works</Link>
+                  <Link to={'/feedback/help'}>
+                    <span className='inline-flex items-center gap-1'>
+                      How feedback works
+                      <ChevronRight className='size-4 opacity-70' />
+                    </span>
+                  </Link>
                 </li>
                 <li>
-                  <Link to={'/admin/review'}>Processed batches</Link>
+                  <Link to={'/admin/review'}>
+                    <span className='inline-flex items-center gap-1'>
+                      Processed batches
+                      <ChevronRight className='size-4 opacity-70' />
+                    </span>
+                  </Link>
                 </li>
               </ul>
             </CardContent>

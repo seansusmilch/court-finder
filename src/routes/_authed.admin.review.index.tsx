@@ -23,13 +23,6 @@ import { CheckCircle2, Image as ImageIcon, Clock } from 'lucide-react';
 import type { Id } from '@backend/_generated/dataModel';
 
 export const Route = createFileRoute('/_authed/admin/review/')({
-  beforeLoad: async ({ context }) => {
-    if (!context.me)
-      throw redirect({
-        to: '/login',
-        search: { redirect: '/_authed/admin/review' },
-      });
-  },
   loader: async ({ context }) => {
     const [pending, processed] = await Promise.all([
       context.convex.query(api.upload_batches.getPendingBatches, {}),

@@ -48,7 +48,7 @@ function HomeComponent() {
               <Unauthenticated>
                 <Button asChild size='lg'>
                   <Link to={'/login'}>
-                    Get Started Free <ArrowRight className='ml-2 h-4 w-4' />
+                    Get Started <ArrowRight className='ml-2 h-4 w-4' />
                   </Link>
                 </Button>
                 <Button asChild variant='outline' size='lg'>

@@ -23,10 +23,6 @@ type ScanResult = {
 export const Route = createFileRoute('/_authed/admin/scans')({
   validateSearch: (search: { scanId?: string }) => search,
   component: ScansPage,
-  beforeLoad: async ({ context }) => {
-    if (!context.me)
-      throw redirect({ to: '/login', search: { redirect: '/_authed/scans' } });
-  },
 });
 
 function ScansPage() {
