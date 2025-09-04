@@ -1,111 +1,134 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Authenticated, Unauthenticated, useQuery } from 'convex/react';
-import { api } from '@backend/_generated/api';
+import { Authenticated, Unauthenticated } from 'convex/react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { ArrowRight, CheckCircle, Map, ScanEye } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: HomeComponent,
-  beforeLoad: async () => {},
 });
 
-function HomeComponent() {
-  const healthCheck = useQuery(api.healthCheck.get);
+function ImageHeroVisual() {
   return (
-    <div className='container mx-auto px-4 py-10 lg:py-16'>
-      <div className='mx-auto max-w-5xl'>
-        <div className='grid items-center gap-8 md:grid-cols-2'>
-          <div>
-            <h1 className='text-3xl font-bold tracking-tight md:text-5xl'>
-              Find courts from space.
+    <div className='relative order-first h-64 w-full overflow-hidden rounded-2xl border md:order-none md:h-96'>
+      <img
+        src='/satellite-example.png'
+        alt='Satellite view of sports courts'
+        className='h-full w-full object-cover'
+      />
+      <div className='absolute inset-0 bg-gradient-to-t from-background/50 via-background/20 to-transparent' />
+      <div className='absolute inset-0 bg-black/20' />
+    </div>
+  );
+}
+
+function HomeComponent() {
+  return (
+    <div className='container mx-auto px-4 py-12 md:py-20'>
+      <div className='mx-auto max-w-6xl'>
+        <div className='grid items-center gap-12 md:grid-cols-2'>
+          <div className='animate-in fade-in slide-in-from-bottom-6 duration-500'>
+            <h1 className='text-4xl font-bold tracking-tighter md:text-6xl'>
+              Discover Every Court.
+              <br />
+              <span className='text-primary'>From Space.</span>
             </h1>
-            <p className='mt-4 text-muted-foreground md:text-lg'>
-              AI-powered detection and review tools to discover pickleball and
-              tennis courts anywhere on Earth, then explore and validate them on
-              an interactive map.
+            <p className='mt-6 text-lg text-muted-foreground md:text-xl'>
+              Our AI scans satellite imagery to uncover sports courts across the
+              globe. Find, verify, and explore athletic fields with
+              unprecedented detail.
             </p>
-            <div className='mt-6 flex flex-wrap items-center gap-3'>
+            <div className='mt-8 flex flex-wrap items-center gap-4'>
               <Unauthenticated>
-                <Button asChild>
-                  <Link to={'/login'}>Get started</Link>
+                <Button asChild size='lg'>
+                  <Link to={'/login'}>
+                    Get Started Free <ArrowRight className='ml-2 h-4 w-4' />
+                  </Link>
                 </Button>
-                <Button asChild variant='outline'>
-                  <Link to={'/map'}>Explore the map</Link>
+                <Button asChild variant='outline' size='lg'>
+                  <Link to={'/map'}>Explore the Map</Link>
                 </Button>
               </Unauthenticated>
               <Authenticated>
-                <Button asChild>
-                  <Link to={'/map'}>Open map</Link>
+                <Button asChild size='lg'>
+                  <Link to={'/map'}>
+                    Open Map <Map className='ml-2 h-4 w-4' />
+                  </Link>
                 </Button>
-                <Button asChild variant='outline'>
-                  <Link to={'/scans'}>Run a scan</Link>
+                <Button asChild variant='outline' size='lg'>
+                  <Link to={'/scans'}>
+                    Run a Scan <ScanEye className='ml-2 h-4 w-4' />
+                  </Link>
                 </Button>
               </Authenticated>
             </div>
           </div>
-          <div className='relative order-first h-56 w-full overflow-hidden rounded-xl border bg-muted md:order-none md:h-80'>
-            <img
-              src='/logo.webp'
-              alt='Court Finder'
-              className='absolute inset-0 m-auto h-24 w-24 opacity-60'
-            />
-            <div className='absolute inset-0 bg-gradient-to-br from-background/60 via-background/20 to-transparent' />
+          <div className='animate-in fade-in zoom-in-95 duration-500 delay-200'>
+            <ImageHeroVisual />
           </div>
         </div>
 
-        <div className='mt-12 grid gap-6 md:grid-cols-3'>
-          <Card>
+        <div className='mt-24 grid gap-8 md:grid-cols-3'>
+          <Card className='animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300'>
             <CardHeader>
-              <CardTitle>AI detections</CardTitle>
+              <CardTitle className='flex items-center gap-2'>
+                <ScanEye className='h-6 w-6 text-primary' />
+                AI Detections
+              </CardTitle>
               <CardDescription>
                 High-precision models tuned for courts
               </CardDescription>
             </CardHeader>
-            <CardContent className='text-sm text-muted-foreground'>
+            <CardContent className='text-muted-foreground'>
               Scan anywhere in the world and get detections with confidence
               scores and zoom-level context.
             </CardContent>
           </Card>
-          <Card>
+          <Card className='animate-in fade-in slide-in-from-bottom-10 duration-700 delay-400'>
             <CardHeader>
-              <CardTitle>Interactive map</CardTitle>
+              <CardTitle className='flex items-center gap-2'>
+                <Map className='h-6 w-6 text-primary' />
+                Interactive Map
+              </CardTitle>
               <CardDescription>
                 Clustered pins and rich popovers
               </CardDescription>
             </CardHeader>
-            <CardContent className='text-sm text-muted-foreground'>
+            <CardContent className='text-muted-foreground'>
               Explore results with smooth clustering, emoji markers, and
               detailed information at every zoom level.
             </CardContent>
           </Card>
-          <Card>
+          <Card className='animate-in fade-in slide-in-from-bottom-10 duration-700 delay-500'>
             <CardHeader>
-              <CardTitle>Review workflow</CardTitle>
+              <CardTitle className='flex items-center gap-2'>
+                <CheckCircle className='h-6 w-6 text-primary' />
+                Review Workflow
+              </CardTitle>
               <CardDescription>Filter by confidence and verify</CardDescription>
             </CardHeader>
-            <CardContent className='text-sm text-muted-foreground'>
-              Adjust thresholds, inspect satellite tiles, and confirm detections
-              quickly.
+            <CardContent className='text-muted-foreground'>
+              Adjust thresholds, inspect satellite tiles, and help train our AI
+              by confirming detections.
             </CardContent>
           </Card>
         </div>
 
-        <div className='mt-12 grid gap-6 md:grid-cols-2'>
-          <Card className='border-destructive text-destructive-foreground'>
+        <div className='mt-24'>
+          <Card className='border-destructive bg-destructive/10 text-destructive-foreground'>
             <CardHeader>
               <CardTitle>Disclaimer</CardTitle>
-              <CardDescription className='text-destructive font-bold'>
+              <CardDescription className='text-destructive/80'>
                 Read before visiting any detected location!
               </CardDescription>
             </CardHeader>
-            <CardContent className='text-sm space-y-3'>
+            <CardContent className='space-y-3 text-sm text-destructive/90'>
               <p>
                 Detections shown in this app are generated by automated models
                 and are provided on an “as is” and “as available” basis without
@@ -123,11 +146,17 @@ function HomeComponent() {
                 project maintainers and contributors shall not be liable for any
                 injury, damage, citation, or loss arising from your use of the
                 information. See our{' '}
-                <Link to={'/terms'} className='underline'>
+                <Link
+                  to={'/terms'}
+                  className='underline hover:text-destructive'
+                >
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link to={'/privacy'} className='underline'>
+                <Link
+                  to={'/privacy'}
+                  className='underline hover:text-destructive'
+                >
                   Privacy Policy
                 </Link>
                 .
