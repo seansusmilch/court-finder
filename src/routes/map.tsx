@@ -25,6 +25,7 @@ import {
   CLUSTER_MAX_ZOOM,
   MAPBOX_API_KEY,
   COURT_CLASS_VISUALS,
+  LOCALSTORAGE_KEYS,
 } from '@/lib/constants';
 import type {
   MapViewState,
@@ -34,7 +35,11 @@ import type {
   CourtFeatureProperties,
 } from '@/lib/types';
 
-const MAP_VIEW_STATE_KEY = 'map.viewState';
+interface MapSettings {
+  confidenceThreshold: number;
+  mapStyle: string;
+  enabledCategories: string[] | null;
+}
 
 function getInitialViewState(): MapViewState {
   if (typeof window === 'undefined') {
@@ -45,7 +50,7 @@ function getInitialViewState(): MapViewState {
     };
   }
   try {
-    const raw = window.localStorage.getItem(MAP_VIEW_STATE_KEY);
+    const raw = window.localStorage.getItem(LOCALSTORAGE_KEYS.MAP_VIEW_STATE);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<MapViewState>;
       if (
@@ -68,21 +73,75 @@ function getInitialViewState(): MapViewState {
   };
 }
 
+function getInitialMapSettings(): MapSettings {
+  if (typeof window === 'undefined') {
+    return {
+      confidenceThreshold: 0.5,
+      mapStyle: MAP_STYLE_SATELLITE,
+      enabledCategories: null,
+    };
+  }
+  try {
+    const raw = window.localStorage.getItem(LOCALSTORAGE_KEYS.MAP_SETTINGS);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<MapSettings>;
+      return {
+        confidenceThreshold:
+          typeof parsed.confidenceThreshold === 'number'
+            ? parsed.confidenceThreshold
+            : 0.5,
+        mapStyle:
+          typeof parsed.mapStyle === 'string'
+            ? parsed.mapStyle
+            : MAP_STYLE_SATELLITE,
+        enabledCategories: Array.isArray(parsed.enabledCategories)
+          ? parsed.enabledCategories
+          : null,
+      };
+    }
+  } catch {}
+  return {
+    confidenceThreshold: 0.5,
+    mapStyle: MAP_STYLE_SATELLITE,
+    enabledCategories: null,
+  };
+}
+
+function saveMapSettings(settings: MapSettings): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      LOCALSTORAGE_KEYS.MAP_SETTINGS,
+      JSON.stringify(settings)
+    );
+  } catch {
+    // Silently fail if localStorage is not available
+  }
+}
+
 const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   type: 'FeatureCollection',
   features: [],
 };
 
 export const Route = createFileRoute('/map')({
-  loader: () => getInitialViewState(),
+  loader: () => ({
+    viewState: getInitialViewState(),
+    mapSettings: getInitialMapSettings(),
+  }),
   component: MapPage,
 });
 
 function MapPage() {
   const mapRef = useRef<MapRef | null>(null);
-  const initial = Route.useLoaderData() as MapViewState;
-  const [viewState, setViewState] = useState<MapViewState>(initial);
-  const [mapStyle, setMapStyle] = useState(MAP_STYLE_SATELLITE);
+  const loaderData = Route.useLoaderData() as {
+    viewState: MapViewState;
+    mapSettings: MapSettings;
+  };
+  const [viewState, setViewState] = useState<MapViewState>(
+    loaderData.viewState
+  );
+  const [mapStyle, setMapStyle] = useState(loaderData.mapSettings.mapStyle);
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
@@ -91,7 +150,7 @@ function MapPage() {
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
   // Category filtering (null means all categories enabled)
   const [enabledCategories, setEnabledCategories] = useState<string[] | null>(
-    null
+    loaderData.mapSettings.enabledCategories
   );
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
@@ -143,7 +202,18 @@ function MapPage() {
     });
   }, []);
 
-  const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(
+    loaderData.mapSettings.confidenceThreshold
+  );
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    saveMapSettings({
+      confidenceThreshold,
+      mapStyle,
+      enabledCategories,
+    });
+  }, [confidenceThreshold, mapStyle, enabledCategories]);
 
   const canScan = useQuery(api.users.hasPermission, {
     permission: 'scans.execute',
@@ -215,7 +285,7 @@ function MapPage() {
     try {
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
-          MAP_VIEW_STATE_KEY,
+          LOCALSTORAGE_KEYS.MAP_VIEW_STATE,
           JSON.stringify({
             longitude: viewState.longitude,
             latitude: viewState.latitude,

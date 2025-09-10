@@ -88,3 +88,11 @@ export function getVisualForClass(predictionClass: string): CourtClassVisual {
 
 // Mapbox API configuration
 export const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
+
+// localStorage keys
+export const LOCALSTORAGE_KEYS = {
+  MAP_VIEW_STATE: 'map.viewState',
+  MAP_SETTINGS: 'map.settings',
+  ADMIN_REVIEW_ADVANCED_VIEW: 'admin-review-advanced-view',
+  ADMIN_REVIEW_SELECTED_CLASSES: 'admin-review-selected-classes',
+} as const;

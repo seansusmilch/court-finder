@@ -1,14 +1,8 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ConfidenceSlider } from './ConfidenceSlider';
 import { MapStyleControl } from './MapStyleControl';
 import { cn } from '@/lib/utils';
