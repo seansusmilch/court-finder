@@ -9,9 +9,11 @@ import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import { useLocalStorage } from '@/hooks';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@backend/_generated/api';
+import { MAPBOX_TILE_DEFAULTS } from '@backend/lib/constants';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
@@ -25,6 +27,7 @@ import {
   CLUSTER_MAX_ZOOM,
   MAPBOX_API_KEY,
   COURT_CLASS_VISUALS,
+  LOCALSTORAGE_KEYS,
 } from '@/lib/constants';
 import type {
   MapViewState,
@@ -34,38 +37,10 @@ import type {
   CourtFeatureProperties,
 } from '@/lib/types';
 
-const MAP_VIEW_STATE_KEY = 'map.viewState';
-
-function getInitialViewState(): MapViewState {
-  if (typeof window === 'undefined') {
-    return {
-      longitude: DEFAULT_MAP_CENTER[0],
-      latitude: DEFAULT_MAP_CENTER[1],
-      zoom: DEFAULT_MAP_ZOOM,
-    };
-  }
-  try {
-    const raw = window.localStorage.getItem(MAP_VIEW_STATE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<MapViewState>;
-      if (
-        typeof parsed.longitude === 'number' &&
-        typeof parsed.latitude === 'number' &&
-        typeof parsed.zoom === 'number'
-      ) {
-        return {
-          longitude: parsed.longitude,
-          latitude: parsed.latitude,
-          zoom: parsed.zoom,
-        };
-      }
-    }
-  } catch {}
-  return {
-    longitude: DEFAULT_MAP_CENTER[0],
-    latitude: DEFAULT_MAP_CENTER[1],
-    zoom: DEFAULT_MAP_ZOOM,
-  };
+interface MapSettings {
+  confidenceThreshold: number;
+  mapStyle: string;
+  enabledCategories: string[] | null;
 }
 
 const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
@@ -74,25 +49,56 @@ const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
 };
 
 export const Route = createFileRoute('/map')({
-  loader: () => getInitialViewState(),
+  loader: () => ({
+    defaultViewState: {
+      longitude: DEFAULT_MAP_CENTER[0],
+      latitude: DEFAULT_MAP_CENTER[1],
+      zoom: DEFAULT_MAP_ZOOM,
+    },
+    defaultMapSettings: {
+      confidenceThreshold: 0.5,
+      mapStyle: MAP_STYLE_SATELLITE,
+      enabledCategories: null,
+    },
+  }),
   component: MapPage,
 });
 
 function MapPage() {
   const mapRef = useRef<MapRef | null>(null);
-  const initial = Route.useLoaderData() as MapViewState;
-  const [viewState, setViewState] = useState<MapViewState>(initial);
-  const [mapStyle, setMapStyle] = useState(MAP_STYLE_SATELLITE);
+  const loaderData = Route.useLoaderData() as {
+    defaultViewState: MapViewState;
+    defaultMapSettings: MapSettings;
+  };
+
+  // Use localStorage hooks for persistent state
+  const [viewState, setViewState] = useLocalStorage<MapViewState>(
+    LOCALSTORAGE_KEYS.MAP_VIEW_STATE,
+    loaderData.defaultViewState
+  );
+
+  // Use individual localStorage hooks for each setting to avoid circular dependencies
+  const [confidenceThreshold, setConfidenceThreshold] = useLocalStorage<number>(
+    `${LOCALSTORAGE_KEYS.MAP_SETTINGS}_confidenceThreshold`,
+    loaderData.defaultMapSettings.confidenceThreshold
+  );
+  const [mapStyle, setMapStyle] = useLocalStorage<string>(
+    `${LOCALSTORAGE_KEYS.MAP_SETTINGS}_mapStyle`,
+    loaderData.defaultMapSettings.mapStyle
+  );
+  const [enabledCategories, setEnabledCategories] = useLocalStorage<
+    string[] | null
+  >(
+    `${LOCALSTORAGE_KEYS.MAP_SETTINGS}_enabledCategories`,
+    loaderData.defaultMapSettings.enabledCategories
+  );
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
   // We update state on move end, so no debouncing needed
 
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
-  // Category filtering (null means all categories enabled)
-  const [enabledCategories, setEnabledCategories] = useState<string[] | null>(
-    null
-  );
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -143,12 +149,14 @@ function MapPage() {
     });
   }, []);
 
-  const [confidenceThreshold, setConfidenceThreshold] = useState(0.5);
-
   const canScan = useQuery(api.users.hasPermission, {
     permission: 'scans.execute',
   }) as boolean | undefined;
+  const canUpload = useQuery(api.users.hasPermission, {
+    permission: 'admin.access',
+  }) as boolean | undefined;
   const scanArea = useAction(api.actions.scanArea);
+  const uploadCenterTile = useAction(api.upload_batches.uploadCenterTile);
 
   const scanMutation = useMutation({
     mutationKey: ['scanArea'],
@@ -156,6 +164,25 @@ function MapPage() {
       const center = mapRef.current?.getCenter?.();
       if (!center) throw new Error('Map center not available');
       return scanArea({ latitude: center.lat, longitude: center.lng });
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationKey: ['uploadTile'],
+    mutationFn: async () => {
+      const center = mapRef.current?.getCenter?.();
+      if (!center) throw new Error('Map center not available');
+
+      return uploadCenterTile({
+        latitude: center.lat,
+        longitude: center.lng,
+        zoom: MAPBOX_TILE_DEFAULTS.zoom,
+      });
+    },
+    onSuccess: () => {
+      setUploadSuccess(true);
+      // Reset success state after 3 seconds
+      setTimeout(() => setUploadSuccess(false), 3000);
     },
   });
 
@@ -196,39 +223,30 @@ function MapPage() {
     } as NonNullable<typeof bbox>;
   };
 
-  const onMoveEnd = useCallback((evt: unknown) => {
-    const { viewState, target } = evt as {
-      viewState: MapViewState;
-      target: {
-        getBounds?: () =>
-          | {
-              getSouth: () => number;
-              getWest: () => number;
-              getNorth: () => number;
-              getEast: () => number;
-            }
-          | null
-          | undefined;
+  const onMoveEnd = useCallback(
+    (evt: unknown) => {
+      const { viewState, target } = evt as {
+        viewState: MapViewState;
+        target: {
+          getBounds?: () =>
+            | {
+                getSouth: () => number;
+                getWest: () => number;
+                getNorth: () => number;
+                getEast: () => number;
+              }
+            | null
+            | undefined;
+        };
       };
-    };
-    setViewState(viewState);
-    try {
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(
-          MAP_VIEW_STATE_KEY,
-          JSON.stringify({
-            longitude: viewState.longitude,
-            latitude: viewState.latitude,
-            zoom: viewState.zoom,
-          })
-        );
-      }
-    } catch {}
-    const newBbox = computeBbox({
-      getBounds: () => target.getBounds?.() ?? undefined,
-    });
-    if (newBbox) setBbox(newBbox);
-  }, []);
+      setViewState(viewState);
+      const newBbox = computeBbox({
+        getBounds: () => target.getBounds?.() ?? undefined,
+      });
+      if (newBbox) setBbox(newBbox);
+    },
+    [setViewState]
+  );
 
   // Keep previous pins visible during refetches to avoid flicker on pan/zoom/filters
   const [stableFeatureCollection, setStableFeatureCollection] =
@@ -365,6 +383,10 @@ function MapPage() {
         categories={availableCategories}
         enabledCategories={enabledCategories ?? availableCategories}
         onCategoriesChange={(cats: string[]) => setEnabledCategories(cats)}
+        canUpload={!!canUpload}
+        onUpload={() => uploadMutation.mutate()}
+        isUploading={uploadMutation.isPending}
+        uploadSuccess={uploadSuccess}
       />
     </div>
   );

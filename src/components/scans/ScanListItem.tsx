@@ -45,7 +45,7 @@ export function ScanListItem({ scan, locationName }: ScanListItemProps) {
             </div>
           </div>
           <Link
-            to='/scans'
+            to='/admin/scans'
             search={{ scanId: scan._id }}
             className='inline-block'
           >
