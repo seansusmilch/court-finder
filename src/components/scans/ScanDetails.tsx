@@ -27,7 +27,7 @@ export function ScanDetails({ scanResult }: ScanDetailsProps) {
     <div className='container mx-auto max-w-7xl px-4 py-4'>
       <div className='mb-6 flex items-center gap-4'>
         <Link
-          to='/scans'
+          to='/admin/scans'
           className='flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors'
         >
           <ArrowLeft className='h-4 w-4' />
