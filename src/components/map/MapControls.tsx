@@ -8,6 +8,7 @@ import { MapStyleControl } from './MapStyleControl';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getVisualForClass } from '@/lib/constants';
+import { Check } from 'lucide-react';
 
 interface MapControlsProps {
   className?: string;
@@ -28,6 +29,10 @@ interface MapControlsProps {
   categories: string[];
   enabledCategories: string[];
   onCategoriesChange: (categories: string[]) => void;
+  canUpload?: boolean;
+  onUpload?: () => void;
+  isUploading?: boolean;
+  uploadSuccess?: boolean;
 }
 
 function ControlsBody({
@@ -48,6 +53,10 @@ function ControlsBody({
   categories,
   enabledCategories,
   onCategoriesChange,
+  canUpload,
+  onUpload,
+  isUploading,
+  uploadSuccess,
   shouldBlurSearchOnMount,
 }: Omit<MapControlsProps, 'className'> & {
   shouldBlurSearchOnMount?: boolean;
@@ -191,6 +200,31 @@ function ControlsBody({
           </Button>
         </div>
       )}
+
+      {canUpload && (
+        <div className='pt-1'>
+          <Button
+            variant={uploadSuccess ? 'default' : 'outline'}
+            onClick={onUpload}
+            disabled={isUploading || uploadSuccess}
+            className={cn(
+              'w-full transition-colors',
+              uploadSuccess && 'bg-green-600 hover:bg-green-600 text-white'
+            )}
+          >
+            {uploadSuccess ? (
+              <div className='flex items-center gap-2'>
+                <Check className='size-4' />
+                Uploaded successfully!
+              </div>
+            ) : isUploading ? (
+              'Uploading…'
+            ) : (
+              'Upload center tile'
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -220,6 +254,10 @@ export function MapControls({
   categories,
   enabledCategories,
   onCategoriesChange,
+  canUpload,
+  onUpload,
+  isUploading,
+  uploadSuccess,
 }: MapControlsProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -244,6 +282,10 @@ export function MapControls({
           categories={categories}
           enabledCategories={enabledCategories}
           onCategoriesChange={onCategoriesChange}
+          canUpload={canUpload}
+          onUpload={onUpload}
+          isUploading={isUploading}
+          uploadSuccess={uploadSuccess}
         />
       </CardContent>
     </Card>
@@ -289,6 +331,10 @@ export function MapControls({
                 categories={categories}
                 enabledCategories={enabledCategories}
                 onCategoriesChange={onCategoriesChange}
+                canUpload={canUpload}
+                onUpload={onUpload}
+                isUploading={isUploading}
+                uploadSuccess={uploadSuccess}
                 shouldBlurSearchOnMount={sheetOpen}
               />
             </div>

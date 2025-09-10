@@ -68,7 +68,7 @@ function RouteComponent() {
     const classSet = new Set<string>();
     pending.forEach((item) => {
       item.predictions.forEach((p) => {
-        classSet.add((p as any).prediction.class);
+        classSet.add(p.prediction.class);
       });
     });
     return Array.from(classSet);
@@ -145,7 +145,7 @@ function RouteComponent() {
 
       // Otherwise, show items that have at least one selected class
       return item.predictions.some((p) =>
-        selectedClasses.includes((p as any).prediction.class)
+        selectedClasses.includes(p.prediction.class)
       );
     });
   }, [pending, selectedClasses, selectedZoomLevels]);
@@ -318,7 +318,7 @@ function RouteComponent() {
 
               const predictionClassCounts = item.predictions.reduce(
                 (acc, p) => {
-                  const className = (p as any).prediction.class;
+                  const className = p.prediction.class;
                   acc[className] = (acc[className] || 0) + 1;
                   return acc;
                 },

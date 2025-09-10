@@ -1,12 +1,18 @@
 import { v } from 'convex/values';
 import { action, mutation, query } from './_generated/server';
-import { ROBOFLOW_MODEL_NAME, ROBOFLOW_MODEL_VERSION } from './lib/constants';
+import { internal } from './_generated/api';
+import {
+  ROBOFLOW_MODEL_NAME,
+  ROBOFLOW_MODEL_VERSION,
+  MAPBOX_TILE_DEFAULTS,
+} from './lib/constants';
 import { createCreateMLAnnotationFromPredictions } from './lib/createml';
 import {
   uploadAnnotationToRoboflow,
   uploadImageToRoboflow,
   type AnnotationUploadResponse,
 } from './lib/roboflow';
+import { pointToTile } from './lib/tiles';
 import { api } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 
@@ -344,12 +350,12 @@ export const getAnnotationsForBatch = mutation({
       const feedback = feedbacks.filter(
         (f) => f.predictionId === prediction._id
       );
-      if (!feedback) return false;
+      if (feedback.length === 0) return false;
 
       const feedbackCount = feedback.length;
       const yesCount = feedback.filter((f) => f.userResponse === 'yes').length;
 
-      return yesCount / feedbackCount > 0.5;
+      return feedbackCount > 0 && yesCount / feedbackCount > 0.5;
     });
 
     await ctx.runMutation(api.upload_batches.updateFeedbacksWithBatchId, {
@@ -576,5 +582,33 @@ export const processNewBatchImageOnly = action({
       message: `Successfully uploaded image ${batch.roboflowName} to Roboflow without annotations`,
       imageId: imageUploadResult.id,
     };
+  },
+});
+
+export const uploadCenterTile = action({
+  args: {
+    latitude: v.number(),
+    longitude: v.number(),
+    zoom: v.optional(v.number()),
+  },
+  handler: async (
+    ctx,
+    args
+  ): Promise<{ success: boolean; message: string; imageId: string }> => {
+    // Get the tile coordinates for the center point
+    const zoom = args.zoom ?? MAPBOX_TILE_DEFAULTS.zoom;
+    const tile = pointToTile(args.latitude, args.longitude, zoom as 16);
+
+    // Ensure the tile exists in the database
+    const tileId = await ctx.runMutation(internal.tiles.insertTileIfNotExists, {
+      x: tile.x,
+      y: tile.y,
+      z: tile.z,
+    });
+
+    // Upload the tile image to Roboflow
+    return await ctx.runAction(api.upload_batches.processNewBatchImageOnly, {
+      tileId,
+    });
   },
 });

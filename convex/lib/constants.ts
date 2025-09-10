@@ -49,7 +49,6 @@ export const MAPBOX_TILE_DEFAULTS = {
   styleId: 'satellite-v9',
   tileSize: 512 as 256 | 512,
   zoom: 16,
-  accessToken: process.env[ENV_VARS.MAPBOX_API_KEY],
 } as const;
 
 // Toggle for randomizing prediction feedback

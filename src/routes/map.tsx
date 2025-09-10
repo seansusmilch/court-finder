@@ -13,6 +13,7 @@ import { useLocalStorage } from '@/hooks';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@backend/_generated/api';
+import { MAPBOX_TILE_DEFAULTS } from '@backend/lib/constants';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
@@ -97,6 +98,7 @@ function MapPage() {
   // We update state on move end, so no debouncing needed
 
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -150,7 +152,11 @@ function MapPage() {
   const canScan = useQuery(api.users.hasPermission, {
     permission: 'scans.execute',
   }) as boolean | undefined;
+  const canUpload = useQuery(api.users.hasPermission, {
+    permission: 'admin.access',
+  }) as boolean | undefined;
   const scanArea = useAction(api.actions.scanArea);
+  const uploadCenterTile = useAction(api.upload_batches.uploadCenterTile);
 
   const scanMutation = useMutation({
     mutationKey: ['scanArea'],
@@ -158,6 +164,25 @@ function MapPage() {
       const center = mapRef.current?.getCenter?.();
       if (!center) throw new Error('Map center not available');
       return scanArea({ latitude: center.lat, longitude: center.lng });
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationKey: ['uploadTile'],
+    mutationFn: async () => {
+      const center = mapRef.current?.getCenter?.();
+      if (!center) throw new Error('Map center not available');
+
+      return uploadCenterTile({
+        latitude: center.lat,
+        longitude: center.lng,
+        zoom: MAPBOX_TILE_DEFAULTS.zoom,
+      });
+    },
+    onSuccess: () => {
+      setUploadSuccess(true);
+      // Reset success state after 3 seconds
+      setTimeout(() => setUploadSuccess(false), 3000);
     },
   });
 
@@ -358,6 +383,10 @@ function MapPage() {
         categories={availableCategories}
         enabledCategories={enabledCategories ?? availableCategories}
         onCategoriesChange={(cats: string[]) => setEnabledCategories(cats)}
+        canUpload={!!canUpload}
+        onUpload={() => uploadMutation.mutate()}
+        isUploading={uploadMutation.isPending}
+        uploadSuccess={uploadSuccess}
       />
     </div>
   );
