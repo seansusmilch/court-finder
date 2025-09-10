@@ -41,14 +41,14 @@ export const ROBOFLOW_MODEL_NAME = 'satellite-sports-facilities-bubrg';
 export const ROBOFLOW_MODEL_VERSION = '6';
 
 // Map tile coverage configuration
-export const DEFAULT_TILE_RADIUS = 1;
+export const DEFAULT_TILE_RADIUS = 2;
 
 // Mapbox tile configuration
 export const MAPBOX_TILE_DEFAULTS = {
   username: 'mapbox',
   styleId: 'satellite-v9',
   tileSize: 512 as 256 | 512,
-  zoom: 15,
+  zoom: 16,
   accessToken: process.env[ENV_VARS.MAPBOX_API_KEY],
 } as const;
 

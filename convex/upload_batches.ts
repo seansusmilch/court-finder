@@ -5,10 +5,10 @@ import { createCreateMLAnnotationFromPredictions } from './lib/createml';
 import {
   uploadAnnotationToRoboflow,
   uploadImageToRoboflow,
-  AnnotationUploadResponse,
+  type AnnotationUploadResponse,
 } from './lib/roboflow';
 import { api } from './_generated/api';
-import { Id } from './_generated/dataModel';
+import type { Id } from './_generated/dataModel';
 
 export const getPendingBatches = query({
   args: {
@@ -451,11 +451,18 @@ export const processNewBatch = action({
   args: {
     tileId: v.id('tiles'),
   },
-  handler: async (ctx, args): Promise<AnnotationUploadResponse> => {
+  handler: async (
+    ctx,
+    args
+  ): Promise<
+    | AnnotationUploadResponse
+    | { success: boolean; message: string; imageId: string }
+  > => {
     /**
      * 1. create new batch (tileId)
      * 2. upload image to roboflow (imageUrl, imageName)
-     * 3. add annotation to roboflow (batchId, imageId, imageName)
+     * 3. check if there are predictions with feedback, if so add annotation to roboflow
+     * 4. if no feedback, mark as processed without annotations
      */
     const batchId = await ctx.runMutation(
       api.upload_batches.createUploadBatch,
@@ -484,6 +491,28 @@ export const processNewBatch = action({
       }
     );
 
+    // Check if there are any predictions with feedback
+    const shouldAnnotate = await ctx.runMutation(
+      api.upload_batches.getAnnotationsForBatch,
+      {
+        batchId,
+      }
+    );
+
+    // If no predictions with feedback, just mark as processed
+    if (shouldAnnotate.length === 0) {
+      await ctx.runMutation(api.upload_batches.updateBatchWithAnnotationId, {
+        batchId,
+      });
+
+      return {
+        success: true,
+        message: `Successfully uploaded image ${batch.roboflowName} to Roboflow without annotations (no feedback available)`,
+        imageId: imageUploadResult.id,
+      };
+    }
+
+    // Otherwise, upload annotations as usual
     const annotationUploadResult = await ctx.runAction(
       api.upload_batches.addAnnotationToRoboflow,
       {
@@ -494,5 +523,58 @@ export const processNewBatch = action({
     );
 
     return annotationUploadResult;
+  },
+});
+
+export const processNewBatchImageOnly = action({
+  args: {
+    tileId: v.id('tiles'),
+  },
+  handler: async (
+    ctx,
+    args
+  ): Promise<{ success: boolean; message: string; imageId: string }> => {
+    /**
+     * 1. create new batch (tileId)
+     * 2. upload image to roboflow (imageUrl, imageName)
+     * 3. mark batch as processed without annotations
+     */
+    const batchId = await ctx.runMutation(
+      api.upload_batches.createUploadBatch,
+      {
+        tileId: args.tileId,
+      }
+    );
+
+    const batch = await ctx.runQuery(api.upload_batches.getBatchById, {
+      batchId,
+    });
+    if (!batch) {
+      throw new Error('Batch not found');
+    }
+
+    const imageUrl = await ctx.runQuery(api.tiles.getImageUrlFromTileId, {
+      tileId: batch.tileId,
+    });
+
+    const imageUploadResult = await ctx.runAction(
+      api.upload_batches.addImageToRoboflow,
+      {
+        batchId,
+        imageUrl,
+        imageName: batch.roboflowName,
+      }
+    );
+
+    // Mark batch as processed without annotations
+    await ctx.runMutation(api.upload_batches.updateBatchWithAnnotationId, {
+      batchId,
+    });
+
+    return {
+      success: true,
+      message: `Successfully uploaded image ${batch.roboflowName} to Roboflow without annotations`,
+      imageId: imageUploadResult.id,
+    };
   },
 });

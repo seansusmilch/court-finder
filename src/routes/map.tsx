@@ -9,6 +9,7 @@ import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import { useLocalStorage } from '@/hooks';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@backend/_generated/api';
@@ -41,84 +42,6 @@ interface MapSettings {
   enabledCategories: string[] | null;
 }
 
-function getInitialViewState(): MapViewState {
-  if (typeof window === 'undefined') {
-    return {
-      longitude: DEFAULT_MAP_CENTER[0],
-      latitude: DEFAULT_MAP_CENTER[1],
-      zoom: DEFAULT_MAP_ZOOM,
-    };
-  }
-  try {
-    const raw = window.localStorage.getItem(LOCALSTORAGE_KEYS.MAP_VIEW_STATE);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<MapViewState>;
-      if (
-        typeof parsed.longitude === 'number' &&
-        typeof parsed.latitude === 'number' &&
-        typeof parsed.zoom === 'number'
-      ) {
-        return {
-          longitude: parsed.longitude,
-          latitude: parsed.latitude,
-          zoom: parsed.zoom,
-        };
-      }
-    }
-  } catch {}
-  return {
-    longitude: DEFAULT_MAP_CENTER[0],
-    latitude: DEFAULT_MAP_CENTER[1],
-    zoom: DEFAULT_MAP_ZOOM,
-  };
-}
-
-function getInitialMapSettings(): MapSettings {
-  if (typeof window === 'undefined') {
-    return {
-      confidenceThreshold: 0.5,
-      mapStyle: MAP_STYLE_SATELLITE,
-      enabledCategories: null,
-    };
-  }
-  try {
-    const raw = window.localStorage.getItem(LOCALSTORAGE_KEYS.MAP_SETTINGS);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<MapSettings>;
-      return {
-        confidenceThreshold:
-          typeof parsed.confidenceThreshold === 'number'
-            ? parsed.confidenceThreshold
-            : 0.5,
-        mapStyle:
-          typeof parsed.mapStyle === 'string'
-            ? parsed.mapStyle
-            : MAP_STYLE_SATELLITE,
-        enabledCategories: Array.isArray(parsed.enabledCategories)
-          ? parsed.enabledCategories
-          : null,
-      };
-    }
-  } catch {}
-  return {
-    confidenceThreshold: 0.5,
-    mapStyle: MAP_STYLE_SATELLITE,
-    enabledCategories: null,
-  };
-}
-
-function saveMapSettings(settings: MapSettings): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(
-      LOCALSTORAGE_KEYS.MAP_SETTINGS,
-      JSON.stringify(settings)
-    );
-  } catch {
-    // Silently fail if localStorage is not available
-  }
-}
-
 const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   type: 'FeatureCollection',
   features: [],
@@ -126,8 +49,16 @@ const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
 
 export const Route = createFileRoute('/map')({
   loader: () => ({
-    viewState: getInitialViewState(),
-    mapSettings: getInitialMapSettings(),
+    defaultViewState: {
+      longitude: DEFAULT_MAP_CENTER[0],
+      latitude: DEFAULT_MAP_CENTER[1],
+      zoom: DEFAULT_MAP_ZOOM,
+    },
+    defaultMapSettings: {
+      confidenceThreshold: 0.5,
+      mapStyle: MAP_STYLE_SATELLITE,
+      enabledCategories: null,
+    },
   }),
   component: MapPage,
 });
@@ -135,23 +66,37 @@ export const Route = createFileRoute('/map')({
 function MapPage() {
   const mapRef = useRef<MapRef | null>(null);
   const loaderData = Route.useLoaderData() as {
-    viewState: MapViewState;
-    mapSettings: MapSettings;
+    defaultViewState: MapViewState;
+    defaultMapSettings: MapSettings;
   };
-  const [viewState, setViewState] = useState<MapViewState>(
-    loaderData.viewState
+
+  // Use localStorage hooks for persistent state
+  const [viewState, setViewState] = useLocalStorage<MapViewState>(
+    LOCALSTORAGE_KEYS.MAP_VIEW_STATE,
+    loaderData.defaultViewState
   );
-  const [mapStyle, setMapStyle] = useState(loaderData.mapSettings.mapStyle);
+
+  // Use individual localStorage hooks for each setting to avoid circular dependencies
+  const [confidenceThreshold, setConfidenceThreshold] = useLocalStorage<number>(
+    `${LOCALSTORAGE_KEYS.MAP_SETTINGS}_confidenceThreshold`,
+    loaderData.defaultMapSettings.confidenceThreshold
+  );
+  const [mapStyle, setMapStyle] = useLocalStorage<string>(
+    `${LOCALSTORAGE_KEYS.MAP_SETTINGS}_mapStyle`,
+    loaderData.defaultMapSettings.mapStyle
+  );
+  const [enabledCategories, setEnabledCategories] = useLocalStorage<
+    string[] | null
+  >(
+    `${LOCALSTORAGE_KEYS.MAP_SETTINGS}_enabledCategories`,
+    loaderData.defaultMapSettings.enabledCategories
+  );
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
   // We update state on move end, so no debouncing needed
 
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
-  // Category filtering (null means all categories enabled)
-  const [enabledCategories, setEnabledCategories] = useState<string[] | null>(
-    loaderData.mapSettings.enabledCategories
-  );
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -201,19 +146,6 @@ function MapPage() {
       properties,
     });
   }, []);
-
-  const [confidenceThreshold, setConfidenceThreshold] = useState(
-    loaderData.mapSettings.confidenceThreshold
-  );
-
-  // Save settings to localStorage when they change
-  useEffect(() => {
-    saveMapSettings({
-      confidenceThreshold,
-      mapStyle,
-      enabledCategories,
-    });
-  }, [confidenceThreshold, mapStyle, enabledCategories]);
 
   const canScan = useQuery(api.users.hasPermission, {
     permission: 'scans.execute',
@@ -266,39 +198,30 @@ function MapPage() {
     } as NonNullable<typeof bbox>;
   };
 
-  const onMoveEnd = useCallback((evt: unknown) => {
-    const { viewState, target } = evt as {
-      viewState: MapViewState;
-      target: {
-        getBounds?: () =>
-          | {
-              getSouth: () => number;
-              getWest: () => number;
-              getNorth: () => number;
-              getEast: () => number;
-            }
-          | null
-          | undefined;
+  const onMoveEnd = useCallback(
+    (evt: unknown) => {
+      const { viewState, target } = evt as {
+        viewState: MapViewState;
+        target: {
+          getBounds?: () =>
+            | {
+                getSouth: () => number;
+                getWest: () => number;
+                getNorth: () => number;
+                getEast: () => number;
+              }
+            | null
+            | undefined;
+        };
       };
-    };
-    setViewState(viewState);
-    try {
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(
-          LOCALSTORAGE_KEYS.MAP_VIEW_STATE,
-          JSON.stringify({
-            longitude: viewState.longitude,
-            latitude: viewState.latitude,
-            zoom: viewState.zoom,
-          })
-        );
-      }
-    } catch {}
-    const newBbox = computeBbox({
-      getBounds: () => target.getBounds?.() ?? undefined,
-    });
-    if (newBbox) setBbox(newBbox);
-  }, []);
+      setViewState(viewState);
+      const newBbox = computeBbox({
+        getBounds: () => target.getBounds?.() ?? undefined,
+      });
+      if (newBbox) setBbox(newBbox);
+    },
+    [setViewState]
+  );
 
   // Keep previous pins visible during refetches to avoid flicker on pan/zoom/filters
   const [stableFeatureCollection, setStableFeatureCollection] =

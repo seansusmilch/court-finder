@@ -1,9 +1,11 @@
 ---
 alwaysApply: true
 ---
+
 ---
-Source: .ruler\frontend.md
----
+
+## Source: .ruler\frontend.md
+
 # General Rules
 
 - ALWAYS USE TANSTACK ROUTER FEATURES OVER HANDLING THINGS IN THE COMPONENT
@@ -17,3 +19,7 @@ Source: .ruler\frontend.md
 ## For React Copmonents
 
 - Store components in src/components/(feature)/\*
+
+## Check your work
+
+- Use the `bun check-types` script to check your work and make sure no new type errors come up

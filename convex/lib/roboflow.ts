@@ -1,4 +1,4 @@
-import { CreateMLAnnotation } from './createml';
+import type { CreateMLAnnotation } from './createml';
 import { ENV_VARS, ROBOFLOW_MODEL_NAME } from './constants';
 
 export interface RoboflowPrediction {

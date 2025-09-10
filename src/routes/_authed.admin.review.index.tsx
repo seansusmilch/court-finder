@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useAction } from 'convex/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useLocalStorage } from '@/hooks';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Image as ImageIcon, Clock, Filter } from 'lucide-react';
@@ -25,35 +26,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-
-// Custom hook for localStorage state management
-function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  });
-
-  const setValue = useCallback(
-    (value: T | ((val: T) => T)) => {
-      try {
-        const valueToStore =
-          value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-      } catch (error) {
-        console.warn(`Error setting localStorage key "${key}":`, error);
-      }
-    },
-    [key, storedValue]
-  );
-
-  return [storedValue, setValue] as const;
-}
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export const Route = createFileRoute('/_authed/admin/review/')({
   loader: async ({ context }) => {
@@ -69,6 +49,9 @@ export const Route = createFileRoute('/_authed/admin/review/')({
 function RouteComponent() {
   const { pending, processed } = Route.useLoaderData();
   const processNewBatch = useAction(api.upload_batches.processNewBatch);
+  const processNewBatchImageOnly = useAction(
+    api.upload_batches.processNewBatchImageOnly
+  );
   const router = useRouter();
 
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
@@ -76,6 +59,10 @@ function RouteComponent() {
     LOCALSTORAGE_KEYS.ADMIN_REVIEW_ADVANCED_VIEW,
     false
   );
+  const [confirmImageOnly, setConfirmImageOnly] = useState<{
+    isOpen: boolean;
+    tileId: Id<'tiles'> | null;
+  }>({ isOpen: false, tileId: null });
 
   const allClasses = useMemo(() => {
     const classSet = new Set<string>();
@@ -87,27 +74,56 @@ function RouteComponent() {
     return Array.from(classSet);
   }, [pending]);
 
+  const allZoomLevels = useMemo(() => {
+    const zoomSet = new Set<number>();
+    [...pending, ...processed].forEach((item) => {
+      zoomSet.add(item.tile.z);
+    });
+    return Array.from(zoomSet).sort((a, b) => a - b);
+  }, [pending, processed]);
+
   const [selectedClasses, setSelectedClasses] = useLocalStorage(
     LOCALSTORAGE_KEYS.ADMIN_REVIEW_SELECTED_CLASSES,
     [] as string[]
   );
+  const [selectedZoomLevels, setSelectedZoomLevels] = useLocalStorage(
+    LOCALSTORAGE_KEYS.ADMIN_REVIEW_SELECTED_ZOOM_LEVELS,
+    [] as number[]
+  );
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    // Only initialize once when component mounts and we have classes available
+    // Only initialize once when component mounts and we have data available
     // This ensures we don't override user's "Deselect All" action
-    if (!hasInitialized.current && allClasses.length > 0) {
+    if (
+      !hasInitialized.current &&
+      (allClasses.length > 0 || allZoomLevels.length > 0)
+    ) {
       // If no classes are selected from localStorage, select all by default
-      if (selectedClasses.length === 0) {
+      if (selectedClasses.length === 0 && allClasses.length > 0) {
         setSelectedClasses(allClasses);
+      }
+      // If no zoom levels are selected from localStorage, select all by default
+      if (selectedZoomLevels.length === 0 && allZoomLevels.length > 0) {
+        setSelectedZoomLevels(allZoomLevels);
       }
       hasInitialized.current = true;
     }
-  }, [allClasses, selectedClasses, setSelectedClasses]);
+  }, [
+    allClasses,
+    allZoomLevels,
+    selectedClasses,
+    selectedZoomLevels,
+    setSelectedClasses,
+    setSelectedZoomLevels,
+  ]);
 
   const isFilterActive = useMemo(() => {
-    return selectedClasses.length < allClasses.length;
-  }, [selectedClasses, allClasses]);
+    return (
+      selectedClasses.length < allClasses.length ||
+      selectedZoomLevels.length < allZoomLevels.length
+    );
+  }, [selectedClasses, allClasses, selectedZoomLevels, allZoomLevels]);
 
   const filteredPending = useMemo(() => {
     return pending.filter((item) => {
@@ -116,18 +132,35 @@ function RouteComponent() {
         return false;
       }
 
+      // If no zoom levels are selected, show no items
+      if (selectedZoomLevels.length === 0) {
+        return false;
+      }
+
+      // Check if tile zoom level is selected
+      const zoomLevelSelected = selectedZoomLevels.includes(item.tile.z);
+      if (!zoomLevelSelected) {
+        return false;
+      }
+
       // Otherwise, show items that have at least one selected class
       return item.predictions.some((p) =>
         selectedClasses.includes((p as any).prediction.class)
       );
     });
-  }, [pending, selectedClasses]);
+  }, [pending, selectedClasses, selectedZoomLevels]);
 
   const filteredProcessed = useMemo(() => {
-    // Since processed items don't have predictions loaded, we can't filter them by class.
-    // You might want to adjust this logic based on your needs.
-    return processed;
-  }, [processed]);
+    return processed.filter((item) => {
+      // If no zoom levels are selected, show no items
+      if (selectedZoomLevels.length === 0) {
+        return false;
+      }
+
+      // Check if tile zoom level is selected
+      return selectedZoomLevels.includes(item.tile.z);
+    });
+  }, [processed, selectedZoomLevels]);
 
   const feedbackCount = useMemo(
     () => pending.reduce((acc, item) => acc + item.feedbackCount, 0),
@@ -199,6 +232,58 @@ function RouteComponent() {
                         }}
                       />
                       <Label htmlFor={className}>{className}</Label>
+                    </div>
+                  ))}
+                </div>
+                <div className='space-y-2'>
+                  <h4 className='font-medium leading-none'>
+                    Zoom Level Filters
+                  </h4>
+                  <p className='text-sm text-muted-foreground'>
+                    Select the zoom levels to display.
+                  </p>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setSelectedZoomLevels(allZoomLevels)}
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setSelectedZoomLevels([])}
+                  >
+                    Deselect All
+                  </Button>
+                </div>
+                <div className='grid gap-2'>
+                  {allZoomLevels.map((zoomLevel) => (
+                    <div
+                      key={zoomLevel}
+                      className='flex items-center space-x-2'
+                    >
+                      <Checkbox
+                        id={`zoom-${zoomLevel}`}
+                        checked={selectedZoomLevels.includes(zoomLevel)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedZoomLevels((prev) => [
+                              ...prev,
+                              zoomLevel,
+                            ]);
+                          } else {
+                            setSelectedZoomLevels((prev) =>
+                              prev.filter((z) => z !== zoomLevel)
+                            );
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`zoom-${zoomLevel}`}>
+                        Zoom {zoomLevel}
+                      </Label>
                     </div>
                   ))}
                 </div>
@@ -290,7 +375,7 @@ function RouteComponent() {
                     </CardContent>
                   </Link>
                   {isAdvancedView && (
-                    <CardFooter>
+                    <CardFooter className='flex gap-2'>
                       <Button
                         disabled={processingIds.has(String(tile._id))}
                         onClick={async (e) => {
@@ -299,7 +384,7 @@ function RouteComponent() {
                           const id = String(tile._id);
                           try {
                             setProcessingIds((prev) => new Set(prev).add(id));
-                            toast.info('Processing batch...');
+                            toast.info('Processing batch with annotations...');
                             await processNewBatch({
                               tileId: tile._id as Id<'tiles'>,
                             });
@@ -317,10 +402,28 @@ function RouteComponent() {
                             });
                           }
                         }}
+                        className='flex-1'
                       >
                         {processingIds.has(String(tile._id))
                           ? 'Processing…'
-                          : 'Process'}
+                          : 'Process with Annotations'}
+                      </Button>
+                      <Button
+                        disabled={processingIds.has(String(tile._id))}
+                        variant='outline'
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setConfirmImageOnly({
+                            isOpen: true,
+                            tileId: tile._id as Id<'tiles'>,
+                          });
+                        }}
+                        className='flex-1'
+                      >
+                        {processingIds.has(String(tile._id))
+                          ? 'Processing…'
+                          : 'Image Only'}
                       </Button>
                     </CardFooter>
                   )}
@@ -385,6 +488,65 @@ function RouteComponent() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Confirmation Dialog for Image Only Processing */}
+      <Dialog
+        open={confirmImageOnly.isOpen}
+        onOpenChange={(open) =>
+          setConfirmImageOnly({ isOpen: open, tileId: null })
+        }
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Image-Only Upload</DialogTitle>
+            <DialogDescription>
+              You are about to upload this image to Roboflow without any
+              annotations. This means the image will be added to your dataset
+              but won't have any labeled training data associated with it.
+              <br />
+              <br />
+              Are you sure you want to proceed?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant='outline'
+              onClick={() =>
+                setConfirmImageOnly({ isOpen: false, tileId: null })
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!confirmImageOnly.tileId) return;
+
+                const id = String(confirmImageOnly.tileId);
+                try {
+                  setProcessingIds((prev) => new Set(prev).add(id));
+                  setConfirmImageOnly({ isOpen: false, tileId: null });
+                  toast.info('Processing batch (image only)...');
+                  await processNewBatchImageOnly({
+                    tileId: confirmImageOnly.tileId,
+                  });
+                  toast.success('Image uploaded. Moving to Processed.');
+                  router.invalidate();
+                } catch (err) {
+                  toast.error('Failed to process batch');
+                } finally {
+                  setProcessingIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(id);
+                    return next;
+                  });
+                }
+              }}
+            >
+              Upload Image Only
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

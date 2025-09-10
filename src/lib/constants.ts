@@ -95,4 +95,5 @@ export const LOCALSTORAGE_KEYS = {
   MAP_SETTINGS: 'map.settings',
   ADMIN_REVIEW_ADVANCED_VIEW: 'admin-review-advanced-view',
   ADMIN_REVIEW_SELECTED_CLASSES: 'admin-review-selected-classes',
+  ADMIN_REVIEW_SELECTED_ZOOM_LEVELS: 'admin-review-selected-zoom-levels',
 } as const;
