@@ -44,7 +44,7 @@ function clampLat(lat: number): number {
 export function pointToTile(
   lat: number,
   lon: number,
-  zoom = MAPBOX_TILE_DEFAULTS.zoom
+  zoom: number = MAPBOX_TILE_DEFAULTS.zoom
 ): TileCoordinate {
   const clampedLat = clampLat(lat);
   return {
