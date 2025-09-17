@@ -21,6 +21,7 @@ import type * as lib_createml from "../lib/createml.js";
 import type * as lib_geocoding from "../lib/geocoding.js";
 import type * as lib_index from "../lib/index.js";
 import type * as lib_roboflow from "../lib/roboflow.js";
+import type * as lib_spatial from "../lib/spatial.js";
 import type * as lib_tiles from "../lib/tiles.js";
 import type * as migrations from "../migrations.js";
 import type * as scanResults from "../scanResults.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   "lib/geocoding": typeof lib_geocoding;
   "lib/index": typeof lib_index;
   "lib/roboflow": typeof lib_roboflow;
+  "lib/spatial": typeof lib_spatial;
   "lib/tiles": typeof lib_tiles;
   migrations: typeof migrations;
   scanResults: typeof scanResults;

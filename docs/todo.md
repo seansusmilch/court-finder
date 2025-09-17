@@ -37,8 +37,8 @@ Let's show the user how many predictions they have left to evaluate this number 
 
 ## 8-27-25
 
-- make the training UI look nicer
-- add job to aggregate feedback submissions and send it to roboflow
+- DONE: make the training UI look nicer
+- DONE: add job to aggregate feedback submissions and send it to roboflow
 - some ideas to think on
   - implementing a currency system?
   - allowing users to set the radius of their scan (gotta store the radius)
@@ -49,3 +49,7 @@ Let's show the user how many predictions they have left to evaluate this number 
 - the satellite view is sometimes too much
 - having support for the street map (light and dark!) would be nice
 - should just have to change a string in the mapbox api request
+
+## Fixing Multiple detections at edges of satellite images
+
+-  please group courts that are the same type and really close to each other together into 1 marker. 

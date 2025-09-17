@@ -53,3 +53,17 @@ export const MAPBOX_TILE_DEFAULTS = {
 
 // Toggle for randomizing prediction feedback
 export const RANDOMIZE_PREDICTION_FEEDBACK = true;
+
+// Deduplication configuration
+// Base proximity radius used when a class-specific radius isn't defined (meters)
+export const MARKER_DEDUP_BASE_RADIUS_M = 20;
+// Confidence delta at or below which we consider two confidences a tie
+export const MARKER_DEDUP_CONFIDENCE_TIE_EPSILON = 0.05;
+// Per-class proximity radius overrides (meters)
+export const MARKER_DEDUP_RADIUS_BY_CLASS_M: Record<string, number> = {
+  'basketball-court': 10,
+  'tennis-court': 12,
+  'soccer-ball-field': 16,
+  'baseball-diamond': 32,
+  'ground-track-field': 16,
+};

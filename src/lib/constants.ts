@@ -64,12 +64,6 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     borderTopClass: 'border-t-blue-300',
     displayName: 'Track & Field',
   },
-  'swimming-pool': {
-    emoji: '🏊',
-    bgClass: 'bg-cyan-300',
-    borderTopClass: 'border-t-cyan-300',
-    displayName: 'Swimming Pool',
-  },
 };
 
 export function getVisualForClass(predictionClass: string): CourtClassVisual {
