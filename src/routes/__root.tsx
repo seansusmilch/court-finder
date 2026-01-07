@@ -1,4 +1,5 @@
 import Header from '@/components/header';
+import BottomNav from '@/components/bottom-nav';
 import Loader from '@/components/loader';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
@@ -96,7 +97,10 @@ function RootComponent() {
           } h-dvh`}
         >
           <Header />
-          {isFetching ? <Loader /> : <Outlet />}
+          <main className="pb-16 md:pb-0 overflow-auto">
+            {isFetching ? <Loader /> : <Outlet />}
+          </main>
+          <BottomNav />
         </div>
         <Toaster richColors />
       </ThemeProvider>

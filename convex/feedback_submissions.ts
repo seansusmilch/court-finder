@@ -109,13 +109,30 @@ export const submitFeedback = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    const startTs = Date.now();
     const userId = await getAuthUserId(ctx);
     if (!userId) {
+      console.error('error: unauthorized', {
+        requestedAction: 'submit_feedback',
+        predictionId: args.predictionId,
+      });
       throw new Error('Unauthorized');
     }
 
+    console.log('start', {
+      startTs,
+      userId,
+      predictionId: args.predictionId,
+      userResponse: args.userResponse,
+    });
+
     const prediction = await ctx.db.get(args.predictionId);
     if (!prediction) {
+      console.error('error: prediction not found', {
+        predictionId: args.predictionId,
+        userId,
+        requestedAction: 'submit_feedback',
+      });
       throw new Error('Prediction not found');
     }
 
@@ -126,17 +143,41 @@ export const submitFeedback = mutation({
       )
       .first();
 
+    console.log('query', {
+      table: 'feedback_submissions',
+      index: 'by_user_and_prediction',
+      params: { userId, predictionId: args.predictionId },
+      found: !!existingFeedback,
+    });
+
     if (existingFeedback) {
-      // Optionally update existing feedback or throw an error
-      console.log('Feedback already submitted for this prediction.');
+      console.log('complete', {
+        durationMs: Date.now() - startTs,
+        userId,
+        action: 'skipped_existing',
+        predictionId: args.predictionId,
+        feedbackId: existingFeedback._id,
+      });
       return;
     }
 
-    await ctx.db.insert('feedback_submissions', {
+    const feedbackId = await ctx.db.insert('feedback_submissions', {
       tileId: prediction.tileId,
       predictionId: args.predictionId,
       userId: userId,
       userResponse: args.userResponse,
+    });
+
+    console.log('created', {
+      table: 'feedback_submissions',
+      feedbackId,
+      data: {
+        tileId: prediction.tileId,
+        predictionId: args.predictionId,
+        userResponse: args.userResponse,
+      },
+      userId,
+      durationMs: Date.now() - startTs,
     });
   },
 });

@@ -72,13 +72,19 @@ const findOrCreateScan = async (
   longitude: number,
   userId: Id<'users'>
 ): Promise<Id<'scans'>> => {
+  const centerTile = pointToTile(latitude, longitude);
   const existingScans = await ctx.runQuery(internal.scans.findByCenterTile, {
-    centerTile: pointToTile(latitude, longitude),
+    centerTile,
   });
 
   if (existingScans?.length) {
-    console.log('[scanArea] reusing existing scan', {
+    console.log('query', {
+      table: 'scans',
+      index: 'by_center_tile',
+      params: { centerTile },
+      found: true,
       scanId: existingScans[0]._id,
+      userId,
     });
     return existingScans[0]._id;
   }
@@ -88,7 +94,12 @@ const findOrCreateScan = async (
     centerLong: longitude,
     userId,
   });
-  console.log('[scanArea] created new scan', { scanId });
+  console.log('created', {
+    table: 'scans',
+    scanId,
+    data: { centerLat: latitude, centerLong: longitude, centerTile },
+    userId,
+  });
   return scanId;
 };
 
@@ -101,13 +112,14 @@ const processTile = async (
   total: number,
   roboflowKey: string
 ): Promise<{ result: ScanResult; scanTile: ScanTile }> => {
-  console.log('[scanArea] processing tile', {
+  const tileStartTs = Date.now();
+
+  console.log('tile:start', {
     index: index + 1,
     total,
-    z: tile.z,
-    x: tile.x,
-    y: tile.y,
-    url: tile.url,
+    progress: `${Math.round((index / total) * 100)}%`,
+    tile: { z: tile.z, x: tile.x, y: tile.y },
+    url: tile.url.substring(0, 100),
   });
 
   const tileId = await ctx.runMutation(internal.tiles.insertTileIfNotExists, {
@@ -125,6 +137,14 @@ const processTile = async (
       version: ROBOFLOW_MODEL_VERSION,
     }
   );
+
+  console.log('query', {
+    table: 'inference_predictions',
+    index: 'by_tile_model_version',
+    params: { tileId, model: ROBOFLOW_MODEL_NAME, version: ROBOFLOW_MODEL_VERSION },
+    found: existingPredictions.length > 0,
+    predictionsCount: existingPredictions.length,
+  });
 
   let detections: RoboflowResponse;
   if (existingPredictions.length > 0) {
@@ -154,12 +174,6 @@ const processTile = async (
   const predictionsCount = Array.isArray(detections.predictions)
     ? detections.predictions.length
     : undefined;
-  console.log('[scanArea] predictions ready', {
-    index: index + 1,
-    tileId,
-    predictionsCount,
-    reused: existingPredictions.length > 0,
-  });
 
   // Upsert inference predictions
   const predictionIds = await Promise.all(
@@ -174,8 +188,13 @@ const processTile = async (
     })
   );
 
-  console.log('[scanArea] upserted predictions', {
-    predictionIds,
+  console.log('tile:complete', {
+    index: index + 1,
+    total,
+    tileId,
+    predictionsCount,
+    reusedCache: existingPredictions.length > 0,
+    durationMs: Date.now() - tileStartTs,
   });
 
   return {
@@ -204,6 +223,12 @@ export const scanArea = action({
     });
     const userId = await getAuthUserId(ctx);
     if (!canScan || !userId) {
+      console.error('error: unauthorized', {
+        userId,
+        canScan,
+        permission: PERMISSIONS.SCANS.EXECUTE,
+        requestedAction: 'scanArea',
+      });
       throw new Error('Unauthorized');
     }
 
@@ -211,9 +236,12 @@ export const scanArea = action({
     const { mapboxToken, roboflowKey } = validateEnvironmentVariables();
 
     // Log scan start
-    console.log('[scanArea] start', {
+    console.log('start', {
+      startTs,
+      userId,
       latitude: args.latitude,
       longitude: args.longitude,
+      centerTile: pointToTile(args.latitude, args.longitude),
     });
 
     // Generate tile coverage
@@ -225,11 +253,10 @@ export const scanArea = action({
       { accessToken: mapboxToken }
     );
 
-    console.log('[scanArea] tiles generated', {
+    console.log('processing tiles', {
+      totalTiles: coverage.tiles.length,
       zoom: coverage.zoom,
-      count: coverage.tiles.length,
-      rows: coverage.rows,
-      cols: coverage.cols,
+      gridSize: { rows: coverage.rows, cols: coverage.cols },
     });
 
     // Find or create scan
@@ -272,11 +299,21 @@ export const scanArea = action({
     }
 
     // Log completion and return results
-    const endTs = Date.now();
-    console.log('[scanArea] done', {
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      userId,
+      input: { latitude: args.latitude, longitude: args.longitude },
       scanId,
-      resultsCount: results.length,
-      durationMs: endTs - startTs,
+      tilesProcessed: results.length,
+      totalPredictions: results.reduce((sum, t) => {
+        const detections = t.detections as RoboflowResponse;
+        return sum + (detections.predictions?.length ?? 0);
+      }, 0),
+      tilesFromCache: results.filter((t) => {
+        // This is approximate - we'd need to track this better
+        return false;
+      }).length,
+      tilesNewlyScanned: results.length,
     });
 
     return {
@@ -286,5 +323,56 @@ export const scanArea = action({
       rows: coverage.rows,
       tiles: results,
     };
+  },
+});
+
+export const changePassword = action({
+  args: {
+    currentPassword: v.string(),
+    newPassword: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const user = await ctx.runQuery(api.users.me, {});
+    if (!user || !user.email) {
+      throw new Error('User not found or no email');
+    }
+
+    // Import password utilities
+    const { verifyPassword, hashPassword } = await import('./actions/password');
+
+    // Get account info using mutation (since we can't query accounts directly from action)
+    const accountInfo = await ctx.runMutation(api.users._changePasswordInternal, {
+      userId,
+    });
+
+    if (!accountInfo) {
+      throw new Error('Account not found');
+    }
+
+    // Verify current password
+    const isValid = await verifyPassword(
+      args.currentPassword,
+      accountInfo.hashedPassword
+    );
+
+    if (!isValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    // Hash new password
+    const newHashedPassword = await hashPassword(args.newPassword);
+
+    // Update account with new password
+    await ctx.runMutation(api.users._updateAccountPassword, {
+      accountId: accountInfo.accountId,
+      hashedPassword: newHashedPassword,
+    });
+
+    return { success: true };
   },
 });

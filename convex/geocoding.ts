@@ -10,6 +10,15 @@ export const revGeocode = internalAction({
     tileId: v.optional(v.id('tiles')),
   },
   handler: async (ctx, { lat, lng, tileId }): Promise<string> => {
+    const startTs = Date.now();
+
+    console.log('start', {
+      startTs,
+      lat,
+      lng,
+      tileId,
+    });
+
     const geocodedLocation = await reverseGeocode(lat, lng);
 
     // If we have a tileId, update the tile with the geocoded location
@@ -19,6 +28,14 @@ export const revGeocode = internalAction({
         reverseGeocode: geocodedLocation,
       });
     }
+
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      lat,
+      lng,
+      tileId,
+      result: geocodedLocation,
+    });
 
     return geocodedLocation;
   },

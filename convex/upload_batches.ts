@@ -37,8 +37,9 @@ export const getPendingBatches = query({
       (tile) => !uploadedTileIds.has(tile._id)
     );
 
-    console.log({
-      uploadedTileIds,
+    console.log('query', {
+      table: 'upload_batches',
+      uploadedTilesCount: uploadedTiles.length,
       allTilesCount: allTiles.length,
       pendingTilesCount: pendingTiles.length,
     });
@@ -65,7 +66,12 @@ export const getPendingBatches = query({
 
       if (!predictions.length && !args.includeEmpty) continue;
 
-      console.log({ tileId: tile._id, predictionsCount: predictions.length });
+      console.log('query', {
+        table: 'inference_predictions',
+        tileId: tile._id,
+        predictionsCount: predictions.length,
+        onlyLatestModelVersion: args.onlyLatestModelVersion ?? false,
+      });
 
       const feedbacks = await ctx.db
         .query('feedback_submissions')
@@ -312,6 +318,10 @@ export const createUploadBatch = mutation({
   handler: async (ctx, args) => {
     const tile = await ctx.db.get(args.tileId);
     if (!tile) {
+      console.error('error: tile not found', {
+        tileId: args.tileId,
+        requestedAction: 'create_upload_batch',
+      });
       throw new Error('Tile not found');
     }
 
@@ -320,6 +330,12 @@ export const createUploadBatch = mutation({
     const id = await ctx.db.insert('upload_batches', {
       tileId: args.tileId,
       roboflowName,
+    });
+
+    console.log('created', {
+      table: 'upload_batches',
+      batchId: id,
+      data: { tileId: args.tileId, roboflowName },
     });
 
     return id;
@@ -386,6 +402,15 @@ export const addImageToRoboflow = action({
     imageName: v.string(),
   },
   handler: async (ctx, args) => {
+    const startTs = Date.now();
+
+    console.log('start', {
+      startTs,
+      batchId: args.batchId,
+      imageName: args.imageName,
+      imageUrl: args.imageUrl.substring(0, 100),
+    });
+
     const result = await uploadImageToRoboflow({
       imageUrl: args.imageUrl,
       imageName: args.imageName,
@@ -394,6 +419,13 @@ export const addImageToRoboflow = action({
     await ctx.runMutation(api.upload_batches.updateBatchWithImageId, {
       batchId: args.batchId,
       imageId: result.id,
+    });
+
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      batchId: args.batchId,
+      imageId: result.id,
+      success: result.success,
     });
 
     return result;
@@ -406,7 +438,18 @@ export const updateBatchWithImageId = mutation({
     imageId: v.string(),
   },
   handler: async (ctx, args) => {
+    const batch = await ctx.db.get(args.batchId);
+    const previousValue = batch?.roboflowImageId;
+
     await ctx.db.patch(args.batchId, { roboflowImageId: args.imageId });
+
+    console.log('patched', {
+      table: 'upload_batches',
+      batchId: args.batchId,
+      fields: ['roboflowImageId'],
+      newValue: args.imageId,
+      previousValue,
+    });
   },
 });
 
@@ -417,6 +460,15 @@ export const addAnnotationToRoboflow = action({
     imageName: v.string(),
   },
   handler: async (ctx, args) => {
+    const startTs = Date.now();
+
+    console.log('start', {
+      startTs,
+      batchId: args.batchId,
+      imageId: args.imageId,
+      imageName: args.imageName,
+    });
+
     const shouldAnnotate = await ctx.runMutation(
       api.upload_batches.getAnnotationsForBatch,
       {
@@ -438,6 +490,14 @@ export const addAnnotationToRoboflow = action({
       batchId: args.batchId,
     });
 
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      batchId: args.batchId,
+      imageId: args.imageId,
+      annotationsCount: shouldAnnotate.length,
+      success: result.success,
+    });
+
     return result;
   },
 });
@@ -447,8 +507,20 @@ export const updateBatchWithAnnotationId = mutation({
     batchId: v.id('upload_batches'),
   },
   handler: async (ctx, args) => {
+    const batch = await ctx.db.get(args.batchId);
+    const previousValue = batch?.roboflowAnnotatedAt;
+    const newValue = Date.now();
+
     await ctx.db.patch(args.batchId, {
-      roboflowAnnotatedAt: Date.now(),
+      roboflowAnnotatedAt: newValue,
+    });
+
+    console.log('patched', {
+      table: 'upload_batches',
+      batchId: args.batchId,
+      fields: ['roboflowAnnotatedAt'],
+      newValue,
+      previousValue,
     });
   },
 });
@@ -464,6 +536,13 @@ export const processNewBatch = action({
     | AnnotationUploadResponse
     | { success: boolean; message: string; imageId: string }
   > => {
+    const startTs = Date.now();
+
+    console.log('start', {
+      startTs,
+      tileId: args.tileId,
+    });
+
     /**
      * 1. create new batch (tileId)
      * 2. upload image to roboflow (imageUrl, imageName)
@@ -481,6 +560,11 @@ export const processNewBatch = action({
       batchId,
     });
     if (!batch) {
+      console.error('error: batch not found', {
+        batchId,
+        tileId: args.tileId,
+        requestedAction: 'process_new_batch',
+      });
       throw new Error('Batch not found');
     }
 
@@ -511,6 +595,15 @@ export const processNewBatch = action({
         batchId,
       });
 
+      console.log('complete', {
+        durationMs: Date.now() - startTs,
+        tileId: args.tileId,
+        batchId,
+        imageId: imageUploadResult.id,
+        annotationsCount: 0,
+        action: 'image_only',
+      });
+
       return {
         success: true,
         message: `Successfully uploaded image ${batch.roboflowName} to Roboflow without annotations (no feedback available)`,
@@ -528,6 +621,15 @@ export const processNewBatch = action({
       }
     );
 
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      tileId: args.tileId,
+      batchId,
+      imageId: imageUploadResult.id,
+      annotationsCount: shouldAnnotate.length,
+      success: annotationUploadResult.success,
+    });
+
     return annotationUploadResult;
   },
 });
@@ -540,6 +642,13 @@ export const processNewBatchImageOnly = action({
     ctx,
     args
   ): Promise<{ success: boolean; message: string; imageId: string }> => {
+    const startTs = Date.now();
+
+    console.log('start', {
+      startTs,
+      tileId: args.tileId,
+    });
+
     /**
      * 1. create new batch (tileId)
      * 2. upload image to roboflow (imageUrl, imageName)
@@ -556,6 +665,11 @@ export const processNewBatchImageOnly = action({
       batchId,
     });
     if (!batch) {
+      console.error('error: batch not found', {
+        batchId,
+        tileId: args.tileId,
+        requestedAction: 'process_new_batch_image_only',
+      });
       throw new Error('Batch not found');
     }
 
@@ -577,6 +691,14 @@ export const processNewBatchImageOnly = action({
       batchId,
     });
 
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      tileId: args.tileId,
+      batchId,
+      imageId: imageUploadResult.id,
+      action: 'image_only',
+    });
+
     return {
       success: true,
       message: `Successfully uploaded image ${batch.roboflowName} to Roboflow without annotations`,
@@ -595,9 +717,24 @@ export const uploadCenterTile = action({
     ctx,
     args
   ): Promise<{ success: boolean; message: string; imageId: string }> => {
+    const startTs = Date.now();
+
+    console.log('start', {
+      startTs,
+      latitude: args.latitude,
+      longitude: args.longitude,
+      zoom: args.zoom,
+    });
+
     // Get the tile coordinates for the center point
     const zoom = args.zoom ?? MAPBOX_TILE_DEFAULTS.zoom;
     const tile = pointToTile(args.latitude, args.longitude, zoom as 16);
+
+    console.log('processing tiles', {
+      totalTiles: 1,
+      zoom: tile.z,
+      tile: { x: tile.x, y: tile.y, z: tile.z },
+    });
 
     // Ensure the tile exists in the database
     const tileId = await ctx.runMutation(internal.tiles.insertTileIfNotExists, {
@@ -607,8 +744,18 @@ export const uploadCenterTile = action({
     });
 
     // Upload the tile image to Roboflow
-    return await ctx.runAction(api.upload_batches.processNewBatchImageOnly, {
+    const result = await ctx.runAction(api.upload_batches.processNewBatchImageOnly, {
       tileId,
     });
+
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      input: { latitude: args.latitude, longitude: args.longitude, zoom },
+      tileId,
+      imageId: result.imageId,
+      success: result.success,
+    });
+
+    return result;
   },
 });

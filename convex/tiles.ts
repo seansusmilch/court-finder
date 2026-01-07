@@ -32,12 +32,27 @@ export const insertTileIfNotExists = internalMutation({
       .withIndex('by_tile', (q) => q.eq('x', x).eq('y', y).eq('z', z))
       .unique();
 
-    if (existingTile) return existingTile._id;
+    if (existingTile) {
+      console.log('query', {
+        table: 'tiles',
+        index: 'by_tile',
+        params: { x, y, z },
+        found: true,
+        tileId: existingTile._id,
+      });
+      return existingTile._id;
+    }
 
     const { lat, lng } = tileCenterLatLng(z, x, y);
     const reverseGeocode: string = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
     const tileId = await ctx.db.insert('tiles', { x, y, z, reverseGeocode });
+
+    console.log('created', {
+      table: 'tiles',
+      tileId,
+      data: { x, y, z, reverseGeocode },
+    });
 
     // Schedule the geocoding action to run after the mutation completes
     await ctx.scheduler.runAfter(0, internal.geocoding.revGeocode, {
@@ -64,7 +79,18 @@ export const updateTileGeocode = internalMutation({
     reverseGeocode: v.string(),
   },
   handler: async (ctx, { tileId, reverseGeocode }) => {
+    const tile = await ctx.db.get(tileId);
+    const previousValue = tile?.reverseGeocode;
+
     await ctx.db.patch(tileId, { reverseGeocode });
+
+    console.log('patched', {
+      table: 'tiles',
+      tileId,
+      fields: ['reverseGeocode'],
+      newValue: reverseGeocode,
+      previousValue,
+    });
   },
 });
 

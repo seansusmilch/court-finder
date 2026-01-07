@@ -3,7 +3,8 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, HelpCircle } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle, HelpCircle } from 'lucide-react';
 import {
   redirect,
   useNavigate,
@@ -53,8 +54,22 @@ export function TrainingFeedbackPage() {
 
   if (feedbackData === undefined) {
     return (
-      <div className='flex items-center justify-center h-screen'>
-        <Loader2 className='h-8 w-8 animate-spin' />
+      <div className='h-full w-full flex flex-col'>
+        <div className='flex justify-between items-center p-4 flex-shrink-0'>
+          <Skeleton className='h-5 w-20' />
+          <Skeleton className='h-9 w-16' />
+        </div>
+        <div className='flex flex-col items-center justify-center p-4 flex-1'>
+          <Skeleton className='w-full max-w-2xl aspect-square rounded-lg' />
+        </div>
+        <div className='bg-background p-4 pb-20 space-y-4 flex-shrink-0'>
+          <Skeleton className='h-6 w-48 mx-auto' />
+          <div className='flex justify-center gap-3'>
+            <Skeleton className='h-12 w-24' />
+            <Skeleton className='h-12 w-24' />
+            <Skeleton className='h-12 w-24' />
+          </div>
+        </div>
       </div>
     );
   }
@@ -109,20 +124,18 @@ export function TrainingFeedbackPage() {
 
   return (
     <div className='h-full w-full flex flex-col'>
-      {/* Top section with help button and progress */}
+      {/* Compact header */}
       <div className='flex justify-between items-center p-4 flex-shrink-0'>
-        <div className='flex items-center space-x-2'>
-          {predictionsLeft !== null && (
-            <span className='text-sm text-muted-foreground'>
-              {predictionsLeft} left
-            </span>
-          )}
-        </div>
+        {predictionsLeft !== null && (
+          <span className='text-sm text-muted-foreground'>
+            {predictionsLeft} left
+          </span>
+        )}
         <Button
           asChild
           variant='ghost'
           size='sm'
-          className='flex items-center space-x-2'
+          className='flex items-center gap-2'
         >
           <Link to='/feedback/help'>
             <HelpCircle className='h-4 w-4' />
@@ -131,8 +144,8 @@ export function TrainingFeedbackPage() {
         </Button>
       </div>
 
-      {/* Main content area - fixed height for image viewer */}
-      <div className='flex flex-col items-center justify-center p-4 flex-shrink-0'>
+      {/* Image viewer - takes majority of screen */}
+      <div className='flex flex-col items-center justify-center p-4 flex-1 min-h-0'>
         <ImageViewer
           imageUrl={imageUrl}
           imageWidth={imageWidth}
@@ -146,19 +159,20 @@ export function TrainingFeedbackPage() {
         />
       </div>
 
-      {/* Bottom section with question and buttons - grows to fill remaining space */}
-      <div className='bg-background p-4 pb-20 space-y-4 flex-1 flex flex-col justify-end'>
+      {/* Fixed bottom action bar - thumb zone optimized */}
+      <div className='bg-background border-t p-4 pb-20 md:pb-4 space-y-4 flex-shrink-0'>
         <div className='text-center'>
-          <div className='text-lg font-medium flex items-center justify-center'>
-            <span className='mr-2'>{emoji}</span> Is this a {displayName}?
+          <div className='text-xl font-medium flex items-center justify-center gap-2'>
+            <span>{emoji}</span>
+            <span>Is this a {displayName}?</span>
           </div>
         </div>
 
-        <div className='flex justify-center space-x-2 sm:space-x-4'>
+        <div className='flex gap-3 justify-center'>
           <Button
             size='lg'
             variant='outline'
-            className='bg-red-500 hover:bg-red-600 text-white flex-1 max-w-[100px] sm:max-w-[120px]'
+            className='bg-red-500 hover:bg-red-600 text-white h-12 flex-1 max-w-[120px]'
             onClick={() => handleFeedback('no')}
             disabled={isSubmitting}
           >
@@ -169,25 +183,19 @@ export function TrainingFeedbackPage() {
             variant='outline'
             onClick={() => handleFeedback('unsure')}
             disabled={isSubmitting}
-            className='flex-1 max-w-[100px] sm:max-w-[120px]'
+            className='h-12 flex-1 max-w-[120px]'
           >
             🤔 Unsure
           </Button>
           <Button
             size='lg'
             variant='outline'
-            className='bg-green-500 hover:bg-green-600 text-white flex-1 max-w-[100px] sm:max-w-[120px]'
+            className='bg-green-500 hover:bg-green-600 text-white h-12 flex-1 max-w-[120px]'
             onClick={() => handleFeedback('yes')}
             disabled={isSubmitting}
           >
             ✅ Yes
           </Button>
-        </div>
-        <div className='text-center text-xs text-muted-foreground pt-4'>
-          <p>Prediction ID: {prediction._id}</p>
-          <p>
-            Tile: {tile.z}/{tile.x}/{tile.y}
-          </p>
         </div>
       </div>
     </div>

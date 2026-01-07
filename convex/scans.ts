@@ -18,11 +18,21 @@ export const findByCenterTile = internalQuery({
     }),
   },
   handler: async (ctx, args) => {
-    console.log('[scans.findByCenterTile] args', args);
-    return await ctx.db
+    const scans = await ctx.db
       .query('scans')
       .withIndex('by_center_tile', (q) => q.eq('centerTile', args.centerTile))
       .collect();
+
+    console.log('query', {
+      table: 'scans',
+      index: 'by_center_tile',
+      params: { centerTile: args.centerTile },
+      found: scans.length > 0,
+      count: scans.length,
+      scanIds: scans.map((s) => s._id),
+    });
+
+    return scans;
   },
 });
 
@@ -33,18 +43,31 @@ export const create = internalMutation({
     userId: v.id('users'),
   },
   handler: async (ctx, args) => {
-    console.log('[scans.create] creating scan', args);
-
+    const centerTile = pointToTile(args.centerLat, args.centerLong);
     const id = await ctx.db.insert('scans', {
       centerLat: args.centerLat,
       centerLong: args.centerLong,
-      centerTile: pointToTile(args.centerLat, args.centerLong),
+      centerTile,
       model: ROBOFLOW_MODEL_NAME,
       version: ROBOFLOW_MODEL_VERSION,
       radius: DEFAULT_TILE_RADIUS,
       userId: args.userId,
     });
-    console.log('[scans.create] created', { id });
+
+    console.log('created', {
+      table: 'scans',
+      scanId: id,
+      data: {
+        centerLat: args.centerLat,
+        centerLong: args.centerLong,
+        centerTile,
+        model: ROBOFLOW_MODEL_NAME,
+        version: ROBOFLOW_MODEL_VERSION,
+        radius: DEFAULT_TILE_RADIUS,
+      },
+      userId: args.userId,
+    });
+
     return id;
   },
 });

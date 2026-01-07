@@ -36,6 +36,19 @@ export const upsert = internalMutation({
       )
       .unique();
 
+    console.log('query', {
+      table: 'inference_predictions',
+      index: 'by_tile_model_version_detection',
+      params: {
+        tileId: args.tileId,
+        model: args.model,
+        version: args.version,
+        detectionId: args.prediction.detection_id,
+      },
+      found: !!existing,
+      predictionId: existing?._id,
+    });
+
     const updateData = {
       roboflowInferenceId: args.inference_id,
       roboflowDetectionId: args.prediction.detection_id,
@@ -53,9 +66,28 @@ export const upsert = internalMutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, updateData);
+      console.log('patched', {
+        table: 'inference_predictions',
+        predictionId: existing._id,
+        fields: Object.keys(updateData),
+        tileId: args.tileId,
+        model: args.model,
+        version: args.version,
+      });
       return existing._id;
     } else {
       const id = await ctx.db.insert('inference_predictions', updateData);
+      console.log('created', {
+        table: 'inference_predictions',
+        predictionId: id,
+        data: {
+          tileId: args.tileId,
+          model: args.model,
+          version: args.version,
+          class: args.prediction.class,
+          confidence: args.prediction.confidence,
+        },
+      });
       return id;
     }
   },

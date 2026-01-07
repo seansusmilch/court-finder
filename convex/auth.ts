@@ -20,21 +20,52 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         shouldLink?: boolean;
       }
     ) {
-      console.log('createOrUpdateUser', args);
+      const startTs = Date.now();
+
+      console.log('start', {
+        startTs,
+        existingUserId: args.existingUserId,
+        type: args.type,
+        hasEmail: !!args.profile.email,
+        email: args.profile.email,
+        shouldLink: args.shouldLink,
+      });
+
       if (args.existingUserId) {
+        console.log('complete', {
+          durationMs: Date.now() - startTs,
+          action: 'reuse_existing',
+          userId: args.existingUserId,
+        });
         return args.existingUserId;
       }
+
+      let userId: Id<'users'>;
       if (args.profile.email) {
-        return ctx.db.insert('users', {
+        userId = await ctx.db.insert('users', {
           email: args.profile.email,
           permissions: DEFAULT_USER_PERMISSIONS,
         });
+        console.log('created', {
+          table: 'users',
+          userId,
+          data: { email: args.profile.email, isAnonymous: false },
+          durationMs: Date.now() - startTs,
+        });
+      } else {
+        userId = await ctx.db.insert('users', {
+          isAnonymous: true,
+          permissions: DEFAULT_ANONYMOUS_PERMISSIONS,
+        });
+        console.log('created', {
+          table: 'users',
+          userId,
+          data: { isAnonymous: true },
+          durationMs: Date.now() - startTs,
+        });
       }
 
-      return ctx.db.insert('users', {
-        isAnonymous: true,
-        permissions: DEFAULT_ANONYMOUS_PERMISSIONS,
-      });
+      return userId;
     },
   },
 });

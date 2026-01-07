@@ -301,16 +301,18 @@ export function MapControls({
       {/* Mobile: FAB + bottom sheet */}
       <div className='md:hidden pointer-events-auto'>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild>
-            <Button
-              aria-label='Open map controls'
-              className='fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg flex items-center justify-center'
-              size='icon'
-              variant='default'
-            >
-              <Search className='size-6' aria-hidden='true' />
-            </Button>
-          </SheetTrigger>
+          {!sheetOpen && (
+            <SheetTrigger asChild>
+              <Button
+                aria-label='Open map controls'
+                className='fixed bottom-20 right-4 z-[60] h-12 w-12 rounded-full shadow-lg flex items-center justify-center'
+                size='icon'
+                variant='default'
+              >
+                <Search className='size-6' aria-hidden='true' />
+              </Button>
+            </SheetTrigger>
+          )}
           <SheetContent side='bottom' className='h-[70vh]'>
             <div className='pt-4'>
               <ControlsBody

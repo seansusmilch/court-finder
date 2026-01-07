@@ -1,6 +1,7 @@
 import { query } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
+import { getAuthUserId } from '@convex-dev/auth/server';
 import {
   predictionToFeature,
   tilesIntersectingBbox,
@@ -44,7 +45,17 @@ export const featuresByViewport = query({
     confidenceThreshold: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    console.log('[inferences.featuresByViewport]');
+    const startTs = Date.now();
+    const userId = await getAuthUserId(ctx);
+
+    console.log('start', {
+      startTs,
+      userId,
+      bbox: args.bbox,
+      zoom: args.zoom,
+      confidenceThreshold: args.confidenceThreshold,
+    });
+
     const features: GeoJSONPointFeature[] = [];
 
     // Get ALL predictions from database (across all models)
@@ -418,10 +429,17 @@ export const featuresByViewport = query({
         } as GeoJSONPointFeature;
       });
 
-    console.log('[inferences.featuresByViewport] dedup', {
-      input: features.length,
-      output: dedupedFeatures.length,
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      userId,
+      input: { bbox: args.bbox, zoom: args.zoom, confidenceThreshold: args.confidenceThreshold },
+      output: {
+        inputFeatures: features.length,
+        outputFeatures: dedupedFeatures.length,
+        dedupRatio: features.length > 0 ? (dedupedFeatures.length / features.length).toFixed(2) : '0.00',
+      },
     });
+
     return { type: 'FeatureCollection', features: dedupedFeatures } as const;
   },
 });
