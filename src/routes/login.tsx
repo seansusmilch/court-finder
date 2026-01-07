@@ -21,6 +21,84 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
 
+/**
+ * Converts Convex auth errors to user-friendly messages
+ */
+function getAuthErrorMessage(error: unknown): string {
+  const rawMessage = error instanceof Error ? error.message : String(error);
+
+  // Normalize for matching (lowercase, trimmed)
+  const msg = rawMessage.toLowerCase();
+
+  // Invalid credentials / wrong password
+  if (
+    msg.includes('invalid password') ||
+    msg.includes('incorrect password') ||
+    msg.includes('wrong password') ||
+    msg.includes('invalid credentials') ||
+    msg.includes('authentication failed')
+  ) {
+    return 'Invalid email or password. Please try again.';
+  }
+
+  // User not found
+  if (
+    msg.includes('user not found') ||
+    msg.includes('no user found') ||
+    msg.includes('could not find user') ||
+    msg.includes("couldn't find your account")
+  ) {
+    return 'No account found with this email. Please sign up first.';
+  }
+
+  // Email already exists (during signup)
+  if (
+    msg.includes('already exists') ||
+    msg.includes('already registered') ||
+    msg.includes('email is already') ||
+    msg.includes('duplicate')
+  ) {
+    return 'An account with this email already exists. Please sign in instead.';
+  }
+
+  // Invalid email format
+  if (msg.includes('invalid email') || msg.includes('email format')) {
+    return 'Please enter a valid email address.';
+  }
+
+  // Password too weak
+  if (
+    msg.includes('password') &&
+    (msg.includes('weak') ||
+      msg.includes('short') ||
+      msg.includes('at least') ||
+      msg.includes('minimum'))
+  ) {
+    return 'Password is too weak. Please use at least 8 characters with a mix of letters and numbers.';
+  }
+
+  // Rate limiting
+  if (
+    msg.includes('rate limit') ||
+    msg.includes('too many') ||
+    msg.includes('try again later')
+  ) {
+    return 'Too many attempts. Please wait a moment and try again.';
+  }
+
+  // Network errors
+  if (
+    msg.includes('network') ||
+    msg.includes('fetch') ||
+    msg.includes('connection')
+  ) {
+    return 'Unable to connect. Please check your internet connection and try again.';
+  }
+
+  // Fallback - don't expose raw error details
+  return 'Something went wrong. Please try again.';
+}
+
 export const Route = createFileRoute('/login')({
   validateSearch: (s: { redirect?: string }) => s,
   beforeLoad: async ({ context }) => {
@@ -46,9 +124,7 @@ function AuthPage() {
     },
 
     onError: (err: unknown) => {
-      const message =
-        err instanceof Error ? err.message : 'Something went wrong';
-      setServerError(message);
+      setServerError(getAuthErrorMessage(err));
     },
   });
 
