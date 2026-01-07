@@ -1,0 +1,109 @@
+---
+alwaysApply: false
+description: React and frontend architecture/style rules. Use for any code involving React components, TanStack Router, TanStack Query, frontend structure, UI patterns, and styling with Tailwind or Shadcn/ui. Ensures best practices for imports, file layout, server state management, and component authoring in this project.
+---
+# React & Frontend Guidelines
+
+## Stack Overview
+
+- **React 19** + TypeScript
+- **TanStack Router** for file-based routing
+- **TanStack Query** for server state (via Convex)
+- **Tailwind CSS 4** for styling
+- **Shadcn/ui** (Radix primitives) for base components
+- **Bun** as package manager
+
+## Imports
+
+```tsx
+// ✅ React 19 doesn't need this import
+function MyComponent() { ... }
+
+// ❌ Never do this
+import React from 'react';
+```
+
+- Use `@/` path alias: `import { Button } from '@/components/ui/button'`
+- Avoid `await import()` unless lazy-loading routes
+
+## Component Patterns
+
+### Props & Types
+
+```tsx
+interface MyComponentProps {
+  title: string;
+  onClick: () => void;
+}
+
+export function MyComponent({ title, onClick }: MyComponentProps) {
+  return <button onClick={onClick}>{title}</button>;
+}
+```
+
+### File Structure
+
+```
+src/
+├── components/
+│   ├── ui/              # Shadcn base components (don't modify)
+│   ├── map/             # Feature: map-related components
+│   ├── training/        # Feature: training-related components
+│   └── header.tsx       # Shared components at root
+├── hooks/               # Custom hooks
+├── lib/                 # Utils, types, constants
+└── routes/              # TanStack Router pages
+```
+
+### Naming
+
+- **Files:** `kebab-case.tsx` (e.g., `court-marker.tsx`)
+- **Components:** `PascalCase` (e.g., `CourtMarker`)
+- **Hooks:** `useCamelCase` (e.g., `useLocalStorage`)
+
+## Routes (TanStack Router)
+
+Keep route component in the same file:
+
+```tsx
+import { createFileRoute } from '@tanstack/react-router';
+
+export const Route = createFileRoute('/example')({
+  loader: () => ({ defaultValue: 42 }),
+  component: ExamplePage,
+});
+
+function ExamplePage() {
+  const { defaultValue } = Route.useLoaderData();
+  return <div>{defaultValue}</div>;
+}
+```
+
+**Prefer router features over component state:**
+- Use `loader` for data fetching
+- Use search params (`useSearch`) over `useState` for URL-driven state
+- Use `Link` component for navigation
+
+## Styling
+
+Use the `cn()` utility for conditional classes:
+
+```tsx
+import { cn } from '@/lib/utils';
+
+<div className={cn('base-class', isActive && 'active-class')} />
+```
+
+## State Management
+
+| Use Case | Solution |
+|----------|----------|
+| Server data | Convex `useQuery` / `useMutation` |
+| Async mutations | TanStack Query `useMutation` |
+| URL state | TanStack Router search params |
+| Local persistence | `useLocalStorage` hook |
+| Component state | `useState` / `useReducer` |
+
+## Verification
+
+Run `bun check-types` after changes to catch type errors.

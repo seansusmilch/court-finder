@@ -1,0 +1,582 @@
+---
+alwaysApply: false
+description: Use this rule for any code that defines, structures, or organizes Convex backend functions (queries, mutations, actions), schemas, or architectural patterns. Refer to this rule when writing, updating, or reviewing Convex server code, database logic, or backend utilities.
+---
+# Convex Backend Guidelines
+
+## Stack Overview
+
+- **Convex** for backend (database, queries, mutations, actions)
+- **@convex-dev/auth** for authentication
+- **Mapbox** for satellite tiles and geocoding
+- **Roboflow** for ML inference and training data
+
+## File Structure
+
+```
+convex/
+├── _generated/          # Auto-generated (don't edit)
+├── lib/
+│   ├── constants.ts     # Shared constants, env vars, permissions
+│   ├── roboflow.ts      # Roboflow API utilities
+│   ├── tiles.ts         # Mapbox tile utilities
+│   ├── spatial.ts       # Geo/spatial calculations
+│   └── index.ts         # Re-exports
+├── schema.ts            # Database schema
+├── auth.ts              # Auth configuration
+└── [resource].ts        # Queries/mutations per resource
+```
+
+## Function Types
+
+### Public Functions (callable from client)
+
+```ts
+import { query, mutation, action } from './_generated/server';
+import { v } from 'convex/values';
+
+// Query: Read-only, automatically reactive
+export const myQuery = query({
+  args: { id: v.id('users') },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
+// Mutation: Read/write, transactional
+export const myMutation = mutation({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert('users', { name: args.name });
+  },
+});
+```
+
+### Internal Functions (server-side only)
+
+```ts
+import { internalQuery, internalMutation } from './_generated/server';
+import { internal } from './_generated/api';
+
+// Can only be called from other Convex functions
+export const findByTile = internalQuery({
+  args: { x: v.float64(), y: v.float64(), z: v.float64() },
+  handler: async (ctx, args) => {
+    return await ctx.db.query('tiles')
+      .withIndex('by_tile', (q) => q.eq('x', args.x).eq('y', args.y).eq('z', args.z))
+      .unique();
+  },
+});
+
+// Call internal functions via `internal` API
+await ctx.runQuery(internal.tiles.findByTile, { x, y, z });
+```
+
+### Actions (for external APIs)
+
+```ts
+'use node'; // Required for Node.js APIs (fetch, process.env)
+import { action } from './_generated/server';
+
+export const callExternalAPI = action({
+  args: { input: v.string() },
+  handler: async (ctx, args) => {
+    // Access env vars (actions only)
+    const apiKey = process.env.ROBOFLOW_API_KEY;
+    
+    // Call mutations/queries from actions
+    await ctx.runMutation(internal.tiles.create, { ... });
+    const data = await ctx.runQuery(internal.tiles.get, { ... });
+    
+    // External API calls
+    const response = await fetch('https://api.example.com');
+    return response.json();
+  },
+});
+```
+
+## Authentication
+
+### Getting the Current User
+
+```ts
+import { getAuthUserId } from '@convex-dev/auth/server';
+
+export const myQuery = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null; // Not authenticated
+    
+    const user = await ctx.db.get(userId);
+    return user;
+  },
+});
+```
+
+### Permission Checks
+
+```ts
+import { api } from './_generated/api';
+import { PERMISSIONS } from './lib/constants';
+
+export const protectedMutation = mutation({
+  handler: async (ctx) => {
+    const canExecute = await ctx.runQuery(api.users.hasPermission, {
+      permission: PERMISSIONS.SCANS.EXECUTE,
+    });
+    if (!canExecute) {
+      throw new Error('Unauthorized');
+    }
+    // ... proceed with operation
+  },
+});
+```
+
+### Permission Constants
+
+Define permissions in `lib/constants.ts`:
+
+```ts
+export const PERMISSIONS = {
+  SCANS: {
+    READ: 'scans.read',
+    WRITE: 'scans.write',
+    EXECUTE: 'scans.execute',
+  },
+  ADMIN: {
+    ACCESS: 'admin.access',
+  },
+};
+```
+
+## Schema Definition
+
+```ts
+import { defineSchema, defineTable } from 'convex/server';
+import { v } from 'convex/values';
+
+export default defineSchema({
+  tiles: defineTable({
+    x: v.float64(),
+    y: v.float64(),
+    z: v.float64(),
+    reverseGeocode: v.optional(v.string()),
+  })
+    .index('by_tile', ['x', 'y', 'z']), // Always add indexes for queried fields
+
+  inference_predictions: defineTable({
+    tileId: v.id('tiles'),           // Use v.id() for foreign keys
+    confidence: v.float64(),
+    class: v.string(),
+  })
+    .index('by_tile', ['tileId'])
+    .index('by_tile_model_version', ['tileId', 'model', 'version']),
+});
+```
+
+## Database Patterns
+
+### Query with Index
+
+```ts
+// ✅ Use indexes for efficient queries
+const tile = await ctx.db
+  .query('tiles')
+  .withIndex('by_tile', (q) => q.eq('x', x).eq('y', y).eq('z', z))
+  .unique();
+
+// ❌ Avoid full table scans
+const tile = await ctx.db.query('tiles')
+  .filter((q) => q.eq(q.field('x'), x))
+  .first();
+```
+
+### Upsert Pattern
+
+```ts
+export const upsert = internalMutation({
+  args: { tileId: v.id('tiles'), data: v.string() },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query('records')
+      .withIndex('by_tile', (q) => q.eq('tileId', args.tileId))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { data: args.data });
+      return existing._id;
+    }
+    return await ctx.db.insert('records', args);
+  },
+});
+```
+
+## External API Integrations
+
+### Mapbox
+
+```ts
+import { styleTileUrl, tileCenterLatLng } from './lib/tiles';
+
+// Generate tile image URL
+const url = styleTileUrl(z, x, y, {
+  accessToken: process.env.MAPBOX_API_KEY,
+});
+
+// Get lat/lng from tile coordinates
+const { lat, lng } = tileCenterLatLng(z, x, y);
+```
+
+### Roboflow
+
+```ts
+import { detectObjectsWithRoboflow, uploadImageToRoboflow } from './lib/roboflow';
+import { ROBOFLOW_MODEL_NAME, ROBOFLOW_MODEL_VERSION } from './lib/constants';
+
+// Run inference
+const result = await detectObjectsWithRoboflow(
+  imageUrl,
+  apiKey,
+  ROBOFLOW_MODEL_NAME,
+  ROBOFLOW_MODEL_VERSION
+);
+
+// Upload training image
+await uploadImageToRoboflow({
+  imageUrl,
+  imageName: `tile_${x}_${y}_${z}.png`,
+  split: 'train',
+});
+```
+
+## Environment Variables
+
+Define env var names in `lib/constants.ts`:
+
+```ts
+export const ENV_VARS = {
+  MAPBOX_API_KEY: 'MAPBOX_API_KEY',
+  ROBOFLOW_API_KEY: 'ROBOFLOW_API_KEY',
+} as const;
+```
+
+Access only in actions:
+
+```ts
+'use node';
+
+const validateEnvVars = () => {
+  const mapboxKey = process.env[ENV_VARS.MAPBOX_API_KEY];
+  const roboflowKey = process.env[ENV_VARS.ROBOFLOW_API_KEY];
+  
+  if (!mapboxKey) throw new Error('Missing MAPBOX_API_KEY');
+  if (!roboflowKey) throw new Error('Missing ROBOFLOW_API_KEY');
+  
+  return { mapboxKey, roboflowKey };
+};
+```
+
+## Background Tasks
+
+Use scheduler for deferred work:
+
+```ts
+export const createTile = internalMutation({
+  handler: async (ctx, args) => {
+    const tileId = await ctx.db.insert('tiles', { ... });
+    
+    // Schedule async work after mutation completes
+    await ctx.scheduler.runAfter(0, internal.geocoding.revGeocode, {
+      tileId,
+      lat,
+      lng,
+    });
+    
+    return tileId;
+  },
+});
+```
+
+## Logging
+
+Every log must tell the complete story. When you read a log line, you should know exactly what happened, where it happened, what data was involved, and how long it took.
+
+### Log Format
+
+```ts
+console.log('phase: description', { ...structuredContext });
+```
+
+### Required Context by Phase
+
+#### Function Entry — Log ALL inputs
+
+```ts
+export const scanArea = action({
+  args: { latitude: v.number(), longitude: v.number() },
+  handler: async (ctx, args) => {
+    const startTs = Date.now();
+    const userId = await getAuthUserId(ctx);
+    
+    console.log('start', {
+      // Timing
+      startTs,
+      // Auth context
+      userId,
+      // ALL input args
+      latitude: args.latitude,
+      longitude: args.longitude,
+      // Derived/computed values
+      centerTile: pointToTile(args.latitude, args.longitude),
+    });
+```
+
+#### Database Operations — Log query params, results, and IDs
+
+```ts
+// Query
+const existingTile = await ctx.db
+  .query('tiles')
+  .withIndex('by_tile', (q) => q.eq('x', x).eq('y', y).eq('z', z))
+  .unique();
+
+console.log('query', {
+  table: 'tiles',
+  index: 'by_tile',
+  params: { x, y, z },
+  found: !!existingTile,
+  tileId: existingTile?._id,
+});
+
+// Insert
+const tileId = await ctx.db.insert('tiles', { x, y, z, reverseGeocode });
+
+console.log('created', {
+  table: 'tiles',
+  tileId,
+  data: { x, y, z, reverseGeocode },
+});
+
+// Update
+await ctx.db.patch(tileId, { reverseGeocode: newValue });
+
+console.log('patched', {
+  table: 'tiles',
+  tileId,
+  fields: ['reverseGeocode'],
+  newValue,
+  previousValue: tile.reverseGeocode,
+});
+```
+
+#### External API Calls — Log request, response, and timing
+
+```ts
+const apiStartTs = Date.now();
+
+console.log('request', {
+  url: `https://detect.roboflow.com/${modelName}/${version}`,
+  model: modelName,
+  version,
+  imageUrl,
+  // Never log API keys, but log that they exist
+  hasApiKey: !!apiKey,
+});
+
+const response = await detectObjectsWithRoboflow(imageUrl, apiKey, modelName, version);
+
+console.log('response', {
+  model: modelName,
+  version,
+  imageUrl,
+  durationMs: Date.now() - apiStartTs,
+  // Response summary
+  predictionsCount: response.predictions.length,
+  imageSize: response.image,
+  inferenceId: response.inference_id,
+  // Sample of results (first 3)
+  topPredictions: response.predictions.slice(0, 3).map(p => ({
+    class: p.class,
+    confidence: p.confidence,
+    detectionId: p.detection_id,
+  })),
+});
+```
+
+#### Loop/Batch Processing — Log progress and aggregates
+
+```ts
+console.log('processing tiles', {
+  totalTiles: tiles.length,
+  zoom: coverage.zoom,
+  gridSize: { rows: coverage.rows, cols: coverage.cols },
+});
+
+for (let i = 0; i < tiles.length; i++) {
+  const tile = tiles[i];
+  
+  console.log('tile:start', {
+    index: i + 1,
+    total: tiles.length,
+    progress: `${Math.round((i / tiles.length) * 100)}%`,
+    tile: { z: tile.z, x: tile.x, y: tile.y },
+    url: tile.url,
+  });
+
+  // ... process tile ...
+
+  console.log('tile:complete', {
+    index: i + 1,
+    total: tiles.length,
+    tileId,
+    predictionsCount: detections.predictions.length,
+    reusedCache: existingPredictions.length > 0,
+    durationMs: Date.now() - tileStartTs,
+  });
+}
+```
+
+#### Function Exit — Log results and total duration
+
+```ts
+    const result = { scanId, tiles: results };
+    
+    console.log('complete', {
+      // Timing
+      durationMs: Date.now() - startTs,
+      // Auth
+      userId,
+      // Input summary
+      input: { latitude: args.latitude, longitude: args.longitude },
+      // Output summary
+      scanId,
+      tilesProcessed: results.length,
+      totalPredictions: results.reduce((sum, t) => sum + t.detections.predictions.length, 0),
+      // Cache stats
+      tilesFromCache: results.filter(t => t.fromCache).length,
+      tilesNewlyScanned: results.filter(t => !t.fromCache).length,
+    });
+
+    return result;
+  },
+});
+```
+
+#### Errors — Log full context before throwing
+
+```ts
+const tile = await ctx.db.get(args.tileId);
+if (!tile) {
+  console.error('error: tile not found', {
+    tileId: args.tileId,
+    userId,
+    predictionId: args.predictionId,
+    // Include what we know about the request
+    requestedAction: 'submit_feedback',
+  });
+  throw new Error('Tile not found');
+}
+
+// For caught errors from external services
+try {
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error('error: http failure', {
+      url,
+      status: response.status,
+      statusText: response.statusText,
+      model: modelName,
+      version,
+      imageUrl,
+      durationMs: Date.now() - apiStartTs,
+    });
+    throw new Error(`Roboflow HTTP error ${response.status}`);
+  }
+} catch (error) {
+  console.error('error: request failed', {
+    url,
+    model: modelName,
+    version,
+    imageUrl,
+    errorMessage: error instanceof Error ? error.message : String(error),
+    errorName: error instanceof Error ? error.name : undefined,
+    durationMs: Date.now() - apiStartTs,
+  });
+  throw error;
+}
+```
+
+### Structured Context Checklist
+
+Always include when available:
+
+| Category | Fields |
+|----------|--------|
+| **Timing** | `startTs`, `durationMs`, `apiDurationMs` |
+| **Auth** | `userId`, `permissions`, `isAnonymous` |
+| **IDs** | `scanId`, `tileId`, `predictionId`, `batchId` |
+| **Coordinates** | `{ lat, lng }`, `{ x, y, z }`, `bbox` |
+| **Counts** | `totalCount`, `processedCount`, `matchCount`, `errorCount` |
+| **Progress** | `index`, `total`, `progress` (percentage string) |
+| **Results** | `found`, `created`, `updated`, `reusedCache` |
+| **External APIs** | `url`, `status`, `model`, `version`, `inferenceId` |
+| **Errors** | `errorMessage`, `errorName`, `errorCode` |
+
+### What NOT to Log
+
+```ts
+// ❌ Never log secrets
+console.log({ apiKey, password, token });
+
+// ❌ Never log full response bodies (too verbose)
+console.log({ fullResponse: await response.json() });
+
+// ❌ Never log without context
+console.log('done');
+console.log(tileId);
+
+// ✅ Instead, log summaries with context
+console.log('complete', {
+  tileId,
+  predictionsCount: response.predictions.length,
+});
+```
+
+## Error Handling
+
+```ts
+// Throw descriptive errors for client-facing issues
+if (!userId) {
+  throw new Error('Unauthorized');
+}
+
+if (!record) {
+  throw new Error('Record not found');
+}
+
+// Validate required data before operations
+const tile = await ctx.db.get(args.tileId);
+if (!tile) {
+  throw new Error('Tile not found');
+}
+```
+
+## Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Files | `snake_case.ts` | `feedback_submissions.ts` |
+| Public functions | `camelCase` | `getNextPrediction` |
+| Internal functions | `camelCase` | `insertTileIfNotExists` |
+| Tables | `snake_case` | `inference_predictions` |
+| Indexes | `by_field` or `by_field1_field2` | `by_tile_model_version` |
+| Constants | `SCREAMING_SNAKE_CASE` | `ROBOFLOW_MODEL_VERSION` |
+
+## Verification
+
+After changes, run:
+
+```bash
+bun convex dev   # Start dev server and validate schema
+bun check-types  # Type check all code
+```

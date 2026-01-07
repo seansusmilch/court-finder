@@ -1,0 +1,452 @@
+---
+alwaysApply: false
+description: Use this rule for any code involving React component UI, layout, or styling where professional, accessible, and mobile-first frontend design patterns should be applied. Guides best practices for visual design, usability, accessibility, and responsive interaction in user-facing interfaces.
+---
+
+# Frontend Design Guidelines
+
+Professional design principles for building beautiful, usable interfaces.
+
+## Mobile-First Philosophy
+
+**Design for mobile first, then enhance for larger screens.** Most users are on mobile devices—treat desktop as the progressive enhancement, not the other way around.
+
+### Why Mobile-First
+
+- Forces focus on essential content and actions
+- Ensures touch-friendly interactions work everywhere
+- Prevents "desktop afterthought" mobile experiences
+- Easier to add than to remove complexity
+
+### Mobile-First Rules
+
+1. **Start every design at 320-375px width** before considering larger screens
+2. **Touch targets minimum 44x44px**—thumbs are imprecise
+3. **Bottom navigation > hamburger menus**—reachable with one hand
+4. **Full-width buttons on mobile**—easier to tap
+5. **Avoid hover-dependent interactions**—touch has no hover state
+6. **Test on real devices**—emulators miss performance and touch issues
+7. **Consider thumb zones**—primary actions in bottom 2/3 of screen
+
+### Mobile-Specific Patterns
+
+```tsx
+// ✅ Bottom sheet instead of modal (more natural on mobile)
+<Sheet>
+  <SheetTrigger>Open</SheetTrigger>
+  <SheetContent side="bottom">
+    {/* Content slides up from bottom */}
+  </SheetContent>
+</Sheet>
+
+// ✅ Sticky bottom action bar
+<div className="fixed bottom-0 inset-x-0 p-4 bg-background border-t">
+  <Button className="w-full">Primary Action</Button>
+</div>
+
+// ✅ Mobile-first responsive classes
+<div className="px-4 md:px-6 lg:px-8">           {/* Padding scales up */}
+<div className="text-base md:text-lg">           {/* Font scales up */}
+<div className="grid grid-cols-1 md:grid-cols-2"> {/* Stack → Grid */}
+```
+
+### Mobile Touch Considerations
+
+| Element | Minimum Size | Recommended |
+|---------|--------------|-------------|
+| Buttons | 44x44px | 48x48px |
+| List items | 44px height | 48-56px height |
+| Icon buttons | 44x44px | 48x48px |
+| Spacing between targets | 8px | 12px |
+
+### Mobile Performance
+
+- Lazy load images and heavy components
+- Minimize JavaScript bundle size
+- Use skeleton screens over spinners (feels faster)
+- Avoid layout shifts—reserve space for async content
+- Test on throttled 3G connections
+
+## Core Principles
+
+### Visual Hierarchy
+
+Establish clear importance levels:
+
+```
+1. Primary action → Bold, high-contrast, prominent placement
+2. Secondary content → Medium weight, supporting position
+3. Tertiary info → Subtle, smaller, muted colors
+```
+
+**Rules:**
+- One primary action per screen/section (avoid competing CTAs)
+- Size, color, and whitespace all communicate importance
+- Users should know where to look within 3 seconds
+
+### Spacing System
+
+Use a consistent spacing scale (e.g., 4px base):
+
+```
+4px  → Tight: icon-to-label, inline elements
+8px  → Compact: related items, form field gaps
+16px → Default: between components, card padding
+24px → Relaxed: section separation
+32px → Loose: major section breaks
+48px+ → Generous: page-level separation
+```
+
+**Rules:**
+- Related items = less space between them
+- Unrelated items = more space between them
+- Padding inside containers > gaps between containers
+- Increase spacing on larger screens
+
+### Typography
+
+**Font sizes (mobile-first):**
+```
+12px → Captions, labels, metadata
+14px → Body text, UI elements
+16px → Default body, inputs
+18-20px → Lead text, important body
+24-32px → Section headings
+36-48px → Page titles
+```
+
+**Rules:**
+- Maximum 2-3 font weights per page (regular, medium, bold)
+- Line height: 1.4-1.6 for body text, 1.2-1.3 for headings
+- Maximum line length: 65-75 characters for readability
+- Left-align body text (avoid justified text on web)
+
+### Color
+
+**Semantic colors:**
+```
+Primary   → Brand actions, key interactive elements
+Secondary → Supporting actions, less prominent UI
+Success   → Confirmations, completed states (green)
+Warning   → Caution, non-blocking issues (amber/yellow)
+Error     → Failures, destructive actions (red)
+Neutral   → Backgrounds, borders, disabled states
+```
+
+**Rules:**
+- Maintain 4.5:1 contrast ratio for text (WCAG AA)
+- Don't rely on color alone—use icons, text, or patterns too
+- Limit palette: 1 primary, 1-2 accents, plus neutrals
+- Test in both light and dark modes
+
+## Component Patterns
+
+### Buttons
+
+```tsx
+// ✅ Clear hierarchy
+<Button variant="default">Save Changes</Button>     // Primary
+<Button variant="secondary">Cancel</Button>         // Secondary
+<Button variant="ghost">Learn more</Button>         // Tertiary
+
+// ✅ Good button text
+"Save Changes" | "Create Account" | "Send Message"
+
+// ❌ Vague button text
+"Submit" | "Click Here" | "OK" | "Yes"
+```
+
+**Rules:**
+- Minimum touch target: 44x44px (mobile)
+- Button text = verb + noun ("Create Project", not "Create")
+- Destructive actions require confirmation or undo
+- Loading states: disable + show spinner + change text ("Saving...")
+
+### Forms
+
+```tsx
+// ✅ Good form structure
+<form>
+  <div className="space-y-4">
+    <div>
+      <Label htmlFor="email">Email address</Label>
+      <Input id="email" type="email" placeholder="you@example.com" />
+      <p className="text-sm text-muted-foreground mt-1">
+        We'll never share your email.
+      </p>
+    </div>
+  </div>
+</form>
+```
+
+**Rules:**
+- Labels above inputs (not floating labels for complex forms)
+- Mark optional fields, not required (most fields should be required)
+- Show validation errors inline, below the field
+- Use appropriate input types (email, tel, number, date)
+- Single-column layouts convert better than multi-column
+- Submit button at bottom, aligned left or full-width on mobile
+
+### Empty States
+
+Never show blank screens. Empty states should:
+1. Explain what will appear here
+2. Guide users to take action
+3. Feel intentional, not broken
+
+```tsx
+// ✅ Helpful empty state
+<div className="text-center py-12">
+  <FolderIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+  <h3 className="mt-4 text-lg font-medium">No projects yet</h3>
+  <p className="mt-2 text-muted-foreground">
+    Get started by creating your first project.
+  </p>
+  <Button className="mt-6">Create Project</Button>
+</div>
+```
+
+### Loading States
+
+```tsx
+// ✅ Skeleton screens (preferred for known layouts)
+<div className="space-y-4">
+  <Skeleton className="h-8 w-48" />
+  <Skeleton className="h-4 w-full" />
+  <Skeleton className="h-4 w-3/4" />
+</div>
+
+// ✅ Spinners (for unknown content or quick loads)
+<Loader2 className="h-6 w-6 animate-spin" />
+```
+
+**Rules:**
+- Show skeleton for loads >200ms
+- Match skeleton shapes to actual content
+- Avoid layout shift when content loads
+- Never block the entire screen if only part is loading
+
+### Error States
+
+```tsx
+// ✅ Inline field error
+<div>
+  <Input className="border-destructive" />
+  <p className="text-sm text-destructive mt-1">
+    Please enter a valid email address
+  </p>
+</div>
+
+// ✅ Page-level error with recovery
+<Alert variant="destructive">
+  <AlertTitle>Unable to load data</AlertTitle>
+  <AlertDescription>
+    Please check your connection and try again.
+  </AlertDescription>
+  <Button variant="outline" size="sm" className="mt-2">
+    Retry
+  </Button>
+</Alert>
+```
+
+**Rules:**
+- Be specific: "Email is invalid" not "Error"
+- Offer recovery actions when possible
+- Preserve user input on errors
+- Don't use red for non-error states
+
+## Layout Patterns
+
+### Responsive Design
+
+**Always write mobile styles first, then add breakpoint overrides:**
+
+```tsx
+// ✅ Mobile-first: base styles are mobile, breakpoints add desktop
+<div className="
+  flex flex-col        // Mobile: stack vertically
+  md:flex-row          // Desktop: row layout
+  gap-4               
+  md:gap-6             // Desktop: more spacing
+  p-4
+  md:p-8               // Desktop: more padding
+">
+
+// ❌ Desktop-first: harder to maintain, mobile as afterthought
+<div className="flex-row md:flex-col p-8 md:p-4">
+```
+
+**Breakpoints (use sparingly):**
+```
+sm: 640px  → Large phones (rarely needed)
+md: 768px  → Tablets (primary breakpoint)
+lg: 1024px → Small laptops
+xl: 1280px → Desktops (use for wide layouts)
+```
+
+**Responsive Patterns:**
+
+| Mobile | Desktop |
+|--------|---------|
+| Bottom navigation | Sidebar or top nav |
+| Single column | Multi-column grid |
+| Full-width buttons | Inline/auto-width buttons |
+| Bottom sheets | Modals/dialogs |
+| Stacked cards | Card grid |
+| Collapsed menus | Expanded navigation |
+
+**Rules:**
+- Base styles = mobile styles (no breakpoint prefix)
+- Only add breakpoints when layout genuinely needs to change
+- Navigation: bottom bar (mobile) → sidebar or top nav (desktop)
+- Cards: stack vertically (mobile) → grid (desktop)
+- Content width: max-w-prose for text, max-w-screen-xl for app UI
+- Test at 320px, 375px, 768px, and 1280px minimum
+
+### Whitespace
+
+Whitespace is not empty space—it's a design element:
+
+- **Micro whitespace:** padding inside components
+- **Macro whitespace:** margins between sections
+
+**Rules:**
+- More whitespace = more premium feel
+- Dense UIs feel complex; spacious UIs feel simple
+- Don't fill every pixel—let content breathe
+- Increase whitespace as screen size increases
+
+### Cards & Containers
+
+```tsx
+// ✅ Consistent card styling
+<Card className="p-6">
+  <CardHeader className="pb-4">
+    <CardTitle>Title</CardTitle>
+    <CardDescription>Supporting text</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {/* Content */}
+  </CardContent>
+</Card>
+```
+
+**Rules:**
+- Consistent border-radius across the app (4px, 8px, or 12px)
+- Subtle shadows for elevation, not harsh drop shadows
+- Border OR shadow, rarely both
+- Group related content in cards
+
+## Interaction Design
+
+### Feedback & Microinteractions
+
+Every action should have feedback:
+
+```tsx
+// ✅ Button with loading state
+<Button disabled={isPending}>
+  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+  {isPending ? 'Saving...' : 'Save'}
+</Button>
+
+// ✅ Toast for async confirmations
+toast.success('Changes saved')
+toast.error('Failed to save changes')
+```
+
+**Rules:**
+- Immediate feedback: hover, focus, active states
+- Progress feedback: loading spinners, progress bars
+- Completion feedback: success toasts, checkmarks
+- Transitions: 150-300ms for UI, 300-500ms for modals
+
+### Hover & Focus States
+
+```tsx
+// ✅ Clear interactive affordance
+<button className="
+  hover:bg-accent 
+  focus-visible:outline-none 
+  focus-visible:ring-2 
+  focus-visible:ring-ring
+  transition-colors
+">
+  Click me
+</button>
+```
+
+**Rules:**
+- All interactive elements need hover AND focus states
+- Focus rings for keyboard navigation (accessibility)
+- Cursor changes: pointer for buttons/links, text for inputs
+- Disable hover effects on touch devices
+
+## Accessibility (a11y)
+
+### Minimum Requirements
+
+1. **Keyboard navigation:** Tab through all interactive elements
+2. **Screen readers:** Semantic HTML + ARIA labels where needed
+3. **Color contrast:** 4.5:1 for text, 3:1 for UI elements
+4. **Touch targets:** Minimum 44x44px
+5. **Motion:** Respect `prefers-reduced-motion`
+
+```tsx
+// ✅ Accessible icon button
+<Button size="icon" aria-label="Close dialog">
+  <X className="h-4 w-4" />
+</Button>
+
+// ✅ Reduced motion support
+<div className="motion-safe:animate-fade-in">
+  Content
+</div>
+```
+
+### Focus Management
+
+- Modal opens → focus first focusable element inside
+- Modal closes → return focus to trigger element
+- Page navigation → focus main content area
+- Form error → focus first invalid field
+
+## Anti-Patterns to Avoid
+
+| ❌ Don't | ✅ Do Instead |
+|----------|---------------|
+| Center everything | Left-align body text and forms |
+| Use pure black (#000) | Use dark gray (#111, #1a1a1a) |
+| Walls of text | Break into scannable chunks |
+| Multiple primary buttons | One clear primary action |
+| Tiny click targets | 44px minimum touch targets |
+| Surprise modals/popups | User-initiated dialogs only |
+| Auto-playing media | Let users control media |
+| Infinite scroll everywhere | Pagination for findable content |
+| Custom scrollbars | Native scrollbars (except rare cases) |
+| Tooltip for essential info | Visible labels and descriptions |
+
+## Design System Consistency
+
+### Maintain Consistency
+
+- Same border-radius everywhere (8px)
+- Same shadow scale (sm, md, lg)
+- Same animation timings (150ms, 300ms)
+- Same spacing scale (4, 8, 12, 16, 24, 32...)
+- Same icon style (outline OR filled, not mixed)
+
+### Component Audit Checklist
+
+Before shipping a new component:
+- [ ] **Mobile-first:** Works well at 320px width
+- [ ] **Touch targets:** Minimum 44x44px tap areas
+- [ ] **Thumb-friendly:** Primary actions reachable with one hand
+- [ ] Has hover, focus, active states
+- [ ] Has loading state (if async)
+- [ ] Has error state (if can fail)
+- [ ] Has empty state (if can be empty)
+- [ ] Has disabled state (if can be disabled)
+- [ ] Works with keyboard only
+- [ ] Has sufficient color contrast
+- [ ] Tested on real mobile device
