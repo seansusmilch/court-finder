@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 import { useAuthActions } from '@convex-dev/auth/react';
@@ -24,7 +24,8 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { LogOut, Key, User } from 'lucide-react';
+import { LogOut, Key, User, Camera, X } from 'lucide-react';
+import { ProfileImageCropper } from '@/components/profile/ProfileImageCropper';
 
 export const Route = createFileRoute('/_authed/account')({
   component: AccountPage,
@@ -35,9 +36,13 @@ function AccountPage() {
   const { signOut } = useAuthActions();
   const user = useQuery(api.users.me);
   const stats = useQuery(api.feedback_submissions.getFeedbackStats);
+  const profileImageUrl = useQuery(api.users.getProfileImageUrl, {});
   const updateProfile = useMutation(api.users.updateProfile);
-  const changePasswordMutation = useMutation(api.users.changePassword);
-  const deleteAccountMutation = useMutation(api.users.deleteAccount);
+  const generateUploadUrl = useMutation(api.users.generateUploadUrl);
+  const updateProfileImage = useMutation(api.users.updateProfileImage);
+  const removeProfileImage = useMutation(api.users.removeProfileImage);
+  const changePasswordAction = useAction(api.actions.changePassword);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
@@ -50,6 +55,9 @@ function AccountPage() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showCropDialog, setShowCropDialog] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Initialize name from user data
   useEffect(() => {
@@ -112,6 +120,71 @@ function AccountPage() {
     navigate({ to: '/' });
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    // Validate file size (5MB = 5 * 1024 * 1024 bytes)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error('Image must be less than 5MB');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
+    setSelectedFile(file);
+    setShowCropDialog(true);
+    e.target.value = ''; // Reset input so same file can be selected again
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setIsUploadingImage(true);
+    try {
+      // Get upload URL from Convex
+      const uploadUrl = await generateUploadUrl();
+
+      // Upload the cropped image
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': croppedBlob.type },
+        body: croppedBlob,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const { storageId } = await response.json();
+
+      // Update user profile with storage ID
+      await updateProfileImage({ storageId });
+      toast.success('Profile picture updated');
+      setSelectedFile(null);
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      toast.error('Failed to upload profile picture');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    try {
+      await removeProfileImage();
+      toast.success('Profile picture removed');
+    } catch (error) {
+      console.error('Error removing profile picture:', error);
+      toast.error('Failed to remove profile picture');
+    }
+  };
+
   if (user === undefined) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -152,7 +225,7 @@ function AccountPage() {
       .slice(0, 2) || user.email?.[0].toUpperCase() || 'U';
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
+    <div className="container mx-auto px-4 py-8 md:pb-8 max-w-2xl space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Account</h1>
         <p className="text-muted-foreground mt-1">
@@ -168,16 +241,57 @@ function AccountPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Avatar */}
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xl">
-              {initials}
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="relative flex-shrink-0">
+                {profileImageUrl ? (
+                  <img
+                    src={profileImageUrl}
+                    alt="Profile"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-border"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xl border-2 border-border">
+                    {initials}
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Profile picture</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Maximum file size: 5MB
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Profile picture</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Avatar initials based on your name
-              </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingImage}
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                {profileImageUrl ? 'Change Photo' : 'Add Photo'}
+              </Button>
+              {profileImageUrl && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRemovePhoto}
+                  disabled={isUploadingImage}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Remove
+                </Button>
+              )}
             </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
           </div>
 
           {/* Email (readonly) */}
@@ -295,20 +409,16 @@ function AccountPage() {
             <Key className="mr-2 h-4 w-4" />
             Change Password
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Sign Out */}
-      <Card>
-        <CardContent className="pt-6">
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={handleSignOut}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -392,6 +502,14 @@ function AccountPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Profile Image Cropper Dialog */}
+      <ProfileImageCropper
+        open={showCropDialog}
+        onOpenChange={setShowCropDialog}
+        onCropComplete={handleCropComplete}
+        imageFile={selectedFile}
+      />
     </div>
   );
 }

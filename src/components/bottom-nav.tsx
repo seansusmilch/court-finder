@@ -1,16 +1,18 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { Home, Map, MessageSquare, User } from 'lucide-react';
-import { Authenticated, Unauthenticated } from 'convex/react';
+import { Authenticated, Unauthenticated, useQuery } from 'convex/react';
+import { api } from '@/../convex/_generated/api';
 import { cn } from '@/lib/utils';
 
 interface NavItemProps {
-  icon: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
   label: string;
   to: string;
   isActive: boolean;
+  profileImageUrl?: string | null;
 }
 
-function NavItem({ icon: Icon, label, to, isActive }: NavItemProps) {
+function NavItem({ icon: Icon, label, to, isActive, profileImageUrl }: NavItemProps) {
   return (
     <Link
       to={to}
@@ -22,12 +24,39 @@ function NavItem({ icon: Icon, label, to, isActive }: NavItemProps) {
       )}
       activeProps={{ className: 'text-primary' }}
     >
-      <Icon className={cn('h-6 w-6', isActive && 'text-primary')} />
+      {profileImageUrl ? (
+        <img
+          src={profileImageUrl}
+          alt="Profile"
+          className={cn(
+            'h-6 w-6 rounded-full object-cover border',
+            isActive ? 'border-primary' : 'border-border'
+          )}
+        />
+      ) : Icon ? (
+        <Icon className={cn('h-6 w-6', isActive && 'text-primary')} />
+      ) : null}
       <span className="text-xs font-medium">{label}</span>
       {isActive && (
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-t-full" />
       )}
     </Link>
+  );
+}
+
+function AccountNavItem() {
+  const location = useLocation();
+  const pathname = location.pathname;
+  const profileImageUrl = useQuery(api.users.getProfileImageUrl, {});
+
+  return (
+    <NavItem
+      icon={User}
+      label="Account"
+      to="/account"
+      isActive={pathname === '/account'}
+      profileImageUrl={profileImageUrl}
+    />
   );
 }
 
@@ -67,12 +96,7 @@ export default function BottomNav() {
           />
         </Unauthenticated>
         <Authenticated>
-          <NavItem
-            icon={User}
-            label="Account"
-            to="/account"
-            isActive={pathname === '/account'}
-          />
+          <AccountNavItem />
         </Authenticated>
       </div>
     </nav>

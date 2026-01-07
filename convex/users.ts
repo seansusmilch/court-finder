@@ -61,6 +61,83 @@ export const updateProfile = mutation({
   },
 });
 
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const updateProfileImage = mutation({
+  args: {
+    storageId: v.id('_storage'),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Delete old image if it exists
+    if (user.image) {
+      await ctx.storage.delete(user.image);
+    }
+
+    await ctx.db.patch(userId, { image: args.storageId });
+    return await ctx.db.get(userId);
+  },
+});
+
+export const getProfileImageUrl = query({
+  args: {
+    userId: v.optional(v.id('users')),
+  },
+  handler: async (ctx, args) => {
+    const targetUserId = args.userId || (await getAuthUserId(ctx));
+    if (!targetUserId) {
+      return null;
+    }
+
+    const user = await ctx.db.get(targetUserId);
+    if (!user || !user.image) {
+      return null;
+    }
+
+    return await ctx.storage.getUrl(user.image);
+  },
+});
+
+export const removeProfileImage = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.image) {
+      await ctx.storage.delete(user.image);
+      await ctx.db.patch(userId, { image: undefined });
+    }
+
+    return await ctx.db.get(userId);
+  },
+});
+
 
 // Internal mutation for password change (called from action)
 // Returns account info so the action can verify password and hash new one
