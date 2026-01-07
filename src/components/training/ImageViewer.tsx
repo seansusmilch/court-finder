@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 export type BoundingBox = {
   x: number;
@@ -13,12 +15,14 @@ export default function ImageViewer({
   imageHeight,
   bbox,
   className,
+  onLoadingChange,
 }: {
   imageUrl: string;
   imageWidth: number;
   imageHeight: number;
   bbox: BoundingBox;
   className?: string;
+  onLoadingChange?: (isLoading: boolean) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState(300);
@@ -30,6 +34,40 @@ export default function ImageViewer({
   const [pinchState, setPinchState] = useState<{ lastDistance: number } | null>(
     null
   );
+
+  // Image loading state
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Handle image load completion
+  const markImageLoaded = () => {
+    setIsImageLoading(false);
+    onLoadingChange?.(false);
+  };
+
+  // Reset loading state when imageUrl changes, and check if already cached
+  useEffect(() => {
+    setIsImageLoading(true);
+    onLoadingChange?.(true);
+
+    // Check if the image is already cached/loaded
+    // Need a small delay to let the img src update first
+    const checkIfLoaded = () => {
+      if (imgRef.current?.complete && imgRef.current?.naturalWidth > 0) {
+        markImageLoaded();
+      }
+    };
+
+    // Check immediately and also after a short delay (for cached images)
+    checkIfLoaded();
+    const timeoutId = setTimeout(checkIfLoaded, 50);
+
+    return () => clearTimeout(timeoutId);
+  }, [imageUrl]);
+
+  const handleImageLoad = () => {
+    markImageLoaded();
+  };
 
   useEffect(() => {
     if (containerRef.current) {
@@ -147,29 +185,62 @@ export default function ImageViewer({
   return (
     <div
       ref={containerRef}
-      className={`relative mx-auto rounded-lg overflow-hidden border touch-none w-full h-full max-w-[90vw] max-h-[50vh] sm:max-w-[500px] sm:max-h-[400px] ${
-        className ?? ''
-      }`}
+      className={cn(
+        'relative mx-auto rounded-lg overflow-hidden border touch-none w-full h-full max-w-[90vw] max-h-[50vh] sm:max-w-[500px] sm:max-h-[400px]',
+        className
+      )}
       style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={endPointer}
       onPointerCancel={endPointer}
     >
+      {/* Loading skeleton overlay */}
       <div
+        className={cn(
+          'absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-opacity duration-300',
+          isImageLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+      >
+        <div className='flex flex-col items-center gap-4'>
+          {/* Animated satellite imagery skeleton */}
+          <div className='relative'>
+            <Skeleton className='w-24 h-24 rounded-lg' />
+            {/* Scanning line animation */}
+            <div className='absolute inset-0 overflow-hidden rounded-lg'>
+              <div className='absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent animate-scan' />
+            </div>
+          </div>
+          <div className='flex flex-col items-center gap-1'>
+            <Skeleton className='w-32 h-3 rounded-full' />
+            <span className='text-sm text-muted-foreground animate-pulse'>
+              Loading satellite image...
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Image content */}
+      <div
+        className={cn(
+          'transition-opacity duration-300',
+          isImageLoading ? 'opacity-0' : 'opacity-100'
+        )}
         style={{
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           transformOrigin: 'top left',
         }}
       >
         <img
+          ref={imgRef}
           src={imageUrl}
           alt='Satellite image for feedback'
           style={{ width: imageWidth, height: imageHeight, maxWidth: 'none' }}
           draggable={false}
+          onLoad={handleImageLoad}
         />
         <div
-          className='absolute border border-red-500'
+          className='absolute border-2 border-red-500 rounded-sm shadow-lg'
           style={{
             left: bbox.x - bbox.width / 2,
             top: bbox.y - bbox.height / 2,
@@ -177,7 +248,7 @@ export default function ImageViewer({
             height: bbox.height,
             boxSizing: 'border-box',
           }}
-        ></div>
+        />
       </div>
     </div>
   );

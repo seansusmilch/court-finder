@@ -3,47 +3,127 @@ import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { styleTileUrl } from './lib/tiles';
 import { RANDOMIZE_PREDICTION_FEEDBACK } from './lib/constants';
+import type { QueryCtx } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
+
+// Utility: Get all feedback submissions for a user
+async function getUserSubmissions(
+  ctx: QueryCtx,
+  userId: Id<'users'>
+): Promise<Array<Doc<'feedback_submissions'>>> {
+  return await ctx.db
+    .query('feedback_submissions')
+    .withIndex('by_user_and_prediction', (q) => q.eq('userId', userId))
+    .collect();
+}
+
+// Utility: Get a set of prediction IDs that the user has already submitted feedback for
+function getSubmittedPredictionIds(
+  submissions: Array<Doc<'feedback_submissions'>>
+): Set<string> {
+  return new Set(submissions.map((s) => s.predictionId.toString()));
+}
+
+// Utility: Check if a prediction has already been submitted by the user
+function isPredictionSubmitted(
+  predictionId: Id<'inference_predictions'>,
+  submittedIds: Set<string>
+): boolean {
+  return submittedIds.has(predictionId.toString());
+}
+
+// Utility: Find the next prediction for feedback (random or sequential)
+async function findNextPrediction(
+  ctx: QueryCtx,
+  submittedPredictionIds: Set<string>,
+  currentPredictionId?: Id<'inference_predictions'>
+): Promise<Doc<'inference_predictions'> | null> {
+  // If a currentPredictionId is provided, try to use that prediction
+  // (as long as the user hasn't already submitted feedback for it)
+  if (currentPredictionId) {
+    const currentPrediction = await ctx.db.get(currentPredictionId);
+    if (
+      currentPrediction &&
+      !isPredictionSubmitted(currentPrediction._id, submittedPredictionIds)
+    ) {
+      return currentPrediction;
+    }
+  }
+
+  // Find the next prediction based on randomization setting
+  if (RANDOMIZE_PREDICTION_FEEDBACK) {
+    const allPredictions = await ctx.db
+      .query('inference_predictions')
+      .collect();
+    const candidatePredictions = allPredictions.filter(
+      (prediction) =>
+        !isPredictionSubmitted(prediction._id, submittedPredictionIds)
+    );
+
+    if (candidatePredictions.length > 0) {
+      const randomIndex = Math.floor(
+        Math.random() * candidatePredictions.length
+      );
+      return candidatePredictions[randomIndex];
+    }
+  } else {
+    for await (const prediction of ctx.db.query('inference_predictions')) {
+      if (!isPredictionSubmitted(prediction._id, submittedPredictionIds)) {
+        return prediction;
+      }
+    }
+  }
+
+  return null;
+}
+
+// Utility: Build inference stub for UI expectations
+function buildInferenceStub(
+  prediction: Doc<'inference_predictions'>
+): {
+  tileId: Id<'tiles'>;
+  model: string | undefined;
+  version: string | undefined;
+  response: { image: { width: number; height: number } };
+} {
+  return {
+    tileId: prediction.tileId,
+    model: prediction.model,
+    version: prediction.version,
+    response: { image: { width: 1024, height: 1024 } },
+  } as const;
+}
+
+// Utility: Count total predictions in the database
+async function getTotalPredictionCount(ctx: QueryCtx): Promise<number> {
+  let count = 0;
+  for await (const _ of ctx.db.query('inference_predictions')) {
+    count++;
+  }
+  return count;
+}
 
 export const getNextPredictionForFeedback = query({
-  args: {},
+  args: {
+    // Optional: if provided, we try to return this specific prediction
+    // This prevents the view from changing when new predictions sync in
+    currentPredictionId: v.optional(v.id('inference_predictions')),
+  },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       return null;
     }
 
-    const userSubmissions = await ctx.db
-      .query('feedback_submissions')
-      .withIndex('by_user_and_prediction', (q) => q.eq('userId', userId))
-      .collect();
+    const userSubmissions = await getUserSubmissions(ctx, userId);
+    const submittedPredictionIds =
+      getSubmittedPredictionIds(userSubmissions);
 
-    const submittedPredictionIds = new Set(
-      userSubmissions.map((s) => s.predictionId.toString())
+    const nextPrediction = await findNextPrediction(
+      ctx,
+      submittedPredictionIds,
+      args.currentPredictionId
     );
-
-    let nextPrediction = null;
-    if (RANDOMIZE_PREDICTION_FEEDBACK) {
-      const allPredictions = await ctx.db
-        .query('inference_predictions')
-        .collect();
-      const candidatePredictions = allPredictions.filter(
-        (prediction) => !submittedPredictionIds.has(prediction._id.toString())
-      );
-
-      if (candidatePredictions.length > 0) {
-        const randomIndex = Math.floor(
-          Math.random() * candidatePredictions.length
-        );
-        nextPrediction = candidatePredictions[randomIndex];
-      }
-    } else {
-      for await (const prediction of ctx.db.query('inference_predictions')) {
-        if (!submittedPredictionIds.has(prediction._id.toString())) {
-          nextPrediction = prediction;
-          break;
-        }
-      }
-    }
 
     if (!nextPrediction) {
       return null; // All done
@@ -59,12 +139,7 @@ export const getNextPredictionForFeedback = query({
     const imageUrl = styleTileUrl(tile.z, tile.x, tile.y);
 
     // Provide a minimal stub for `inference` to satisfy UI expectations
-    const inference = {
-      tileId: nextPrediction.tileId,
-      model: nextPrediction.model,
-      version: nextPrediction.version,
-      response: { image: { width: 1024, height: 1024 } },
-    } as const;
+    const inference = buildInferenceStub(nextPrediction);
 
     return {
       prediction: nextPrediction,
@@ -82,19 +157,12 @@ export const getFeedbackStats = query({
       return null;
     }
 
-    const userSubmissions = await ctx.db
-      .query('feedback_submissions')
-      .withIndex('by_user_and_prediction', (q) => q.eq('userId', userId))
-      .collect();
-
-    let totalPredictions = 0;
-    for await (const _ of ctx.db.query('inference_predictions')) {
-      totalPredictions++;
-    }
+    const userSubmissions = await getUserSubmissions(ctx, userId);
+    const totalPredictions = await getTotalPredictionCount(ctx);
 
     return {
       userSubmissionCount: userSubmissions.length,
-      totalPredictions: totalPredictions,
+      totalPredictions,
     };
   },
 });
