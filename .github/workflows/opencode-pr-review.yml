@@ -33,9 +33,18 @@ jobs:
       ))
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Clear git credentials to avoid duplicate Authorization header
+        run: |
+          git config --local --unset-all http.https://github.com/.extraheader || true
+          git config --local --unset-all http.https://github.com/.extraheader || true
+
       - name: Run OpenCode review
         uses: anomalyco/opencode/github@latest
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
