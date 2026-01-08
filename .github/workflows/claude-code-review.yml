@@ -42,12 +42,20 @@ jobs:
         run: |
           set -e
 
-          # Configure custom API endpoint if provided
+          # Configure custom API endpoint and set Anthropic API key if provided
+          mkdir -p ~/.claude
+          SETTINGS_JSON="{"
           if [ -n "$CUSTOM_API_ENDPOINT" ]; then
             echo "Using custom API endpoint: $CUSTOM_API_ENDPOINT"
-            mkdir -p ~/.claude
-            echo "{\"base_url\": \"$CUSTOM_API_ENDPOINT\"}" > ~/.claude/settings.json
+            SETTINGS_JSON="\"ANTHROPIC_BASE_URL\": \"$CUSTOM_API_ENDPOINT\","
           fi
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "Setting Anthropic API key in settings.json"
+            SETTINGS_JSON="${SETTINGS_JSON}\"ANTHROPIC_AUTH_TOKEN\": \"$ANTHROPIC_API_KEY\""
+          fi
+          # Remove trailing comma if only base_url was set
+          SETTINGS_JSON=$(echo $SETTINGS_JSON | sed 's/,\}/\}/')
+          echo "{$SETTINGS_JSON}" > ~/.claude/settings.json
 
           # Create temporary files for analysis
           PR_NUMBER="${{ github.event.pull_request.number }}"
