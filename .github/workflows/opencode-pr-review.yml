@@ -33,18 +33,12 @@ jobs:
       ))
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          token: ''
-          persist-credentials: false
-
       - name: Run OpenCode review
         uses: anomalyco/opencode/github@latest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           model: zai-coding-plan/glm-4.7
           prompt: |
             You are performing a comprehensive code review for a TypeScript/React web application using the GitHub CLI.
