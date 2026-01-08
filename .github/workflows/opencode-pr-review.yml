@@ -1,0 +1,194 @@
+name: OpenCode PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  opencode:
+    # Run automatically on non-draft PRs
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment' && (
+        contains(github.event.comment.body, ' /oc') ||
+        startsWith(github.event.comment.body, '/oc') ||
+        contains(github.event.comment.body, ' /opencode') ||
+        startsWith(github.event.comment.body, '/opencode')
+      )) ||
+      (github.event_name == 'pull_request_review_comment' && (
+        contains(github.event.comment.body, ' /oc') ||
+        startsWith(github.event.comment.body, '/oc') ||
+        contains(github.event.comment.body, ' /opencode') ||
+        startsWith(github.event.comment.body, '/opencode')
+      ))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Run OpenCode review
+        uses: anomalyco/opencode/github@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          model: zai-coding-plan/glm-4.7
+          prompt: |
+            You are performing an AI-powered code review for a TypeScript/React web application using CodeRabbit's methodology. The gh CLI is available and authenticated.
+
+            ## CODE RABBIT METHODOLOGY
+
+            ### Core Principles
+            1. **Context-Aware Analysis**: Review the entire project, not just the diff. Understand relationships between files, existing patterns, and architectural decisions.
+            2. **Section-Specific Suggestions**: Provide targeted feedback on specific code sections (functions, components, modules) rather than isolated lines.
+            3. **Confidence Scoring**: Rate your suggestions with confidence levels based on code clarity, context certainty, and best practice alignment.
+            4. **AST-Like Pattern Matching**: Analyze code structure, patterns, and relationships between code elements deeply.
+
+            ### Confidence Scale
+            - 🟢 **High Confidence (85-100%)**: Clear issue, well-established best practice, unambiguous
+            - 🟡 **Medium Confidence (60-84%)**: Likely issue but depends on context, requires discussion
+            - 🔵 **Low Confidence (40-59%)**: Potential concern, subjective, or needs more context
+            - ⚪ **Suggestion (0-39%)**: Nice-to-have improvement, alternative approach worth considering
+
+            ## IMPORTANT - OUTPUT DELIVERY
+            You MUST use the GitHub CLI (gh) to post review comments:
+            - Summary comment: `gh pr comment $PR_NUMBER --body "SUMMARY" --repo $REPO`
+            - Inline comments: `gh pr comment $PR_NUMBER --body "COMMENT" --repo $REPO --path FILE_PATH --line LINE_NUMBER`
+
+            ## PR INFORMATION
+            - Repository: ${{ github.repository }}
+            - PR Number: ${{ github.event.pull_request.number }}
+            - PR Head SHA: ${{ github.event.pull_request.head.sha }}
+
+            ## TECHNICAL CONTEXT
+            - **Stack**: React 19 + TanStack Router + TailwindCSS v4 + Convex + TypeScript (strict) + Bun
+            - **Architecture**: Component-based, path aliases (@/* → ./src/*, @backend/* → ./convex/*)
+            - **Conventions**: Type safety enforced, modern React patterns (hooks, functional components)
+            - **Focus Areas**: React components, hooks, routing, state management, Convex functions, schema, TailwindCSS
+
+            ## REVIEW PROCESS
+
+            ### Phase 1: Context Gathering & Understanding
+            1. **Analyze the entire codebase structure** - Understand project organization, existing patterns, architectural decisions
+            2. **Review PR changes holistically** - How changes fit into the broader codebase
+            3. **Identify patterns and conventions** - Existing code patterns this PR should follow
+            4. **Map dependencies** - How changes affect other files, imports, exports
+
+            ### Phase 2: Deep Code Analysis (AST-Like)
+            For each changed file, analyze:
+
+            **Component/Function Level:**
+            - Single responsibility principle adherence
+            - Function complexity and cohesion
+            - Parameter validation and type safety
+            - Error handling completeness
+            - Side effects management
+
+            **Relationship Analysis:**
+            - Import/export consistency
+            - Props drilling vs context usage
+            - State placement (component state vs global state)
+            - Data flow patterns
+            - Coupling between modules
+
+            **React-Specific Patterns:**
+            - Hook dependencies (useEffect, useCallback, useMemo)
+            - Unnecessary re-renders
+            - Component composition vs props
+            - Custom hook appropriateness
+            - Event handler patterns
+
+            **TypeScript Type Safety:**
+            - Type coverage (no implicit any)
+            - Proper interface/type definitions
+            - Generic usage appropriateness
+            - Type narrowing and guards
+            - Union/intersection types
+
+            **Convex Integration:**
+            - Schema design and relationships
+            - Query/mutation patterns
+            - Authentication/authorization checks
+            - Validation and error handling
+
+            ### Phase 3: Security & Vulnerability Scanning (OWASP Top 10)
+            - SQL Injection, XSS, Broken Authentication, Sensitive Data Exposure
+            - Broken Access Control, Security Misconfiguration
+            - Hardcoded secrets, insecure cryptography, input validation
+
+            ### Phase 4: Generate Section-Specific Suggestions
+
+            **Format for each suggestion:**
+            ```
+            ## [Section/Function Name] in [file.ts:line-line]
+            Confidence: [🟢/🟡/🔵/⚪] [XX%]
+
+            **Issue/Improvement:**
+            [Clear description of the specific section]
+
+            **Why it matters:**
+            [Context-aware reasoning considering the broader codebase]
+
+            **Suggested approach:**
+            ```typescript
+            [Code example if applicable]
+            ```
+
+            **Impact:**
+            [How this affects the broader system]
+            ```
+
+            ## ISSUE CATEGORIES (Priority Order)
+            - 🚨 **Critical**: Crashes, data corruption, null dereferences
+            - 🔒 **Security**: Injection, auth bypass, exposure
+            - ⚡ **Performance**: N+1 queries, memory leaks, re-renders
+            - ⚠️ **Logic**: Incorrect behavior, edge cases, state bugs
+            - ✨ **Improvement**: Best practices, maintainability
+            - 📝 **Clarity**: Naming, comments, complexity
+
+            ## REVIEW GUIDELINES
+            - **Provide section-level feedback** (functions, components, modules) not just line comments
+            - **Always include confidence scores** based on context certainty
+            - **Consider the entire project** - reference existing patterns, consistency with codebase
+            - **Be specific and actionable** - concrete suggestions, not vague advice
+            - **Prioritize high-confidence critical issues** over low-confidence style suggestions
+            - **Explain the "why"** - connect to architectural decisions or best practices
+            - **Avoid nitpicks** - focus on issues that genuinely impact quality, security, or maintainability
+
+            ## DELIVERY INSTRUCTIONS
+
+            1. **Post Summary Comment** using gh CLI:
+               ```bash
+               gh pr comment $PR_NUMBER --body "FULL_REVIEW_SUMMARY" --repo $REPO
+               ```
+
+               Summary should include:
+               - **Overview**: Changes summary and architectural fit
+               - **Confidence Distribution**: Breakdown by confidence level
+               - **Key Findings**: Top 5 most important issues (high confidence)
+               - **Security Assessment**: Any vulnerabilities found
+               - **Positive Highlights**: Well-implemented patterns
+
+            2. **Post Inline Comments** for each issue using gh CLI:
+               ```bash
+               gh pr comment $PR_NUMBER --body "SECTION_COMMENT" --repo $REPO --path FILE_PATH --line LINE_NUMBER
+               ```
+
+            3. **Comment Structure** for inline:
+               - Start with confidence emoji and percentage
+               - Identify the specific section/function being reviewed
+               - Provide context-aware reasoning
+               - Suggest concrete improvements with examples when helpful
+
+            Begin your context-aware review now.

@@ -1,0 +1,343 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    # Skip automated code review for draft PRs
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install Claude Code CLI
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          claude --version
+
+      - name: Configure git identity
+        run: |
+          git config user.name "Claude Code Reviewer"
+          git config user.email "claude-reviewer@anthropic.com"
+
+      - name: Perform automated code review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CUSTOM_API_ENDPOINT: ${{ secrets.CUSTOM_API_ENDPOINT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAX_INLINE_COMMENTS: ${{ vars.MAX_INLINE_COMMENTS || '10' }}
+          REVIEW_MODE: ${{ vars.REVIEW_MODE || 'comprehensive' }}
+        run: |
+          set -e
+
+          # Configure custom API endpoint and set Anthropic API key if provided
+          mkdir -p ~/.claude
+          
+          # Build env object with proper JSON structure
+          ENV_ENTRIES=""
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "Setting Anthropic API key in settings.json"
+            ENV_ENTRIES="${ENV_ENTRIES}\"ANTHROPIC_AUTH_TOKEN\": \"$ANTHROPIC_API_KEY\","
+          fi
+          if [ -n "$CUSTOM_API_ENDPOINT" ]; then
+            echo "Using custom API endpoint: $CUSTOM_API_ENDPOINT"
+            ENV_ENTRIES="${ENV_ENTRIES}\"ANTHROPIC_BASE_URL\": \"$CUSTOM_API_ENDPOINT\","
+          fi
+          # Add required fields (always present)
+          ENV_ENTRIES="${ENV_ENTRIES}\"API_TIMEOUT_MS\": \"3000000\","
+          ENV_ENTRIES="${ENV_ENTRIES}\"CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC\": 1"
+          
+          # Remove trailing comma if no optional fields were set
+          ENV_ENTRIES=$(echo "$ENV_ENTRIES" | sed 's/,$//')
+          
+          # Construct final JSON with env wrapper
+          echo "{\"env\": {$ENV_ENTRIES}}" > ~/.claude/settings.json
+
+          # Create temporary files for analysis
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+
+          # Gather PR information
+          echo "Gathering PR information..."
+          gh pr view "$PR_NUMBER" --json title,body,author,additions,deletions,changedFiles,labels,state > /tmp/pr_details.json
+
+          # Get the diff
+          gh pr diff "$PR_NUMBER" > /tmp/pr.diff
+
+          # Get changed files with patches
+          gh api "repos/$REPO/pulls/$PR_NUMBER/files" --paginate --jq '.[] | {filename,patch,status,additions,deletions}' > /tmp/files.json
+
+          # Get existing review comments
+          gh pr view "$PR_NUMBER" --json comments --jq '.comments[] | select(.author.login=="claude-code[bot]") | {id,body,path,line,originalLine,originalPosition}' > /tmp/existing_comments.json 2>/dev/null || echo "[]" > /tmp/existing_comments.json
+
+          # Execute Claude Code review
+          cat <<'REVIEW_EOF' | claude
+          You are operating in a GitHub Actions runner performing automated code review using Claude Code. The gh CLI is available and authenticated via GH_TOKEN.
+
+          CONTEXT:
+          - Repository: ${{ github.repository }}
+          - PR Number: ${{ github.event.pull_request.number }}
+          - PR Head SHA: ${{ github.event.pull_request.head.sha }}
+          - PR Base SHA: ${{ github.event.pull_request.base.sha }}
+          - PR Author: ${{ github.event.pull_request.user.login }}
+          - Max Inline Comments: ${{ env.MAX_INLINE_COMMENTS }}
+          - Review Mode: ${{ env.REVIEW_MODE }}
+
+          OBJECTIVE:
+          Perform a comprehensive code review covering four areas:
+          1. PR Summary & Description Analysis
+          2. Inline Code Comments (line-specific feedback)
+          3. Security/Vulnerability Scanning
+          4. File-level Review (high-level analysis)
+
+          PROCEDURE:
+
+          ## Step 1: Analyze PR Information
+
+          Read the PR details from /tmp/pr_details.json to understand:
+          - PR title and description
+          - Number of files changed
+          - Additions and deletions
+          - Labels and state
+
+          ## Step 2: PR Summary & Description Analysis
+
+          Generate a comprehensive summary:
+          - **Overview**: Brief description of changes (2-3 sentences)
+          - **Files Changed**: Total number and key files
+          - **Main Components**: List of affected components (e.g., "Authentication", "Map components", "API routes")
+          - **Impact Assessment**: Breaking changes, deprecations, or major refactoring
+          - **Title Suggestions**: Suggest improvements if unclear or too generic
+          - **Description Suggestions**: Recommend additions if important context is missing
+
+          Format:
+          ```markdown
+          ## 📊 PR Summary
+          **Overview**: [Description]
+          **Files Changed**: [N] files ([N] additions, [N] deletions)
+          **Main Components**: [Component 1, Component 2, ...]
+          **Impact**: [Assessment]
+          **Suggestions**:
+          - Title: [✅ Good / Suggestion]
+          - Description: [✅ Good / Suggestion]
+          ```
+
+          ## Step 3: Security & Vulnerability Scanning
+
+          Perform comprehensive security analysis focusing on:
+
+          ### OWASP Top 10
+          - SQL Injection vulnerabilities (user input in queries)
+          - Cross-Site Scripting (XSS) (unsanitized HTML output)
+          - Broken Authentication (auth bypass, session management)
+          - Sensitive Data Exposure (logs, error messages)
+          - XML External Entities (XXE) (if applicable)
+          - Broken Access Control (authorization checks)
+          - Security Misconfiguration (default credentials, debug mode)
+          - Cross-Site Request Forgery (CSRF) (if applicable)
+          - Using Components with Known Vulnerabilities
+          - Insufficient Logging & Monitoring
+
+          ### Additional Security Checks
+          - Hardcoded secrets, credentials, or API keys
+          - Insecure cryptographic practices (MD5, SHA1, hardcoded keys)
+          - Unsafe deserialization
+          - Server-Side Request Forgery (SSRF)
+          - Race conditions or TOCTOU issues
+          - Input validation and sanitization
+          - Authentication and authorization flaws
+          - Insecure dependencies (check imports)
+          - Information leakage in error messages
+          - Path traversal vulnerabilities
+
+          **Severity Ratings**:
+          - 🚨 CRITICAL: Immediate security risk, must fix
+          - 🔒 HIGH: Significant security issue, should fix soon
+          - ⚠️ MEDIUM: Moderate security concern, recommend fix
+          - ℹ️ LOW: Minor security consideration
+
+          Format findings as:
+          ```markdown
+          ## 🔒 Security Analysis
+          - 🚨/🔒/⚠️/ℹ️ [Category]: [Issue description]
+            Location: [file:line]
+            Recommendation: [Specific fix]
+          ```
+
+          ## Step 4: Inline Code Comments
+
+          Identify specific code issues by analyzing /tmp/pr.diff:
+
+          1. **Parse the diff** to identify changed lines
+          2. **Focus ONLY on lines in the diff** (added or modified lines, not context)
+          3. **For each issue**, create a precise inline comment
+          4. **Use position-based anchoring** for accurate diff placement
+
+          **Issue Categories** (in priority order):
+          - 🚨 **Critical**: Null/undefined dereferences, crashes, data corruption
+          - 🔒 **Security**: Injection attacks, auth bypass, exposure
+          - ⚡ **Performance**: N+1 queries, unnecessary re-renders, memory leaks
+          - ⚠️ **Logic**: Incorrect behavior, edge cases, state management
+          - ✨ **Improvement**: Best practices, code quality, maintainability
+          - 📝 **Clarity**: Confusing code, missing comments, naming
+
+          **Comment Guidelines**:
+          - Maximum ${{ env.MAX_INLINE_COMMENTS }} inline comments
+          - Be specific and actionable (1-2 sentences)
+          - One issue per comment
+          - Natural tone - no "automated" or "AI" mentions
+          - Use emojis for visual clarity
+          - Provide concrete suggestions when possible
+
+          **Deduplication**:
+          - Check /tmp/existing_comments.json for similar feedback
+          - Skip if similar issue exists within 5 lines
+          - Avoid redundant feedback
+
+          **Position Calculation**:
+          For each hunk in diff: @@ -old,old +new,new @@
+          Position is the line number within the hunk (1-indexed)
+          Example: @@ -10,5 +10,7 @@
+            Context line
+            +New line 1 (position 2)
+            +New line 2 (position 3)
+            Context line (position 4)
+
+          ## Step 5: File-level Review
+
+          For each changed file in /tmp/files.json, provide high-level analysis:
+
+          **Analysis Dimensions**:
+          - **Code Quality**: Structure, readability, maintainability
+          - **Architecture**: Design patterns, separation of concerns
+          - **TypeScript Usage**: Type safety, proper typing, `any` usage
+          - **React Patterns**: Hooks, components, state management
+          - **Convex Integration**: Schema, functions, queries (if applicable)
+          - **Testing**: Test coverage, edge cases (if tests exist)
+          - **Documentation**: Comments, clarity, complexity
+          - **Performance**: Efficiency, potential bottlenecks
+
+          Format for each file:
+          ```markdown
+          ## 📁 File: src/components/Example.tsx
+          **Changes**: [Brief description]
+          **Quality**: ⭐⭐⭐⭐☆ [Rating with brief justification]
+          **Observations**:
+          - [Observation 1]
+          - [Observation 2]
+          **Recommendations**:
+          - [Recommendation 1]
+          - [Recommendation 2]
+          ```
+
+          **Prioritization**:
+          - Review core application files first (components, routes, Convex functions)
+          - Provide detailed feedback for important files
+          - Brief analysis for minor changes or config files
+
+          ## Step 6: Handle Existing Comments
+
+          1. **Check for resolved issues**:
+             - Parse /tmp/existing_comments.json
+             - If code changed in that area, reply: "✅ This issue appears to be resolved by the recent changes"
+
+          2. **Remove stale "no issues" comments**:
+             - Detect comments matching: "✅ no issues", "No issues found", "LGTM"
+             - If current review finds issues, delete old "no issues" comments:
+               ```bash
+               gh api -X DELETE "repos/$REPO/issues/comments/COMMENT_ID"
+               ```
+
+          3. **Avoid duplicates**:
+             - Check proximity (within 5 lines)
+             - Check semantic similarity
+             - Skip if similar feedback exists
+
+          ## Step 7: Submit Review
+
+          ### If NO issues found:
+          - Check if "no issues" comment already exists
+          - If yes, skip submission (avoid redundancy)
+          - If no, post summary comment:
+            ```bash
+            gh pr comment "$PR_NUMBER" --body "## 📊 PR Summary\\n\\n[Summary]\\n\\n✅ No issues found in this PR."
+            ```
+
+          ### If issues found:
+          - Build JSON array of inline comments:
+            ```json
+            [
+              {"path": "src/file.ts", "position": 10, "body": "🚨 Null dereference risk"},
+              {"path": "src/file.ts", "position": 15, "body": "⚡ Consider memoizing this function"}
+            ]
+            ```
+          - Construct review body with all sections
+          - Submit via GitHub Reviews API:
+            ```bash
+            gh api "repos/$REPO/pulls/$PR_NUMBER/reviews" \
+              -f event=COMMENT \
+              -f body="$REVIEW_BODY" \
+              -f comments='[$COMMENTS_JSON]'
+            ```
+
+          **CRITICAL**: Always use `event=COMMENT` (never APPROVE or REQUEST_CHANGES)
+
+          **Review Body Structure**:
+          ```markdown
+          ## 📊 PR Summary
+          [Summary from Step 2]
+
+          ## 🔒 Security Analysis
+          [Security findings from Step 3]
+          [If no issues: "✅ No security issues detected"]
+
+          ## 📁 File-level Review
+          [File reviews from Step 5]
+
+          ---
+          💬 *Posted by Claude Code Reviewer*
+          ```
+
+          TECHNICAL CONTEXT:
+          This is a TypeScript/React web application using:
+          - **React 19** with TanStack Router for routing
+          - **TailwindCSS v4** for styling (utility-first CSS)
+          - **Convex** for backend (serverless functions, schema, real-time)
+          - **TypeScript** with strict mode enabled
+          - **Bun** as package manager
+
+          Project conventions:
+          - Path aliases: `@/*` → `./src/*`, `@backend/*` → `./convex/*`
+          - Component-based architecture
+          - Type safety enforced (no `any` without justification)
+          - Modern React patterns (hooks, functional components)
+
+          Review focus areas:
+          - **Frontend**: React components, hooks, routing, state management
+          - **Backend**: Convex functions, schema, queries, mutations
+          - **Styling**: TailwindCSS usage, responsive design
+          - **Type Safety**: Proper TypeScript usage, type guards, validation
+
+          Remember:
+          - Be constructive and helpful
+          - Prioritize critical security and logic issues
+          - Keep comments concise and actionable
+          - Use emojis for visual clarity
+          - Always provide inline comments for code-specific issues
+          - Never block the PR (non-blocking review only)
+          - Consider the project's technical context and conventions
+
+          Begin the review now.
+          REVIEW_EOF
