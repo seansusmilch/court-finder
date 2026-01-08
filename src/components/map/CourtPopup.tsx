@@ -40,8 +40,8 @@ export function CourtPopup({
       closeButton={false}
       closeOnClick={false}
     >
-      <div className='flex flex-col items-center justify-center'>
-        <div className='max-w-xs rounded-lg border border-border bg-card shadow-lg p-4 space-y-3 flex flex-col animate-in fade-in zoom-in duration-200'>
+      <div className='flex flex-col items-center justify-center animate-in fade-in zoom-in duration-200'>
+        <div className='max-w-xs rounded-lg border border-border bg-card shadow-lg p-4 space-y-3 flex flex-col'>
           <div className='flex items-center gap-2'>
             <span className='text-lg' aria-hidden>
               {emoji}
@@ -116,9 +116,7 @@ export function CourtPopup({
           </Button>
         </div>
         <div
-          className={cn(
-            'w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-[1px] border-t-card animate-in fade-in slide-in-from-bottom-1 duration-200'
-          )}
+          className='w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-[1px] border-t-card'
           aria-hidden
         />
       </div>
