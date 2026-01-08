@@ -45,7 +45,8 @@ jobs:
           # Configure custom API endpoint if provided
           if [ -n "$CUSTOM_API_ENDPOINT" ]; then
             echo "Using custom API endpoint: $CUSTOM_API_ENDPOINT"
-            export ANTHROPIC_BASE_URL="$CUSTOM_API_ENDPOINT"
+            mkdir -p ~/.claude
+            echo "{\"base_url\": \"$CUSTOM_API_ENDPOINT\"}" > ~/.claude/settings.json
           fi
 
           # Create temporary files for analysis
