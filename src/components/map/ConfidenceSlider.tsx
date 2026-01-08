@@ -10,7 +10,7 @@ export function ConfidenceSlider({
 }: ConfidenceSliderProps) {
   return (
     <div className='mt-2'>
-      <div className='text-xs text-gray-300 mb-1'>
+      <div className='text-xs text-muted-foreground mb-1'>
         Confidence: {Math.round(confidenceThreshold * 100)}%
       </div>
       <input
@@ -20,7 +20,7 @@ export function ConfidenceSlider({
         step={CONFIDENCE_SLIDER_STEP}
         value={confidenceThreshold}
         onChange={(e) => onConfidenceChange(Number(e.target.value))}
-        className='w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider'
+        className='w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider'
       />
     </div>
   );

@@ -13,20 +13,20 @@ export default function Header() {
   const { signOut } = useAuthActions();
   const healthCheck = useQuery(api.healthCheck.get);
   return (
-    <div>
+    <div className='sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b'>
       <div className='grid grid-cols-2 md:grid-cols-3 items-center px-4 py-2'>
         {/* Left: Logo */}
         <div className='flex items-center justify-start'>
           <Link
             to='/'
-            className='flex items-center hover:opacity-90 transition-opacity'
+            className='flex items-center hover:opacity-90 transition-opacity duration-200'
           >
             <img
               src='/logo.webp'
               alt='Court Finder'
               className='p-0.5 md:p-1 h-8 w-auto sm:h-10'
             />
-            <span className='pl-4 font-semibold text-lg tracking-tight'>
+            <span className='pl-4 font-semibold text-lg tracking-tight font-display'>
               Court Finder
             </span>
           </Link>
@@ -39,12 +39,12 @@ export default function Header() {
               key={to}
               variant='ghost'
               size='sm'
-              className='text-muted-foreground hover:text-foreground'
+              className='text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors'
               asChild
             >
               <Link
                 to={to}
-                activeProps={{ className: 'bg-accent text-foreground' }}
+                activeProps={{ className: 'bg-accent text-foreground shadow-sm' }}
               >
                 {label}
               </Link>
@@ -58,10 +58,10 @@ export default function Header() {
             <div
               className={`h-2 w-2 rounded-full ${
                 healthCheck === 'OK'
-                  ? 'bg-green-500'
+                  ? 'bg-accent shadow-[0_0_8px_rgba(0,0,0,0.3)]'
                   : healthCheck === undefined
-                  ? 'bg-orange-400'
-                  : 'bg-red-500'
+                  ? 'bg-warning shadow-[0_0_8px_rgba(0,0,0,0.3)]'
+                  : 'bg-destructive shadow-[0_0_8px_rgba(0,0,0,0.3)]'
               }`}
               title={
                 healthCheck === undefined
@@ -98,7 +98,6 @@ export default function Header() {
           </div>
         </div>
       </div>
-      <hr />
     </div>
   );
 }

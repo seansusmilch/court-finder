@@ -25,44 +25,56 @@ export const NAVIGATION_LINKS = [
   { to: '/admin', label: 'Admin' },
 ] as const;
 
-// Visuals for court classes (emoji + explicit Tailwind classes)
+// Visuals for court classes (emoji + vibrant OKLCH colors)
 export type CourtClassVisual = {
   emoji: string;
   bgClass: string;
-  borderTopClass: string;
+  borderClass: string;
   displayName: string;
+  colorLight: string; // OKLCH color for light mode
+  colorDark: string; // OKLCH color for dark mode
 };
 
 export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
   'basketball-court': {
     emoji: '🏀',
-    bgClass: 'bg-gray-300',
-    borderTopClass: 'border-t-gray-300',
+    bgClass: 'bg-basketball',
+    borderClass: 'border-basketball',
     displayName: 'Basketball Court',
+    colorLight: 'oklch(0.65 0.18 45)',
+    colorDark: 'oklch(0.70 0.20 45)',
   },
   'tennis-court': {
     emoji: '🎾',
-    bgClass: 'bg-green-300',
-    borderTopClass: 'border-t-green-300',
+    bgClass: 'bg-tennis',
+    borderClass: 'border-tennis',
     displayName: 'Tennis Court',
+    colorLight: 'oklch(0.70 0.16 145)',
+    colorDark: 'oklch(0.75 0.18 145)',
   },
   'soccer-ball-field': {
     emoji: '🏈',
-    bgClass: 'bg-red-300',
-    borderTopClass: 'border-t-red-300',
+    bgClass: 'bg-soccer',
+    borderClass: 'border-soccer',
     displayName: 'Soccer/Football Field',
+    colorLight: 'oklch(0.68 0.20 25)',
+    colorDark: 'oklch(0.73 0.22 25)',
   },
   'baseball-diamond': {
     emoji: '⚾',
-    bgClass: 'bg-yellow-300',
-    borderTopClass: 'border-t-yellow-300',
+    bgClass: 'bg-baseball',
+    borderClass: 'border-baseball',
     displayName: 'Baseball Field',
+    colorLight: 'oklch(0.75 0.18 75)',
+    colorDark: 'oklch(0.80 0.20 75)',
   },
   'ground-track-field': {
     emoji: '🏃',
-    bgClass: 'bg-blue-300',
-    borderTopClass: 'border-t-blue-300',
+    bgClass: 'bg-track',
+    borderClass: 'border-track',
     displayName: 'Track & Field',
+    colorLight: 'oklch(0.65 0.19 270)',
+    colorDark: 'oklch(0.70 0.21 270)',
   },
 };
 
@@ -70,12 +82,14 @@ export function getVisualForClass(predictionClass: string): CourtClassVisual {
   return (
     COURT_CLASS_VISUALS[predictionClass] || {
       emoji: '❓',
-      bgClass: 'bg-blue-500',
-      borderTopClass: 'border-t-blue-500',
+      bgClass: 'bg-primary',
+      borderClass: 'border-primary',
       displayName: `${predictionClass
         .replace(/_/g, ' ')
         .replace(/-/g, ' ')
         .replace(/\b\w/g, (l) => l.toUpperCase())}`,
+      colorLight: 'oklch(0.68 0.19 35)',
+      colorDark: 'oklch(0.72 0.21 35)',
     }
   );
 }

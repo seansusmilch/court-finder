@@ -17,28 +17,28 @@ function NavItem({ icon: Icon, label, to, isActive, profileImageUrl }: NavItemPr
     <Link
       to={to}
       className={cn(
-        'relative flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[64px] transition-colors',
+        'relative flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[64px] transition-all duration-200',
         isActive
-          ? 'text-primary'
+          ? 'text-primary scale-105'
           : 'text-muted-foreground hover:text-foreground'
       )}
-      activeProps={{ className: 'text-primary' }}
+      activeProps={{ className: 'text-primary scale-105' }}
     >
       {profileImageUrl ? (
         <img
           src={profileImageUrl}
           alt="Profile"
           className={cn(
-            'h-6 w-6 rounded-full object-cover border',
-            isActive ? 'border-primary' : 'border-border'
+            'h-6 w-6 rounded-full object-cover border-2 transition-all',
+            isActive ? 'border-primary shadow-lg' : 'border-border'
           )}
         />
       ) : Icon ? (
-        <Icon className={cn('h-6 w-6', isActive && 'text-primary')} />
+        <Icon className={cn('h-6 w-6 transition-transform', isActive && 'text-primary scale-110')} />
       ) : null}
       <span className="text-xs font-medium">{label}</span>
       {isActive && (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-t-full" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary rounded-t-full shadow-[0_0_8px_currentColor]" />
       )}
     </Link>
   );

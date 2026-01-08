@@ -20,6 +20,17 @@ export function CourtPopup({
 }: CourtPopupProps) {
   const courtClass = properties.class ? String(properties.class) : '';
   const { emoji, displayName } = getVisualForClass(courtClass);
+  const confidence = properties.confidence != null
+    ? Math.round(Number(properties.confidence) * 100)
+    : null;
+
+  // Determine confidence color
+  const getConfidenceColor = () => {
+    if (confidence === null) return '';
+    if (confidence >= 80) return 'text-success font-semibold';
+    if (confidence >= 60) return 'text-warning font-medium';
+    return 'text-destructive font-medium';
+  };
 
   return (
     <Popup
@@ -30,26 +41,26 @@ export function CourtPopup({
       closeOnClick={false}
     >
       <div className='flex flex-col items-center justify-center'>
-        <div className='max-w-xs rounded-md border border-border bg-background shadow-sm p-3 space-y-2 flex flex-col'>
+        <div className='max-w-xs rounded-lg border border-border bg-card shadow-lg p-4 space-y-3 flex flex-col animate-in fade-in zoom-in duration-200'>
           <div className='flex items-center gap-2'>
-            <span className='text-base' aria-hidden>
+            <span className='text-lg' aria-hidden>
               {emoji}
             </span>
-            <div className='text-sm font-semibold'>{displayName}</div>
+            <div className='text-base font-semibold'>{displayName}</div>
           </div>
 
           <div className='space-y-1'>
             <div className='text-xs text-muted-foreground'>Location</div>
-            <div className='text-xs'>
+            <div className='text-xs font-mono'>
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </div>
           </div>
 
-          {properties.confidence != null && (
+          {confidence !== null && (
             <div className='text-xs'>
               <span className='text-muted-foreground'>Confidence:</span>
-              <span className='ml-1 text-green-700 dark:text-green-400'>
-                {Math.round(Number(properties.confidence) * 100)}%
+              <span className={cn('ml-1', getConfidenceColor())}>
+                {confidence}%
               </span>
             </div>
           )}
@@ -73,7 +84,7 @@ export function CourtPopup({
               </span>
             </div>
           )}
-          <Button asChild size='sm' variant='secondary' className='mt-1'>
+          <Button asChild size='sm' variant='default' className='mt-2 w-full'>
             <a
               href={`https://maps.google.com/maps?q=${latitude},${longitude}`}
               target='_blank'
@@ -106,7 +117,7 @@ export function CourtPopup({
         </div>
         <div
           className={cn(
-            'w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-[1px] border-t-background'
+            'w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-[1px] border-t-card animate-in fade-in slide-in-from-bottom-1 duration-200'
           )}
           aria-hidden
         />

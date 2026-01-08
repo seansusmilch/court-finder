@@ -175,10 +175,10 @@ function ControlsBody({
 
       {isZoomSufficient ? (
         <div className='space-y-1 text-xs'>
-          <div className='text-green-700 dark:text-green-400'>
+          <div className='text-success font-semibold'>
             {courtCount} courts found
           </div>
-          <div className='text-green-700 dark:text-green-400'>
+          <div className='text-success'>
             Showing all available data
           </div>
         </div>
@@ -209,7 +209,7 @@ function ControlsBody({
             disabled={isUploading || uploadSuccess}
             className={cn(
               'w-full transition-colors',
-              uploadSuccess && 'bg-green-600 hover:bg-green-600 text-white'
+              uploadSuccess && 'bg-success text-success-foreground hover:bg-success/90'
             )}
           >
             {uploadSuccess ? (
