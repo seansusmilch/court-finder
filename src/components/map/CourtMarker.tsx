@@ -2,7 +2,7 @@ import { Marker } from 'react-map-gl/mapbox';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { CourtFeatureProperties } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { useTheme } from '@/components/theme-provider';
 
 interface CourtMarkerProps {
   longitude: number;
@@ -23,25 +23,8 @@ export function CourtMarker({
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
   const { emoji, bgClass, colorLight, colorDark } = getVisualForClass(courtClass);
-
-  // Track theme changes reactively
-  const [isDark, setIsDark] = useState(() =>
-    document.documentElement.classList.contains('dark')
-  );
-
-  useEffect(() => {
-    // Watch for class changes on document element (theme toggle)
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const { theme, systemTheme } = useTheme();
+  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
 
   const arrowColor = isDark ? colorDark : colorLight;
 
