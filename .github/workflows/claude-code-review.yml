@@ -44,18 +44,26 @@ jobs:
 
           # Configure custom API endpoint and set Anthropic API key if provided
           mkdir -p ~/.claude
-          SETTINGS_JSON="{"
-          if [ -n "$CUSTOM_API_ENDPOINT" ]; then
-            echo "Using custom API endpoint: $CUSTOM_API_ENDPOINT"
-            SETTINGS_JSON="\"ANTHROPIC_BASE_URL\": \"$CUSTOM_API_ENDPOINT\","
-          fi
+          
+          # Build env object with proper JSON structure
+          ENV_ENTRIES=""
           if [ -n "$ANTHROPIC_API_KEY" ]; then
             echo "Setting Anthropic API key in settings.json"
-            SETTINGS_JSON="${SETTINGS_JSON}\"ANTHROPIC_AUTH_TOKEN\": \"$ANTHROPIC_API_KEY\""
+            ENV_ENTRIES="${ENV_ENTRIES}\"ANTHROPIC_AUTH_TOKEN\": \"$ANTHROPIC_API_KEY\","
           fi
-          # Remove trailing comma if only base_url was set
-          SETTINGS_JSON=$(echo $SETTINGS_JSON | sed 's/,\}/\}/')
-          echo "{$SETTINGS_JSON}" > ~/.claude/settings.json
+          if [ -n "$CUSTOM_API_ENDPOINT" ]; then
+            echo "Using custom API endpoint: $CUSTOM_API_ENDPOINT"
+            ENV_ENTRIES="${ENV_ENTRIES}\"ANTHROPIC_BASE_URL\": \"$CUSTOM_API_ENDPOINT\","
+          fi
+          # Add required fields (always present)
+          ENV_ENTRIES="${ENV_ENTRIES}\"API_TIMEOUT_MS\": \"3000000\","
+          ENV_ENTRIES="${ENV_ENTRIES}\"CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC\": 1"
+          
+          # Remove trailing comma if no optional fields were set
+          ENV_ENTRIES=$(echo "$ENV_ENTRIES" | sed 's/,$//')
+          
+          # Construct final JSON with env wrapper
+          echo "{\"env\": {$ENV_ENTRIES}}" > ~/.claude/settings.json
 
           # Create temporary files for analysis
           PR_NUMBER="${{ github.event.pull_request.number }}"
