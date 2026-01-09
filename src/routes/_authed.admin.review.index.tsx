@@ -348,14 +348,14 @@ function RouteComponent() {
                           {item.feedbackCount} • Coverage: {coveragePct}%
                         </span>
                       </div>
-                      <div className='relative mt-1 h-6 w-full overflow-hidden rounded-full bg-red-200'>
+                      <div className='relative mt-1 h-6 w-full overflow-hidden rounded-full bg-destructive/20'>
                         <div
-                          className='h-full bg-green-500'
+                          className='h-full bg-success'
                           style={{ width: `${coveragePct}%` }}
                         />
                         <div className='absolute inset-0 flex items-center justify-between px-2 text-xs font-semibold'>
-                          <span className='text-white'>{covered}</span>
-                          <span className='text-red-700'>{missing}</span>
+                          <span className='text-success-foreground'>{covered}</span>
+                          <span className='text-destructive'>{missing}</span>
                         </div>
                       </div>
                       {isAdvancedView && (

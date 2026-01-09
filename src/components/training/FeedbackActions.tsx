@@ -31,7 +31,7 @@ export function FeedbackActions({
         <Button
           size='lg'
           variant='outline'
-          className='bg-red-500 hover:bg-red-600 text-white h-12 flex-1 max-w-[120px]'
+          className='bg-destructive hover:bg-destructive/90 text-destructive-foreground h-12 flex-1 max-w-[120px] border-destructive'
           onClick={() => onSubmit('no')}
           disabled={disabled}
         >
@@ -49,7 +49,7 @@ export function FeedbackActions({
         <Button
           size='lg'
           variant='outline'
-          className='bg-green-500 hover:bg-green-600 text-white h-12 flex-1 max-w-[120px]'
+          className='bg-success hover:bg-success/90 text-success-foreground h-12 flex-1 max-w-[120px] border-success'
           onClick={() => onSubmit('yes')}
           disabled={disabled}
         >
