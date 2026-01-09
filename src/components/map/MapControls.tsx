@@ -81,6 +81,7 @@ function ControlsBody({
     <div className='space-y-3'>
       <div className='w-full' ref={searchBoxContainerRef}>
         {/* SearchBox from @mapbox/search-js-react */}
+        {/** @ts-expect-error ForwardRefExoticComponent typing vs React 19 JSX inference */}
         <SearchBox
           accessToken={accessToken as string}
           onRetrieve={(res) => {
@@ -229,6 +230,8 @@ function ControlsBody({
 }
 
 // Mapbox SearchBox import must be after ts references
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { SearchBox } from '@mapbox/search-js-react';
 import { Search } from 'lucide-react';
 
