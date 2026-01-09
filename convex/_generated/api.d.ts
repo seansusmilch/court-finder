@@ -8,8 +8,8 @@
  * @module
  */
 
-import type * as actions_password from "../actions/password.js";
 import type * as actions from "../actions.js";
+import type * as actions_password from "../actions/password.js";
 import type * as auth from "../auth.js";
 import type * as feedback_submissions from "../feedback_submissions.js";
 import type * as geocoding from "../geocoding.js";
@@ -40,17 +40,9 @@ import type {
   FunctionReference,
 } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
-  "actions/password": typeof actions_password;
   actions: typeof actions;
+  "actions/password": typeof actions_password;
   auth: typeof auth;
   feedback_submissions: typeof feedback_submissions;
   geocoding: typeof geocoding;
@@ -75,14 +67,30 @@ declare const fullApi: ApiFromModules<{
   upload_batches: typeof upload_batches;
   users: typeof users;
 }>;
-declare const fullApiWithMounts: typeof fullApi;
 
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "public">
 >;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
 export declare const internal: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "internal">
 >;
 
@@ -156,6 +164,7 @@ export declare const components: {
           fnHandle: string;
           name: string;
           next?: Array<{ fnHandle: string; name: string }>;
+          oneBatchOnly?: boolean;
         },
         {
           batchSize?: number;
