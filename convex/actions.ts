@@ -161,6 +161,7 @@ const processTile = async (
         detection_id: p.roboflowDetectionId,
       })),
       time: Date.now(),
+      inference_id: existingPredictions[0].roboflowInferenceId || 'cached',
     } as RoboflowResponse;
   } else {
     detections = await detectObjectsWithRoboflow(
