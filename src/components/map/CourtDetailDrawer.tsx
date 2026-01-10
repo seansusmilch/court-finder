@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,7 @@ import { CourtSatelliteImage } from '@/components/map/CourtSatelliteImage';
 import { useQuery } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 
-interface CourtDetailSheetProps {
+interface CourtDetailDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   longitude: number;
@@ -19,13 +19,13 @@ interface CourtDetailSheetProps {
   properties: CourtFeatureProperties;
 }
 
-export function CourtDetailSheet({
+export function CourtDetailDrawer({
   open,
   onOpenChange,
   longitude,
   latitude,
   properties,
-}: CourtDetailSheetProps) {
+}: CourtDetailDrawerProps) {
   const { location: userLocation, error: locationError, loading: locationLoading } = useUserLocation();
   const courtClass = properties.class ? String(properties.class) : '';
   const { emoji, displayName } = getVisualForClass(courtClass);
@@ -53,36 +53,21 @@ export function CourtDetailSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="h-[70vh] rounded-t-2xl border-t-2"
-        onPointerDownOutside={(e) => {
-          // Allow closing by tapping outside
-          onOpenChange(false);
-        }}
-        onEscapeKeyDown={() => {
-          onOpenChange(false);
-        }}
-      >
-        <div className="flex flex-col h-full">
-          {/* Drag handle */}
-          <div className="flex justify-center py-3">
-            <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
-          </div>
-
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="h-[70vh]">
+        <div className="flex flex-col h-full overflow-y-auto">
           {/* Satellite image */}
-          <div className="px-6 pb-4">
+          <div className="px-6 pt-2 pb-4">
             <CourtSatelliteImage courtData={courtImageData ?? null} />
           </div>
 
           {/* Header */}
-          <SheetHeader className="px-2 pb-4">
+          <DrawerHeader className="px-6 pb-4 text-left">
             <div className="flex items-start gap-4">
               <div className="flex items-center gap-3">
                 <div className="text-4xl">{emoji}</div>
                 <div>
-                  <SheetTitle className="text-xl">{displayName}</SheetTitle>
+                  <DrawerTitle className="text-xl">{displayName}</DrawerTitle>
                   {confidence !== null && (
                     <div className={cn(
                       'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border mt-1',
@@ -94,7 +79,7 @@ export function CourtDetailSheet({
                 </div>
               </div>
             </div>
-          </SheetHeader>
+          </DrawerHeader>
 
           {/* Distance */}
           <div className="px-2 py-3">
@@ -151,7 +136,7 @@ export function CourtDetailSheet({
             )}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

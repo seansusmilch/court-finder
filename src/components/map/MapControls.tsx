@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import {
   createCourtCountSection,
   createConfidenceSection,
@@ -114,7 +114,7 @@ export function MapControls({
   settings,
   sections: customSections,
 }: MapControlsProps) {
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Use custom sections or fall back to defaults
   const sections = customSections ?? createDefaultSections(settings);
@@ -136,9 +136,9 @@ export function MapControls({
         {controlsCard}
       </div>
 
-      {/* Mobile: FAB + bottom sheet */}
+      {/* Mobile: FAB + drawer */}
       <div className='md:hidden'>
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <CustomNavigationControls
             mapRef={mapRef}
             showSettings={!!settings.scan}
@@ -148,27 +148,23 @@ export function MapControls({
             isLocating={settings.locate?.isLocating}
             onLocateStart={settings.locate?.onLocateStart}
             onLocateEnd={settings.locate?.onLocateEnd}
-            onSettingsClick={() => setSheetOpen(true)}
+            onSettingsClick={() => setDrawerOpen(true)}
             className='fixed bottom-24 right-4 pointer-events-auto'
           />
-          <SheetContent side='bottom' className='h-[75vh] pt-0'>
-            <SheetHeader className='px-6 pt-6 pb-4 border-b'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <h2 className='font-display text-xl font-bold tracking-tight'>
-                    Map Settings
-                  </h2>
-                  <p className='text-sm text-muted-foreground mt-0.5'>
-                    Customize your view
-                  </p>
-                </div>
-              </div>
-            </SheetHeader>
+          <DrawerContent className='h-[75vh]'>
+            <DrawerHeader className='px-6 pt-6 pb-4 border-b text-left'>
+              <DrawerTitle className='font-display text-xl font-bold tracking-tight'>
+                Map Settings
+              </DrawerTitle>
+              <DrawerDescription>
+                Customize your view
+              </DrawerDescription>
+            </DrawerHeader>
             <div className='px-6 pt-6 overflow-y-auto'>
               <ControlsBody sections={sections} />
             </div>
-          </SheetContent>
-        </Sheet>
+          </DrawerContent>
+        </Drawer>
       </div>
     </div>
   );

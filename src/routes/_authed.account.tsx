@@ -24,8 +24,9 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { LogOut, Key, User, Camera, X } from 'lucide-react';
+import { LogOut, Key, User, Camera, X, Shield } from 'lucide-react';
 import { ProfileImageCropper } from '@/components/profile/ProfileImageCropper';
+import { Link } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authed/account')({
   component: AccountPage,
@@ -421,6 +422,30 @@ function AccountPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Administration Section */}
+      {user.permissions?.includes('admin.access') && (
+        <Card className="border-orange-500/30 bg-orange-500/5 dark:border-orange-500/20 dark:bg-orange-500/10">
+        <CardHeader>
+          <CardTitle className="text-orange-700 dark:text-orange-400">Administration</CardTitle>
+          <CardDescription className="text-orange-600/70 dark:text-orange-400/70">
+            Admin tools and dashboards
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            asChild
+            variant="outline"
+            className="w-full justify-start border-orange-500/30 text-orange-700 hover:bg-orange-500/10 hover:text-orange-800 dark:border-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/20 dark:hover:text-orange-300"
+          >
+            <Link to="/admin">
+              <Shield className="mr-2 h-4 w-4" />
+              Admin Dashboard
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+      )}
 
       {/* Change Password Dialog */}
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>

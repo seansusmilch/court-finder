@@ -133,36 +133,25 @@ interface CropResult {
   bboxStyle: BboxStyle;
 }
 
-interface TileDirection {
-  needNorth: boolean;
-  needSouth: boolean;
-  needWest: boolean;
-  needEast: boolean;
-}
-
 /**
  * Calculates the crop area and bbox position for the final image
  */
 function calculateCropBounds(
   courtData: CourtImageData,
-  gridCols: number,
-  gridRows: number,
-  direction: TileDirection
+  tiles: Array<{ offsetX: number; offsetY: number; x: number; y: number }>
 ): { cropX: number; cropY: number; cropWidth: number; cropHeight: number; bboxInCrop: BboxStyle } {
-  const { pixelX, pixelY, pixelWidth, pixelHeight } = courtData;
+  const { pixelX, pixelY, pixelWidth, pixelHeight, tileX, tileY } = courtData;
 
-  // Calculate court center position in the stitched canvas
-  // pixelX and pixelY are the CENTER of the court (from Roboflow)
-  // The offset depends on which adjacent tiles were loaded:
-  // - If needNorth: court tile is in row 1, so offsetY = TILE_SIZE
-  // - If needSouth: court tile is in row 0, so offsetY = 0
-  // - If needWest: court tile is in col 1, so offsetX = TILE_SIZE
-  // - If needEast: court tile is in col 0, so offsetX = 0
-  const offsetX = direction.needWest ? TILE_SIZE : 0;
-  const offsetY = direction.needNorth ? TILE_SIZE : 0;
+  // Find the court tile in the tiles array - it's the tile with matching x, y coordinates
+  const courtTile = tiles.find(t => t.x === tileX && t.y === tileY);
+  if (!courtTile) {
+    // Fallback: assume court is at origin if tile not found
+    throw new Error('Court tile not found in tiles array');
+  }
 
-  const courtCenterX = pixelX + offsetX;
-  const courtCenterY = pixelY + offsetY;
+  // Court center in the stitched canvas coordinates
+  const courtCenterX = pixelX + courtTile.offsetX;
+  const courtCenterY = pixelY + courtTile.offsetY;
 
   // Calculate desired crop size based on court dimensions with padding
   const desiredCropWidth = pixelWidth * CROP_PADDING;
@@ -172,7 +161,7 @@ function calculateCropBounds(
   const minWidth = Math.max(desiredCropWidth, 400);
   const minHeight = Math.max(desiredCropHeight, 400);
 
-  // Use the larger dimension to maintain aspect ratio, but keep original court aspect
+  // Use the court's aspect ratio for the crop
   const cropWidth = minWidth;
   const cropHeight = minHeight;
 
@@ -180,10 +169,13 @@ function calculateCropBounds(
   let cropX = courtCenterX - cropWidth / 2;
   let cropY = courtCenterY - cropHeight / 2;
 
-  // Clamp to canvas bounds
-  const canvasWidth = gridCols * TILE_SIZE;
-  const canvasHeight = gridRows * TILE_SIZE;
+  // Determine canvas size from tiles
+  const maxX = Math.max(...tiles.map(t => t.offsetX));
+  const maxY = Math.max(...tiles.map(t => t.offsetY));
+  const canvasWidth = maxX + TILE_SIZE;
+  const canvasHeight = maxY + TILE_SIZE;
 
+  // Clamp to canvas bounds
   cropX = Math.max(0, Math.min(cropX, canvasWidth - cropWidth));
   cropY = Math.max(0, Math.min(cropY, canvasHeight - cropHeight));
 
@@ -194,9 +186,9 @@ function calculateCropBounds(
   const finalCropHeight = Math.min(cropHeight, availableHeight);
 
   // Calculate where the court bbox is in the final cropped image
-  // Court bbox in stitched canvas: (pixelX - pixelWidth/2, pixelY - pixelHeight/2, pixelWidth, pixelHeight)
-  const courtBboxX = pixelX + offsetX - pixelWidth / 2;
-  const courtBboxY = pixelY + offsetY - pixelHeight / 2;
+  // Court bbox top-left in stitched canvas (pixelX/Y are center points from Roboflow)
+  const courtBboxX = pixelX + courtTile.offsetX - pixelWidth / 2;
+  const courtBboxY = pixelY + courtTile.offsetY - pixelHeight / 2;
 
   // Position in cropped image
   const bboxInCropX = courtBboxX - cropX;
@@ -237,30 +229,15 @@ export function CourtSatelliteImage({ courtData, className }: CourtSatelliteImag
 
     const processImage = async () => {
       try {
-        // Determine which adjacent tiles are needed
-        const maxTile = Math.pow(2, courtData.tileZ) - 1;
-        const direction: TileDirection = {
-          needNorth: courtData.pixelY < EDGE_THRESHOLD && courtData.tileY > 0,
-          needSouth: courtData.pixelY > TILE_SIZE - EDGE_THRESHOLD && courtData.tileY < maxTile,
-          needWest: courtData.pixelX < EDGE_THRESHOLD && courtData.tileX > 0,
-          needEast: courtData.pixelX > TILE_SIZE - EDGE_THRESHOLD && courtData.tileX < maxTile,
-        };
-
         // Get required tiles (including adjacent if needed)
         const tiles = getRequiredTiles(courtData);
 
         // Stitch tiles together
         const canvas = await stitchTiles(tiles);
 
-        // Calculate grid size for crop bounds
-        const gridCols = tiles.some(t => t.offsetX >= TILE_SIZE * 2) ? 3 :
-                        tiles.some(t => t.offsetX >= TILE_SIZE) ? 2 : 1;
-        const gridRows = tiles.some(t => t.offsetY >= TILE_SIZE * 2) ? 3 :
-                        tiles.some(t => t.offsetY >= TILE_SIZE) ? 2 : 1;
-
-        // Calculate crop bounds and bbox position
+        // Calculate crop bounds and bbox position using actual tile positions
         const { cropX, cropY, cropWidth, cropHeight, bboxInCrop } =
-          calculateCropBounds(courtData, gridCols, gridRows, direction);
+          calculateCropBounds(courtData, tiles);
 
         // Create cropped canvas
         const croppedCanvas = document.createElement('canvas');

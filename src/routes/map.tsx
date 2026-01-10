@@ -19,7 +19,7 @@ import { CourtMarker } from '@/components/map/CourtMarker';
 import MapControls from '@/components/map/MapControls';
 import { FloatingSearchBar } from '@/components/map/FloatingSearchBar';
 import { CourtTypePills } from '@/components/map/CourtTypePills';
-import { CourtDetailSheet } from '@/components/map/CourtDetailSheet';
+import { CourtDetailDrawer } from '@/components/map/CourtDetailDrawer';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
@@ -370,7 +370,7 @@ function MapPage() {
       </Map>
 
       {selectedPin && (
-        <CourtDetailSheet
+        <CourtDetailDrawer
           open={!!selectedPin}
           onOpenChange={(open) => !open && setSelectedPin(null)}
           longitude={selectedPin.longitude}
