@@ -52,7 +52,7 @@ export interface MapSectionConfig {
 // ============================================================================
 
 export const mapControlButtonClassName =
-  'h-10 w-10 rounded-full shadow-md bg-background border-border/50 text-foreground hover:bg-muted';
+  'h-12 w-12 rounded-full shadow-md bg-background border-border/50 text-foreground hover:bg-muted';
 
 export const mapSectionHeaderClassName = 'flex items-center gap-2';
 export const mapSectionTitleClassName = 'font-display text-sm font-semibold tracking-tight';

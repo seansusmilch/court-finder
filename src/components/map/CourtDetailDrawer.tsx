@@ -54,7 +54,7 @@ export function CourtDetailDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="h-[70vh]">
+      <DrawerContent className="h-[70vh] no-zoom">
         <div className="flex flex-col h-full overflow-y-auto">
           {/* Satellite image */}
           <div className="px-6 pt-2 pb-4">

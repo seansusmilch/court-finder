@@ -13,7 +13,7 @@ export default function Header() {
   const { signOut } = useAuthActions();
   const healthCheck = useQuery(api.healthCheck.get);
   return (
-    <div className='sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b'>
+    <div className='sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b no-zoom'>
       <div className='grid grid-cols-2 md:grid-cols-3 items-center px-4 py-2'>
         {/* Left: Logo */}
         <div className='flex items-center justify-start'>

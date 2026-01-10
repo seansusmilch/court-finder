@@ -65,7 +65,7 @@ export default function BottomNav() {
   const pathname = location.pathname;
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur-sm border-t md:hidden z-50 safe-area-inset-bottom">
+    <nav className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur-sm border-t md:hidden z-50 safe-area-inset-bottom no-zoom">
       <div className="flex justify-around items-center h-16">
         <NavItem
           icon={Home}

@@ -112,7 +112,7 @@ export function createDefaultButtons(
   return [
     {
       id: 'scan',
-      icon: <Radar className="h-5 w-5" />,
+      icon: <Radar className="h-6 w-6" />,
       label: 'Scan this area',
       variant: 'default',
       onClick: onScanClick ?? (() => {}),
@@ -121,12 +121,12 @@ export function createDefaultButtons(
       order: 1,
       className: 'bg-orange-500 border-orange-500 hover:bg-orange-600 text-white',
       renderIcon: (icon) => (
-        <span className={isScanning ? 'animate-spin' : ''}>{icon}</span>
+        <span className={isScanning ? 'animate-scan-spin' : ''}>{icon}</span>
       ),
     },
     {
       id: 'settings',
-      icon: <Settings2 className="h-5 w-5" />,
+      icon: <Settings2 className="h-6 w-6" />,
       label: 'Open map controls',
       onClick: onSettingsClick ?? (() => {}),
       show: false,
@@ -134,19 +134,19 @@ export function createDefaultButtons(
     },
     {
       id: 'locate',
-      icon: <Navigation className="h-5 w-5 fill-current" />,
+      icon: <Navigation className="h-6 w-6 fill-current" />,
       label: 'Locate me',
       onClick: handleLocate,
       disabled: isLocating,
       show: true,
       order: 3,
       renderIcon: (icon) => (
-        <span className={isLocating ? 'animate-pulse' : ''}>{icon}</span>
+        <span className={isLocating ? 'animate-locating' : ''}>{icon}</span>
       ),
     },
     {
       id: 'compass',
-      icon: <Compass className="h-5 w-5" />,
+      icon: <Compass className="h-6 w-6" />,
       label: 'Reset bearing',
       onClick: handleResetBearing,
       show: true,
@@ -243,7 +243,7 @@ export function CustomNavigationControls({
 
   return (
     <div
-      className={cn(layoutStyles[layout], className)}
+      className={cn(layoutStyles[layout], 'no-zoom', className)}
       style={Object.keys(positionStyle).length > 0 ? positionStyle : undefined}
     >
       {buttons.map((button) => (

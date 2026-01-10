@@ -148,16 +148,16 @@ export function CustomSearchBar({
   // Get icon for suggestion type
   const getSuggestionIcon = (suggestion: SearchBoxSuggestion) => {
     if (suggestion.feature_type === 'poi' || suggestion.feature_type === 'category') {
-      return <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />;
+      return <Building2 className="h-5 w-5 text-muted-foreground shrink-0" />;
     }
-    return <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />;
+    return <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />;
   };
 
   return (
     <div ref={commandRef} className={cn('relative w-full', className)}>
       <Command className="rounded-full border border-border bg-background/95 backdrop-blur-md shadow-md hover:shadow-lg transition-shadow">
-        <div className="flex h-10 items-center px-3">
-          <Search className="h-4 w-4 shrink-0 opacity-50 mr-2" />
+        <div className="flex h-12 items-center px-4">
+          <Search className="h-5 w-5 shrink-0 opacity-50 mr-3" />
           <Command.Input
             ref={inputRef}
             value={query}
@@ -168,10 +168,10 @@ export function CustomSearchBar({
               setOpen(true);
             }}
             placeholder="Search locations..."
-            className="flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-full rounded-md bg-transparent py-3 text-base outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
           />
           {isLoading && (
-            <Loader2 className="h-4 w-4 shrink-0 opacity-50 animate-spin ml-2" />
+            <Loader2 className="h-5 w-5 shrink-0 opacity-50 animate-spin ml-3" />
           )}
         </div>
       </Command>
@@ -179,7 +179,7 @@ export function CustomSearchBar({
       {/* Suggestions dropdown - using plain divs instead of cmdk components */}
       {(open || isLoading) && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 z-[9999] bg-popover text-popover-foreground rounded-md shadow-lg overflow-hidden"
+          className="absolute top-full left-0 right-0 mt-2 z-[9999] bg-popover text-popover-foreground rounded-md shadow-lg overflow-hidden no-zoom"
         >
           {isLoading && (
             <div className="py-6 text-center text-sm text-muted-foreground">
@@ -187,13 +187,13 @@ export function CustomSearchBar({
             </div>
           )}
           {!isLoading && suggestions.length === 0 && query.length >= 2 && (
-            <div className="py-6 text-center text-sm text-muted-foreground">
+            <div className="py-6 text-center text-base text-muted-foreground">
               No locations found
             </div>
           )}
           {!isLoading && suggestions.length > 0 && (
             <>
-              <div className="px-3 py-2 text-xs font-medium text-muted-foreground">
+              <div className="px-4 py-2.5 text-sm font-medium text-muted-foreground">
                 Suggestions
               </div>
               <div
@@ -205,18 +205,18 @@ export function CustomSearchBar({
                     key={suggestion.mapbox_id}
                     onClick={() => handleSelect(suggestion)}
                     className={cn(
-                      'relative flex cursor-pointer items-center gap-2 px-3 py-2 text-sm outline-hidden select-none',
+                      'relative flex cursor-pointer items-center gap-3 px-4 py-3 text-base outline-hidden select-none',
                       'hover:bg-accent hover:text-accent-foreground',
                       index === selectedIndex && 'bg-accent text-accent-foreground'
                     )}
                   >
                     {getSuggestionIcon(suggestion)}
                     <div className="flex flex-col gap-0.5 overflow-hidden">
-                      <span className="font-medium text-sm truncate">
+                      <span className="font-medium text-base truncate">
                         {suggestion.name}
                       </span>
                       {suggestion.full_address && (
-                        <span className="text-xs text-muted-foreground truncate">
+                        <span className="text-sm text-muted-foreground truncate">
                           {suggestion.full_address}
                         </span>
                       )}

@@ -38,7 +38,7 @@ export function ActionButtonsSection({
         >
           {scan.isScanning ? (
             <span className='flex items-center gap-2'>
-              <Radar className='h-5 w-5 animate-spin' />
+              <Radar className='h-5 w-5 animate-scan-spin' />
               Scanning area…
             </span>
           ) : (

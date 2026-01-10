@@ -122,7 +122,7 @@ export function MapControls({
   const { scan } = settings;
 
   const controlsCard = (
-    <Card className='bg-background/90 backdrop-blur shadow-sm w-80 max-w-[92vw]'>
+    <Card className='bg-background/90 backdrop-blur shadow-sm w-80 max-w-[92vw] no-zoom'>
       <CardContent>
         <ControlsBody sections={sections} />
       </CardContent>
@@ -132,12 +132,12 @@ export function MapControls({
   return (
     <div className={cn(className)}>
       {/* Desktop/tablet: show fixed card above zoom controls */}
-      <div className='hidden md:block absolute bottom-[22rem] right-4 z-50 pointer-events-auto'>
+      <div className='hidden md:block absolute bottom-[22rem] right-4 z-50 pointer-events-auto no-zoom'>
         {controlsCard}
       </div>
 
       {/* Mobile: FAB + drawer */}
-      <div className='md:hidden'>
+      <div className='md:hidden no-zoom'>
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <CustomNavigationControls
             mapRef={mapRef}
@@ -151,7 +151,7 @@ export function MapControls({
             onSettingsClick={() => setDrawerOpen(true)}
             className='fixed bottom-24 right-4 pointer-events-auto'
           />
-          <DrawerContent className='h-[75vh]'>
+          <DrawerContent className='h-[75vh] no-zoom'>
             <DrawerHeader className='px-6 pt-6 pb-4 border-b text-left'>
               <DrawerTitle className='font-display text-xl font-bold tracking-tight'>
                 Map Settings
