@@ -2,14 +2,15 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { Navigation } from 'lucide-react';
+import { Navigation, ThumbsUp, ThumbsDown } from 'lucide-react';
 import type { CourtFeatureProperties } from '@/lib/types';
 import { DistanceDisplay } from '@/components/map/DistanceDisplay';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { FavoriteButton } from '@/components/map/FavoriteButton';
 import { CourtSatelliteImage } from '@/components/map/CourtSatelliteImage';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
+import { useState } from 'react';
 
 interface CourtDetailDrawerProps {
   open: boolean;
@@ -32,12 +33,22 @@ export function CourtDetailDrawer({
   const confidence = properties.confidence != null
     ? Math.round(Number(properties.confidence) * 100)
     : null;
+  const isVerified = properties.status === 'verified';
 
   // Fetch court image data
   const courtImageData = useQuery(
     api.inferences.getCourtImageData,
     open ? { detectionId: properties.detection_id } : 'skip'
   );
+
+  // Check if user has already submitted feedback for this prediction
+  const userFeedback = useQuery(
+    api.feedback_submissions.getUserFeedbackForPrediction,
+    open && !isVerified && properties.detection_id ? { detectionId: properties.detection_id } : 'skip'
+  );
+
+  const submitFeedback = useMutation(api.feedback_submissions.submitFeedback);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Determine confidence color
   const getConfidenceColor = () => {
@@ -50,6 +61,21 @@ export function CourtDetailDrawer({
   const openDirections = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
     window.open(url, '_blank');
+  };
+
+  const handleFeedback = async (userResponse: 'yes' | 'no') => {
+    if (!properties.detection_id || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await submitFeedback({
+        detectionId: properties.detection_id,
+        userResponse,
+      });
+    } catch (error) {
+      console.error('Failed to submit feedback', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -105,6 +131,53 @@ export function CourtDetailDrawer({
 
             <FavoriteButton courtId={properties.detection_id} />
           </div>
+
+          {/* Feedback section for unverified courts */}
+          {!isVerified && (
+            <div className="px-2 py-3">
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <div className="text-center">
+                  <h3 className="text-sm font-semibold">Help verify this court</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Is this actually a {displayName}?
+                  </p>
+                </div>
+
+                {userFeedback ? (
+                  <div className="text-center py-2">
+                    <span className="text-sm text-muted-foreground">
+                      {userFeedback.userResponse === 'yes' && '✅ You confirmed this is a court'}
+                      {userFeedback.userResponse === 'no' && '❌ You reported this is not a court'}
+                      {userFeedback.userResponse === 'unsure' && '🤔 You were unsure'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleFeedback('no')}
+                      disabled={isSubmitting}
+                      variant="outline"
+                      size="lg"
+                      className="flex-1"
+                    >
+                      <ThumbsDown className="mr-2 h-4 w-4" />
+                      No
+                    </Button>
+                    <Button
+                      onClick={() => handleFeedback('yes')}
+                      disabled={isSubmitting}
+                      variant="outline"
+                      size="lg"
+                      className="flex-1"
+                    >
+                      <ThumbsUp className="mr-2 h-4 w-4" />
+                      Yes
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Details section */}
           <div className="flex-1 overflow-y-auto px-2 py-4 space-y-4">

@@ -168,9 +168,39 @@ export const getFeedbackStats = query({
   },
 });
 
+export const getUserFeedbackForPrediction = query({
+  args: {
+    detectionId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const prediction = await ctx.db
+      .query('inference_predictions')
+      .filter((q) => q.eq(q.field('roboflowDetectionId'), args.detectionId))
+      .first();
+
+    if (!prediction) {
+      return null;
+    }
+
+    const feedback = await ctx.db
+      .query('feedback_submissions')
+      .withIndex('by_user_and_prediction', (q) =>
+        q.eq('userId', userId).eq('predictionId', prediction._id)
+      )
+      .first();
+
+    return feedback;
+  },
+});
+
 export const submitFeedback = mutation({
   args: {
-    predictionId: v.id('inference_predictions'),
+    detectionId: v.string(),
     userResponse: v.union(
       v.literal('yes'),
       v.literal('no'),
@@ -183,7 +213,7 @@ export const submitFeedback = mutation({
     if (!userId) {
       console.error('error: unauthorized', {
         requestedAction: 'submit_feedback',
-        predictionId: args.predictionId,
+        detectionId: args.detectionId,
       });
       throw new Error('Unauthorized');
     }
@@ -191,14 +221,18 @@ export const submitFeedback = mutation({
     console.log('start', {
       startTs,
       userId,
-      predictionId: args.predictionId,
+      detectionId: args.detectionId,
       userResponse: args.userResponse,
     });
 
-    const prediction = await ctx.db.get(args.predictionId);
+    const prediction = await ctx.db
+      .query('inference_predictions')
+      .filter((q) => q.eq(q.field('roboflowDetectionId'), args.detectionId))
+      .first();
+
     if (!prediction) {
       console.error('error: prediction not found', {
-        predictionId: args.predictionId,
+        detectionId: args.detectionId,
         userId,
         requestedAction: 'submit_feedback',
       });
@@ -208,14 +242,14 @@ export const submitFeedback = mutation({
     const existingFeedback = await ctx.db
       .query('feedback_submissions')
       .withIndex('by_user_and_prediction', (q) =>
-        q.eq('userId', userId).eq('predictionId', args.predictionId)
+        q.eq('userId', userId).eq('predictionId', prediction._id)
       )
       .first();
 
     console.log('query', {
       table: 'feedback_submissions',
       index: 'by_user_and_prediction',
-      params: { userId, predictionId: args.predictionId },
+      params: { userId, predictionId: prediction._id },
       found: !!existingFeedback,
     });
 
@@ -224,7 +258,7 @@ export const submitFeedback = mutation({
         durationMs: Date.now() - startTs,
         userId,
         action: 'skipped_existing',
-        predictionId: args.predictionId,
+        detectionId: args.detectionId,
         feedbackId: existingFeedback._id,
       });
       return;
@@ -232,7 +266,7 @@ export const submitFeedback = mutation({
 
     const feedbackId = await ctx.db.insert('feedback_submissions', {
       tileId: prediction.tileId,
-      predictionId: args.predictionId,
+      predictionId: prediction._id,
       userId: userId,
       userResponse: args.userResponse,
     });
@@ -242,7 +276,7 @@ export const submitFeedback = mutation({
       feedbackId,
       data: {
         tileId: prediction.tileId,
-        predictionId: args.predictionId,
+        predictionId: prediction._id,
         userResponse: args.userResponse,
       },
       userId,
@@ -250,7 +284,7 @@ export const submitFeedback = mutation({
     });
 
     await ctx.runMutation(internal.courts.verifyFromFeedback, {
-      predictionId: args.predictionId,
+      predictionId: prediction._id,
     });
   },
 });
