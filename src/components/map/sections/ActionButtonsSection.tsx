@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check, Radar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { MapSectionConfig } from '../shared/types';
@@ -38,7 +38,7 @@ export function ActionButtonsSection({
         >
           {scan.isScanning ? (
             <span className='flex items-center gap-2'>
-              <span className='h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary' />
+              <Radar className='h-5 w-5 animate-spin' />
               Scanning area…
             </span>
           ) : (

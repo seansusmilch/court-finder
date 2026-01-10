@@ -15,7 +15,6 @@ This skill provides a systematic approach to refactoring code for better maintai
 - **DRY (Don't Repeat Yourself):** Every piece of knowledge must have a single, unambiguous representation
 - **Decouple:** Reduce dependencies between modules—components should know as little as possible about each other
 - **Small steps:** Refactor in increments, verify after each change
-- **Remove comments:** Comments should be removed unless absolutely necessary—code should be self-documenting through clear names and structure
 
 ## Process Overview
 
@@ -33,26 +32,11 @@ This skill provides a systematic approach to refactoring code for better maintai
 
 Before changing anything, thoroughly understand what the code does.
 
-**Read the code:**
-- What is the input? What is the output?
-- What side effects occur?
-- What dependencies does it have?
-- What are the edge cases?
-
-**Ask questions if unclear:**
-- What is this code supposed to do?
-- Are there hidden requirements?
-- What behavior must be preserved?
-
-**Document current behavior:**
-```markdown
-## Current Behavior
-
-- Takes X as input
-- Returns Y
-- Side effects: Z
-- Edge cases: ...
-```
+**Analyze the code:**
+- Identify inputs and outputs
+- Recognize side effects
+- List dependencies
+- Document edge cases
 
 ---
 
@@ -225,37 +209,6 @@ function countAvailableItems(data: Data): ItemCountResult {
 }
 ```
 
-### Unnecessary Comments
-
-Comments that explain what the code does (rather than why) indicate the code isn't self-documenting:
-
-```ts
-// ❌ Comment explains what code does
-function calculateTotal(items: Item[]): number {
-  let total = 0;
-  // Loop through items and add up prices
-  for (const item of items) {
-    total += item.price * item.quantity;
-  }
-  return total;
-}
-
-// ✅ Self-documenting code, no comment needed
-function calculateTotal(items: Item[]): number {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-}
-```
-
-**When comments are acceptable:**
-- Explaining **why** something is done (business logic, workarounds, non-obvious decisions)
-- Documenting complex algorithms or mathematical formulas
-- API documentation (JSDoc for public functions)
-- Warnings about side effects or gotchas
-
-**When to remove comments:**
-- Comments that restate what the code obviously does
-- Outdated comments that no longer match the code
-- Comments that could be replaced with better naming
 
 ---
 
@@ -523,8 +476,6 @@ Use this checklist when refactoring:
 
 ### Comments
 - [ ] Unnecessary comments removed (code is self-documenting)
-- [ ] Remaining comments explain **why**, not **what**
-- [ ] No outdated or misleading comments
 
 ---
 

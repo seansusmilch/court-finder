@@ -16,10 +16,6 @@ import {
   sortSections,
 } from './shared/types';
 
-// ============================================================================
-// Button Component
-// ============================================================================
-
 interface MapControlButtonProps {
   icon: ReactNode;
   label: string;
@@ -58,10 +54,6 @@ export function MapControlButton({
     </Button>
   );
 }
-
-// ============================================================================
-// Default Button Factories
-// ============================================================================
 
 export interface DefaultButtonFactoriesOptions {
   onSettingsClick?: () => void;
@@ -115,7 +107,7 @@ export function createDefaultButtons(
       order: 1,
       className: 'bg-orange-500 border-orange-500 hover:bg-orange-600 text-white',
       renderIcon: (icon) => (
-        <span className={isScanning ? 'animate-pulse' : ''}>{icon}</span>
+        <span className={isScanning ? 'animate-spin' : ''}>{icon}</span>
       ),
     },
     {
@@ -145,19 +137,12 @@ export function createDefaultButtons(
   ];
 }
 
-// ============================================================================
-// Main Controls Container
-// ============================================================================
-
 export interface CustomNavigationControlsProps {
   mapRef: React.MutableRefObject<MapRef | null>;
   className?: string;
-  // Layout options
   layout?: MapControlLayout;
   position?: MapControlPosition;
-  // Button configuration
   buttons?: MapControlButtonConfig[];
-  // Convenience props for common buttons
   showCompass?: boolean;
   showLocate?: boolean;
   showSettings?: boolean;
@@ -165,7 +150,6 @@ export interface CustomNavigationControlsProps {
   onSettingsClick?: () => void;
   onScanClick?: () => void;
   isScanning?: boolean;
-  // Advanced: override default button factories
   useDefaultButtons?: boolean;
 }
 
@@ -184,7 +168,6 @@ export function CustomNavigationControls({
   isScanning = false,
   useDefaultButtons = true,
 }: CustomNavigationControlsProps) {
-  // Create default buttons (or use custom factory)
   const defaultButtons = useDefaultButtons
     ? createDefaultButtons(mapRef, {
         onSettingsClick,
@@ -193,7 +176,6 @@ export function CustomNavigationControls({
       })
     : [];
 
-  // Override show flags for default buttons based on props
   const configuredDefaults = defaultButtons.map((btn) => {
     switch (btn.id) {
       case 'compass':
@@ -209,24 +191,20 @@ export function CustomNavigationControls({
     }
   });
 
-  // Merge custom buttons with defaults (custom buttons take precedence)
   const buttonMap = new Map(
     [...configuredDefaults, ...(customButtons ?? [])].map((btn) => [btn.id, btn])
   );
 
-  // Sort by order if provided, then filter hidden buttons
   const buttons = sortSections(
     Array.from(buttonMap.values()).filter((btn) => btn.show !== false)
   );
 
-  // Layout styles
   const layoutStyles: Record<MapControlLayout, string> = {
     vertical: 'flex flex-col gap-2',
     horizontal: 'flex flex-row gap-2',
     grid: 'grid grid-cols-2 gap-2',
   };
 
-  // Position styles (if provided)
   const positionStyle = position
     ? {
         top: position.top,
@@ -248,14 +226,7 @@ export function CustomNavigationControls({
   );
 }
 
-// ============================================================================
-// Preset Configurations
-// ============================================================================
-
 export namespace MapControlPresets {
-  /**
-   * Standard navigation controls (compass + locate)
-   */
   export function standard(
     mapRef: React.MutableRefObject<MapRef | null>,
     options?: DefaultButtonFactoriesOptions
@@ -265,9 +236,6 @@ export namespace MapControlPresets {
     );
   }
 
-  /**
-   * Full navigation controls (compass + locate + settings)
-   */
   export function withSettings(
     mapRef: React.MutableRefObject<MapRef | null>,
     options?: DefaultButtonFactoriesOptions
@@ -277,9 +245,6 @@ export namespace MapControlPresets {
     );
   }
 
-  /**
-   * Scan controls (locate + scan)
-   */
   export function scanMode(
     mapRef: React.MutableRefObject<MapRef | null>,
     options?: DefaultButtonFactoriesOptions
@@ -289,9 +254,6 @@ export namespace MapControlPresets {
       .map((btn) => (btn.id === 'scan' ? { ...btn, show: true } : btn));
   }
 
-  /**
-   * Minimal controls (compass only)
-   */
   export function minimal(
     mapRef: React.MutableRefObject<MapRef | null>,
     options?: DefaultButtonFactoriesOptions
