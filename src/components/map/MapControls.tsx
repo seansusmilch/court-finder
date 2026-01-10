@@ -40,6 +40,11 @@ export interface MapControlsSettings {
     isUploading?: boolean;
     uploadSuccess?: boolean;
   };
+  locate?: {
+    isLocating?: boolean;
+    onLocateStart?: () => void;
+    onLocateEnd?: () => void;
+  };
 }
 
 // ============================================================================
@@ -140,6 +145,9 @@ export function MapControls({
             showScan={!!settings.scan}
             onScanClick={settings.scan?.onScan}
             isScanning={settings.scan?.isScanning}
+            isLocating={settings.locate?.isLocating}
+            onLocateStart={settings.locate?.onLocateStart}
+            onLocateEnd={settings.locate?.onLocateEnd}
             onSettingsClick={() => setSheetOpen(true)}
             className='fixed bottom-24 right-4 pointer-events-auto'
           />

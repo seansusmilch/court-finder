@@ -3,12 +3,29 @@ import { Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
+const FAVORITES_KEY = 'court-finder-favorites';
+
+function getFavorites(): string[] {
+  try {
+    const stored = localStorage.getItem(FAVORITES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavorites(favorites: string[]) {
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+  } catch (error) {
+    console.error('Error saving favorites:', error);
+  }
+}
+
 interface FavoriteButtonProps {
   courtId: string;
   className?: string;
 }
-
-const FAVORITES_KEY = 'court-finder-favorites';
 
 export function FavoriteButton({ courtId, className }: FavoriteButtonProps) {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -22,23 +39,6 @@ export function FavoriteButton({ courtId, className }: FavoriteButtonProps) {
       console.error('Error loading favorites:', error);
     }
   }, [courtId]);
-
-  const getFavorites = (): string[] => {
-    try {
-      const stored = localStorage.getItem(FAVORITES_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const saveFavorites = (favorites: string[]) => {
-    try {
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
-    } catch (error) {
-      console.error('Error saving favorites:', error);
-    }
-  };
 
   const toggleFavorite = () => {
     const favorites = getFavorites();

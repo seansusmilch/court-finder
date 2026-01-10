@@ -72,13 +72,13 @@ export function combineClasses(...classes: (string | undefined | false | null)[]
 /**
  * Sorts items by their order property (if present)
  */
-export function sortSections<T>(items: T[]): T[] {
-  return [...items].sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+export function sortSections<T extends { order?: number }>(items: T[]): T[] {
+  return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 /**
  * Filters items based on show property (if present)
  */
 export function filterSections<T extends { show?: boolean }>(items: T[]): T[] {
-  return items.filter((item) => (item as any).show !== false);
+  return items.filter((item) => item.show !== false);
 }

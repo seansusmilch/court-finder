@@ -58,3 +58,27 @@ export interface ViewportBbox {
   maxLat: number;
   maxLng: number;
 }
+
+// Court image data for satellite tile display
+export interface CourtImageData {
+  tileZ: number;
+  tileX: number;
+  tileY: number;
+  pixelX: number;
+  pixelY: number;
+  pixelWidth: number;
+  pixelHeight: number;
+  tileUrl: string;
+  class: string;
+  confidence: number;
+}
+
+// Adjacent tile info for stitching
+export interface AdjacentTile {
+  z: number;
+  x: number;
+  y: number;
+  url: string;
+  offsetX: number; // Position in stitched canvas (x offset)
+  offsetY: number; // Position in stitched canvas (y offset)
+}

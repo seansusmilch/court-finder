@@ -7,6 +7,9 @@ import type { CourtFeatureProperties } from '@/lib/types';
 import { DistanceDisplay } from '@/components/map/DistanceDisplay';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { FavoriteButton } from '@/components/map/FavoriteButton';
+import { CourtSatelliteImage } from '@/components/map/CourtSatelliteImage';
+import { useQuery } from 'convex/react';
+import { api } from '@/../convex/_generated/api';
 
 interface CourtDetailSheetProps {
   open: boolean;
@@ -29,6 +32,12 @@ export function CourtDetailSheet({
   const confidence = properties.confidence != null
     ? Math.round(Number(properties.confidence) * 100)
     : null;
+
+  // Fetch court image data
+  const courtImageData = useQuery(
+    api.inferences.getCourtImageData,
+    open ? { detectionId: properties.detection_id } : 'skip'
+  );
 
   // Determine confidence color
   const getConfidenceColor = () => {
@@ -60,6 +69,11 @@ export function CourtDetailSheet({
           {/* Drag handle */}
           <div className="flex justify-center py-3">
             <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
+          </div>
+
+          {/* Satellite image */}
+          <div className="px-6 pb-4">
+            <CourtSatelliteImage courtData={courtImageData ?? null} />
           </div>
 
           {/* Header */}

@@ -106,6 +106,7 @@ function MapPage() {
 
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -411,6 +412,11 @@ function MapPage() {
                 uploadSuccess,
               }
             : undefined,
+          locate: {
+            isLocating,
+            onLocateStart: () => setIsLocating(true),
+            onLocateEnd: () => setIsLocating(false),
+          },
         }}
       />
     </div>

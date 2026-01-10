@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `bun dev:backend` - Run Convex dev server only
 - `bun dev:frontend` - Run Vite dev server on port 3001
 - `bun check-types` - Type check all TypeScript code
-- `bun build` - Build production frontend
+- `bun run build` - Build production frontend
 - `bun serve` - Preview production build
 
 ### Setup Commands

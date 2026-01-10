@@ -106,6 +106,40 @@ jobs:
 
             ## REVIEW PROCESS
 
+            ### Phase 0: Fetch Existing PR Comments
+            **CRITICAL - Prevent Duplicate Comments**
+
+            Before analyzing any code, you MUST fetch all existing review comments on this PR:
+
+            ```bash
+            gh api \
+              /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments \
+              > /tmp/existing_comments.json
+            ```
+
+            Also fetch existing review discussions:
+            ```bash
+            gh api \
+              /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
+              > /tmp/existing_reviews.json
+            ```
+
+            **Analyze existing comments** and build a list of issues that have already been flagged:
+            - Extract file paths, line numbers, and comment bodies
+            - Categorize existing issues by type (bug, security, performance, style, etc.)
+            - Identify code sections/functions that already have feedback
+
+            **During your review**, for each potential comment you want to create:
+            1. Check if an existing comment addresses the same issue
+            2. Compare file path + line range + issue type
+            3. If an existing comment covers the same concern, **DO NOT create a duplicate**
+            4. Only add comments for NEW issues not already raised
+
+            **Example duplicate detection:**
+            - Existing comment at `src/components/Example.tsx:42`: "Missing error handling for API call"
+            - Your analysis finds: `src/components/Example.tsx:42` needs error handling
+            - **Action: SKIP** - Issue already flagged
+
             ### Phase 1: Context Gathering & Understanding
             1. **Analyze the entire codebase structure** - Understand project organization, existing patterns, architectural decisions
             2. **Review PR changes holistically** - How changes fit into the broader codebase
@@ -185,6 +219,7 @@ jobs:
             - 📝 **Clarity**: Naming, comments, complexity
 
             ## REVIEW GUIDELINES
+            - **NEVER duplicate existing comments** - Check existing PR comments first (Phase 0)
             - **Provide section-level feedback** (functions, components, modules) not just line comments
             - **Always include confidence scores** based on context certainty
             - **Consider the entire project** - reference existing patterns, consistency with codebase
@@ -198,6 +233,13 @@ jobs:
             You must create a SINGLE GitHub review with all feedback. Do NOT post individual comments.
 
             ### Step 1: Build the Review JSON
+
+            **FINAL DUPLICATE CHECK** - Before creating the JSON, verify:
+            - Re-read `/tmp/existing_comments.json`
+            - Ensure no comment in your `comments` array duplicates an existing one
+            - If a duplicate exists, remove it from the `comments` array
+            - Update the summary body to reflect any removed duplicates
+
             Create a JSON file at /tmp/review.json with this structure:
 
             ```json

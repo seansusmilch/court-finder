@@ -59,13 +59,23 @@ export interface DefaultButtonFactoriesOptions {
   onSettingsClick?: () => void;
   onScanClick?: () => void;
   isScanning?: boolean;
+  isLocating?: boolean;
+  onLocateStart?: () => void;
+  onLocateEnd?: () => void;
 }
 
 export function createDefaultButtons(
   mapRef: React.MutableRefObject<MapRef | null>,
   options: DefaultButtonFactoriesOptions = {}
 ): MapControlButtonConfig[] {
-  const { onSettingsClick, onScanClick, isScanning = false } = options;
+  const {
+    onSettingsClick,
+    onScanClick,
+    isScanning = false,
+    isLocating = false,
+    onLocateStart,
+    onLocateEnd,
+  } = options;
 
   const handleLocate = useCallback(() => {
     if (!navigator.geolocation) {
@@ -73,19 +83,23 @@ export function createDefaultButtons(
       return;
     }
 
+    onLocateStart?.();
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         mapRef.current?.flyTo({
           center: [position.coords.longitude, position.coords.latitude],
           zoom: 14,
         });
+        onLocateEnd?.();
       },
       (error) => {
         console.error('Error getting location:', error);
         toast.error('Could not get your location');
+        onLocateEnd?.();
       }
     );
-  }, [mapRef]);
+  }, [mapRef, onLocateStart, onLocateEnd]);
 
   const handleResetBearing = useCallback(() => {
     mapRef.current?.easeTo({
@@ -123,8 +137,12 @@ export function createDefaultButtons(
       icon: <Navigation className="h-5 w-5 fill-current" />,
       label: 'Locate me',
       onClick: handleLocate,
+      disabled: isLocating,
       show: true,
       order: 3,
+      renderIcon: (icon) => (
+        <span className={isLocating ? 'animate-pulse' : ''}>{icon}</span>
+      ),
     },
     {
       id: 'compass',
@@ -150,6 +168,9 @@ export interface CustomNavigationControlsProps {
   onSettingsClick?: () => void;
   onScanClick?: () => void;
   isScanning?: boolean;
+  isLocating?: boolean;
+  onLocateStart?: () => void;
+  onLocateEnd?: () => void;
   useDefaultButtons?: boolean;
 }
 
@@ -166,6 +187,9 @@ export function CustomNavigationControls({
   onSettingsClick,
   onScanClick,
   isScanning = false,
+  isLocating = false,
+  onLocateStart,
+  onLocateEnd,
   useDefaultButtons = true,
 }: CustomNavigationControlsProps) {
   const defaultButtons = useDefaultButtons
@@ -173,6 +197,9 @@ export function CustomNavigationControls({
         onSettingsClick,
         onScanClick,
         isScanning,
+        isLocating,
+        onLocateStart,
+        onLocateEnd,
       })
     : [];
 
@@ -181,7 +208,7 @@ export function CustomNavigationControls({
       case 'compass':
         return { ...btn, show: showCompass };
       case 'locate':
-        return { ...btn, show: showLocate };
+        return { ...btn, show: showLocate, disabled: isLocating };
       case 'settings':
         return { ...btn, show: showSettings };
       case 'scan':
