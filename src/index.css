@@ -377,6 +377,7 @@
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
+  margin-top: -4px;
 }
 
 .slider::-webkit-slider-thumb:hover {
@@ -392,10 +393,11 @@
   border: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s;
+  transform: translateY(-4px);
 }
 
 .slider::-moz-range-thumb:hover {
-  transform: scale(1.1);
+  transform: translateY(-4px) scale(1.1);
 }
 
 /* Slider track progress */
