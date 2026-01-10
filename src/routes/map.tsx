@@ -1,9 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { CustomNavigationControls } from '@/components/map/CustomNavigationControls';
 import Map, {
-  GeolocateControl,
-  FullscreenControl,
   ScaleControl,
-  NavigationControl,
 } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -19,6 +17,8 @@ import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
 import MapControls from '@/components/map/MapControls';
+import { FloatingSearchBar } from '@/components/map/FloatingSearchBar';
+import { CourtDetailSheet } from '@/components/map/CourtDetailSheet';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
@@ -289,7 +289,7 @@ function MapPage() {
   ]);
 
   return (
-    <div className='h-[calc(100vh-4rem)] w-full relative'>
+    <div className='h-[100vh] w-full relative'>
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}
@@ -314,20 +314,11 @@ function MapPage() {
           if (layerId === 'clusters') onClusterClick(e);
         }}
       >
-        <GeolocateControl
-          position='top-left'
-          trackUserLocation
-          showUserHeading
-          showUserLocation
-          positionOptions={{
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 10000,
-          }}
-        />
-        <FullscreenControl position='top-left' />
-        <NavigationControl position='top-left' />
         <ScaleControl />
+        <CustomNavigationControls 
+          mapRef={mapRef} 
+          className="absolute bottom-24 right-4 md:bottom-8 z-50" 
+        />
         {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
           viewState.zoom <= CLUSTER_MAX_ZOOM && (
             <CourtClusters data={geojson} />
@@ -353,21 +344,26 @@ function MapPage() {
               />
             );
           })}
-
-        {selectedPin && (
-          <CourtPopup
-            longitude={selectedPin.longitude}
-            latitude={selectedPin.latitude}
-            properties={selectedPin.properties}
-            onClose={() => setSelectedPin(null)}
-          />
-        )}
       </Map>
+
+      {selectedPin && (
+        <CourtDetailSheet
+          open={!!selectedPin}
+          onOpenChange={(open) => !open && setSelectedPin(null)}
+          longitude={selectedPin.longitude}
+          latitude={selectedPin.latitude}
+          properties={selectedPin.properties}
+        />
+      )}
+
+      <FloatingSearchBar
+        accessToken={MAPBOX_API_KEY as string}
+        mapRef={mapRef}
+      />
 
       <MapControls
         className='absolute inset-0 pointer-events-none'
         mapRef={mapRef}
-        accessToken={MAPBOX_API_KEY as string}
         zoomLevel={viewState.zoom}
         pinsVisibleFromZoom={PINS_VISIBLE_FROM_ZOOM}
         confidenceThreshold={confidenceThreshold}
