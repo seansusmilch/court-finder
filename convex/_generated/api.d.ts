@@ -11,6 +11,7 @@
 import type * as actions from "../actions.js";
 import type * as actions_password from "../actions/password.js";
 import type * as auth from "../auth.js";
+import type * as courts from "../courts.js";
 import type * as feedback_submissions from "../feedback_submissions.js";
 import type * as geocoding from "../geocoding.js";
 import type * as healthCheck from "../healthCheck.js";
@@ -26,6 +27,7 @@ import type * as lib_index from "../lib/index.js";
 import type * as lib_roboflow from "../lib/roboflow.js";
 import type * as lib_spatial from "../lib/spatial.js";
 import type * as lib_tiles from "../lib/tiles.js";
+import type * as lib_types from "../lib/types.js";
 import type * as migrations from "../migrations.js";
 import type * as scanResults from "../scanResults.js";
 import type * as scans from "../scans.js";
@@ -44,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   actions: typeof actions;
   "actions/password": typeof actions_password;
   auth: typeof auth;
+  courts: typeof courts;
   feedback_submissions: typeof feedback_submissions;
   geocoding: typeof geocoding;
   healthCheck: typeof healthCheck;
@@ -59,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "lib/roboflow": typeof lib_roboflow;
   "lib/spatial": typeof lib_spatial;
   "lib/tiles": typeof lib_tiles;
+  "lib/types": typeof lib_types;
   migrations: typeof migrations;
   scanResults: typeof scanResults;
   scans: typeof scans;

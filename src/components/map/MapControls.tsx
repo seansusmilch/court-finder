@@ -7,6 +7,7 @@ import {
   createConfidenceSection,
   createMapStyleSection,
   createActionButtonsSection,
+  createStatusFilterSection,
 } from './sections';
 import { CustomNavigationControls } from './CustomNavigationControls';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,8 @@ export interface MapControlsSettings {
   // Filters
   confidenceThreshold: number;
   onConfidenceChange: (value: number) => void;
+  verifiedOnly?: boolean;
+  onVerifiedOnlyChange?: (value: boolean) => void;
 
   // Map style
   mapStyle: string;
@@ -72,6 +75,10 @@ export function createDefaultSections(settings: MapControlsSettings): MapSection
       courtCount: settings.courtCount,
       isZoomSufficient: settings.isZoomSufficient,
       showZoomWarning: true,
+    }),
+    createStatusFilterSection({
+      verifiedOnly: settings.verifiedOnly ?? false,
+      onVerifiedOnlyChange: settings.onVerifiedOnlyChange ?? (() => {}),
     }),
     createConfidenceSection({
       confidenceThreshold: settings.confidenceThreshold,

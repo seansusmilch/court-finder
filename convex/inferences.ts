@@ -1,4 +1,4 @@
-import { query } from './_generated/server';
+import { internalMutation, query } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
@@ -6,9 +6,11 @@ import {
   predictionToFeature,
   tilesIntersectingBbox,
   styleTileUrl,
+  pixelOnTileToLngLat,
   type GeoJSONPointFeature,
 } from './lib/tiles';
 import type { RoboflowPrediction } from './lib/roboflow';
+import type { CourtStatus } from './lib/types';
 import {
   MARKER_DEDUP_RADIUS_BY_CLASS_M,
   MARKER_DEDUP_BASE_RADIUS_M,
@@ -104,10 +106,18 @@ export const featuresByViewport = query({
     }),
     zoom: v.number(),
     confidenceThreshold: v.optional(v.number()),
+    statusFilter: v.optional(
+      v.union(
+        v.literal('all'),
+        v.literal('verified'),
+        v.literal('predictions')
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const startTs = Date.now();
     const userId = await getAuthUserId(ctx);
+    const statusFilter = args.statusFilter ?? 'all';
 
     console.log('start', {
       startTs,
@@ -115,6 +125,7 @@ export const featuresByViewport = query({
       bbox: args.bbox,
       zoom: args.zoom,
       confidenceThreshold: args.confidenceThreshold,
+      statusFilter,
     });
 
     const features: GeoJSONPointFeature[] = [];
@@ -475,6 +486,7 @@ export const featuresByViewport = query({
           maxConfidence: g.maxConfidence,
           avgConfidence,
           models,
+          status: 'pending' as CourtStatus,
           zRange:
             typeof g.zMin === 'number' && typeof g.zMax === 'number'
               ? [g.zMin, g.zMax]
@@ -490,17 +502,137 @@ export const featuresByViewport = query({
         } as GeoJSONPointFeature;
       });
 
+    let finalFeatures: GeoJSONPointFeature[];
+
+    if (statusFilter === 'predictions') {
+      finalFeatures = dedupedFeatures;
+    } else {
+      const tiles = tilesIntersectingBbox(args.bbox, args.zoom);
+      const tileIds = new Set(tiles.map((t) => `${t.z}:${t.x}:${t.y}`));
+
+      const courtsQuery = await ctx.db.query('courts').collect();
+      const courts = statusFilter === 'verified'
+        ? courtsQuery.filter((c) => c.status === 'verified')
+        : courtsQuery.filter((c) => c.status === 'verified' || c.status === 'pending');
+
+      const courtFeatures: GeoJSONPointFeature[] = [];
+
+      for (const court of courts) {
+        const tile = court.tileId ? await ctx.db.get(court.tileId) : null;
+        if (!tile) continue;
+
+        const tileKey = `${tile.z}:${tile.x}:${tile.y}`;
+        if (!tileIds.has(tileKey)) continue;
+
+        courtFeatures.push({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [court.longitude, court.latitude],
+          },
+          properties: {
+            z: tile.z,
+            x: tile.x,
+            y: tile.y,
+            class: court.class,
+            class_id: 0,
+            confidence: court.sourceConfidence ??1.0,
+            detection_id: '',
+            status: court.status,
+            verifiedAt: court.verifiedAt,
+            sourceModel: court.sourceModel,
+            sourceVersion: court.sourceVersion,
+            totalFeedbackCount: court.totalFeedbackCount,
+            positiveFeedbackCount: court.positiveFeedbackCount,
+          },
+        });
+      }
+
+      if (statusFilter === 'verified') {
+        finalFeatures = courtFeatures;
+      } else {
+        finalFeatures = [...dedupedFeatures, ...courtFeatures];
+      }
+    }
+
     console.log('complete', {
       durationMs: Date.now() - startTs,
       userId,
-      input: { bbox: args.bbox, zoom: args.zoom, confidenceThreshold: args.confidenceThreshold },
+      input: { bbox: args.bbox, zoom: args.zoom, confidenceThreshold: args.confidenceThreshold, statusFilter },
       output: {
         inputFeatures: features.length,
-        outputFeatures: dedupedFeatures.length,
+        predictionFeatures: dedupedFeatures.length,
+        courtFeatures: statusFilter === 'predictions' ? 0 : finalFeatures.filter(f => f.properties.status === 'verified').length,
+        outputFeatures: finalFeatures.length,
         dedupRatio: features.length > 0 ? (dedupedFeatures.length / features.length).toFixed(2) : '0.00',
       },
     });
 
-    return { type: 'FeatureCollection', features: dedupedFeatures } as const;
+    return { type: 'FeatureCollection', features: finalFeatures } as const;
+  },
+});
+
+export const autoLinkPredictionsToCourts = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const startTs = Date.now();
+
+    const predictions = await ctx.db.query('inference_predictions').collect();
+    const courts = await ctx.db.query('courts').collect();
+
+    let linkedCount = 0;
+    let skippedCount = 0;
+
+    for (const prediction of predictions) {
+      if (prediction.courtId) {
+        skippedCount++;
+        continue;
+      }
+
+      const predictionTile = await ctx.db.get(prediction.tileId);
+      if (!predictionTile) continue;
+
+      const { lon, lat } = pixelOnTileToLngLat(
+        predictionTile.z,
+        predictionTile.x,
+        predictionTile.y,
+        prediction.x,
+        prediction.y,
+        1024,
+        1024,
+        512
+      );
+
+      const radiusMeters =
+        MARKER_DEDUP_RADIUS_BY_CLASS_M[prediction.class] ??
+        MARKER_DEDUP_BASE_RADIUS_M;
+
+      for (const court of courts) {
+        if (court.class !== prediction.class) continue;
+
+        const distance = haversineMeters(
+          { lat, lng: lon },
+          { lat: court.latitude, lng: court.longitude }
+        );
+
+        if (distance <= radiusMeters) {
+          await ctx.db.patch(prediction._id, {
+            courtId: court._id,
+          });
+          linkedCount++;
+          break;
+        }
+      }
+    }
+
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      action: 'auto_link_predictions_to_courts',
+      totalPredictions: predictions.length,
+      linkedCount,
+      skippedCount,
+    });
+
+    return { linkedCount, skippedCount };
   },
 });

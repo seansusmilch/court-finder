@@ -1,3 +1,8 @@
+import type { CourtStatus, ConfidenceLevel } from '@backend/lib/types';
+
+// Re-export shared types
+export type { CourtStatus, ConfidenceLevel };
+
 // Court feature types for map components
 export interface CourtFeatureProperties {
   // Core prediction data
@@ -6,17 +11,27 @@ export interface CourtFeatureProperties {
   confidence: number;
   detection_id: string;
 
+  // Verification status
+  status?: CourtStatus;
+  verifiedAt?: number;
+
   // Tile coordinates
   z: number;
   x: number;
   y: number;
 
   // Model information
-  model: string;
-  version: string;
+  model?: string;
+  version?: string;
 
   // Optional zoom level information
   zoom_level?: number;
+
+  // Court-specific fields (for verified courts)
+  sourceModel?: string;
+  sourceVersion?: string;
+  totalFeedbackCount?: number;
+  positiveFeedbackCount?: number;
 
   // Allow additional properties from the convex query
   [key: string]: unknown;

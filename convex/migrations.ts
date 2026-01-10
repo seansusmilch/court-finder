@@ -2,6 +2,8 @@ import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api';
 import type { DataModel } from './_generated/dataModel';
 import { pointToTile, tileCenterLatLng } from './lib/tiles';
+import { COURT_VERIFICATION } from './lib/constants';
+import type { CourtStatus } from './lib/types';
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -201,6 +203,73 @@ export const migrateTilesReverseGeocode = migrations.define({
   },
 });
 
+export const generateCourtsFromExistingFeedback = migrations.define({
+  table: 'inference_predictions',
+  migrateOne: async (ctx, doc) => {
+    if (doc.courtId) return;
+
+    const feedback = await ctx.db
+      .query('feedback_submissions')
+      .filter((q) => q.eq(q.field('predictionId'), doc._id))
+      .collect();
+
+    if (feedback.length === 0) return;
+
+    const positiveCount = feedback.filter((f) => f.userResponse === 'yes').length;
+    const positivePercentage = feedback.length > 0 ? positiveCount / feedback.length : 0;
+
+    const hasPositiveFeedback = positiveCount > 0;
+    const meetsThresholds =
+      feedback.length >= COURT_VERIFICATION.MIN_FEEDBACK_COUNT &&
+      positivePercentage >= COURT_VERIFICATION.MIN_POSITIVE_PERCENTAGE;
+
+    if (!hasPositiveFeedback) return;
+
+    const status: CourtStatus = meetsThresholds ? 'verified' : 'pending';
+
+    const tile = await ctx.db.get(doc.tileId);
+    if (!tile) return;
+
+    const { lat, lng } = tileCenterLatLng(tile.z, tile.x, tile.y);
+
+    const isVerified = status === 'verified';
+
+    const courtId = await ctx.db.insert('courts', {
+      latitude: lat,
+      longitude: lng,
+      class: doc.class,
+      status,
+      verifiedAt: isVerified ? Date.now() : undefined,
+      sourcePredictionId: doc._id,
+      sourceModel: doc.model,
+      sourceVersion: doc.version,
+      sourceConfidence: doc.confidence,
+      totalFeedbackCount: feedback.length,
+      positiveFeedbackCount: positiveCount,
+      tileId: doc.tileId,
+      pixelX: doc.x,
+      pixelY: doc.y,
+      pixelWidth: doc.width,
+      pixelHeight: doc.height,
+    });
+
+    await ctx.db.patch(doc._id, { courtId });
+
+    for (const f of feedback) {
+      await ctx.db.patch(f._id, { courtId });
+    }
+
+    console.log('[generateCourtsFromExistingFeedback] created court', {
+      predictionId: doc._id,
+      courtId,
+      status,
+      feedbackCount: feedback.length,
+      positiveCount,
+      positivePercentage: (positivePercentage * 100).toFixed(2),
+    });
+  },
+});
+
 export const runAll = migrations.runner([
   // internal.migrations.migratePredictions,
   internal.migrations.migrateScansCenterTile,
@@ -215,4 +284,5 @@ export const runAll = migrations.runner([
   // internal.migrations.migrateInferencesDeletedFields,
   // internal.migrations.migrateInferenceToPredictions,
   internal.migrations.migrateTilesReverseGeocode,
+  internal.migrations.generateCourtsFromExistingFeedback,
 ]);

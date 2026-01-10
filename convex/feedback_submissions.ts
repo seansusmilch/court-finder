@@ -1,10 +1,11 @@
-import { mutation, query } from './_generated/server';
+import { internalMutation, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { styleTileUrl } from './lib/tiles';
 import { RANDOMIZE_PREDICTION_FEEDBACK } from './lib/constants';
 import type { QueryCtx } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
+import { internal } from './_generated/api';
 
 // Utility: Get all feedback submissions for a user
 async function getUserSubmissions(
@@ -246,6 +247,10 @@ export const submitFeedback = mutation({
       },
       userId,
       durationMs: Date.now() - startTs,
+    });
+
+    await ctx.runMutation(internal.courts.verifyFromFeedback, {
+      predictionId: args.predictionId,
     });
   },
 });

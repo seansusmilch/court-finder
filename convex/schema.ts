@@ -12,15 +12,37 @@ export default defineSchema({
     isAnonymous: v.optional(v.boolean()),
     permissions: v.array(v.string()),
   }).index('email', ['email']),
+  courts: defineTable({
+    latitude: v.float64(),
+    longitude: v.float64(),
+    class: v.string(),
+    status: v.string(),
+    verifiedAt: v.optional(v.number()),
+    sourcePredictionId: v.optional(v.id('inference_predictions')),
+    sourceModel: v.optional(v.string()),
+    sourceVersion: v.optional(v.string()),
+    sourceConfidence: v.optional(v.float64()),
+    totalFeedbackCount: v.number(),
+    positiveFeedbackCount: v.number(),
+    tileId: v.optional(v.id('tiles')),
+    pixelX: v.optional(v.float64()),
+    pixelY: v.optional(v.float64()),
+    pixelWidth: v.optional(v.float64()),
+    pixelHeight: v.optional(v.float64()),
+  })
+    .index('by_location', ['latitude', 'longitude'])
+    .index('by_status', ['status']),
   feedback_submissions: defineTable({
     predictionId: v.id('inference_predictions'),
     userId: v.id('users'),
     userResponse: v.string(),
     tileId: v.id('tiles'),
     batchId: v.optional(v.id('upload_batches')),
+    courtId: v.optional(v.id('courts')),
   })
     .index('by_user_and_prediction', ['userId', 'predictionId'])
-    .index('by_tile', ['tileId']),
+    .index('by_tile', ['tileId'])
+    .index('by_court', ['courtId']),
 
   inference_predictions: defineTable({
     roboflowDetectionId: v.string(),
@@ -35,6 +57,7 @@ export default defineSchema({
     model: v.optional(v.string()),
     version: v.optional(v.string()),
     roboflowInferenceId: v.optional(v.string()),
+    courtId: v.optional(v.id('courts')),
   })
     .index('by_tile', ['tileId'])
     .index('by_tile_model_version', ['tileId', 'model', 'version'])
@@ -43,7 +66,8 @@ export default defineSchema({
       'model',
       'version',
       'roboflowDetectionId',
-    ]),
+    ])
+    .index('by_court', ['courtId']),
   scans: defineTable({
     userId: v.id('users'),
     model: v.string(),
