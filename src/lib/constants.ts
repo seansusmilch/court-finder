@@ -1,5 +1,5 @@
 // Map rendering thresholds
-export const PINS_VISIBLE_FROM_ZOOM = 11;
+export const PINS_VISIBLE_FROM_ZOOM = 10;
 
 // Map defaults
 export const DEFAULT_MAP_CENTER: [number, number] = [-87.6952, 41.9442];

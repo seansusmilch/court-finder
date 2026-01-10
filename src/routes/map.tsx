@@ -315,9 +315,14 @@ function MapPage() {
         }}
       >
         <ScaleControl />
-        <CustomNavigationControls 
-          mapRef={mapRef} 
-          className="absolute bottom-24 right-4 md:bottom-8 z-50" 
+        <CustomNavigationControls
+          mapRef={mapRef}
+          showLocate={false}
+          showCompass={false}
+          showScan={!!canScan}
+          onScanClick={() => scanMutation.mutate()}
+          isScanning={scanMutation.isPending}
+          className="hidden md:flex absolute bottom-8 right-4 z-50"
         />
         {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
           viewState.zoom <= CLUSTER_MAX_ZOOM && (
@@ -364,25 +369,30 @@ function MapPage() {
       <MapControls
         className='absolute inset-0 pointer-events-none'
         mapRef={mapRef}
-        zoomLevel={viewState.zoom}
-        pinsVisibleFromZoom={PINS_VISIBLE_FROM_ZOOM}
-        confidenceThreshold={confidenceThreshold}
-        onConfidenceChange={setConfidenceThreshold}
-        courtCount={geojson.features.length}
-        availableZoomLevels={availableZoomLevels}
-        isZoomSufficient={viewState.zoom >= PINS_VISIBLE_FROM_ZOOM}
-        canScan={!!canScan}
-        onScan={() => scanMutation.mutate()}
-        isScanning={scanMutation.isPending}
-        mapStyle={mapStyle}
-        onMapStyleChange={setMapStyle}
-        categories={availableCategories}
-        enabledCategories={enabledCategories ?? availableCategories}
-        onCategoriesChange={(cats: string[]) => setEnabledCategories(cats)}
-        canUpload={!!canUpload}
-        onUpload={() => uploadMutation.mutate()}
-        isUploading={uploadMutation.isPending}
-        uploadSuccess={uploadSuccess}
+        settings={{
+          courtCount: geojson.features.length,
+          isZoomSufficient: viewState.zoom >= PINS_VISIBLE_FROM_ZOOM,
+          confidenceThreshold,
+          onConfidenceChange: setConfidenceThreshold,
+          categories: availableCategories,
+          enabledCategories: enabledCategories ?? availableCategories,
+          onCategoriesChange: (cats: string[]) => setEnabledCategories(cats),
+          mapStyle,
+          onMapStyleChange: setMapStyle,
+          scan: canScan
+            ? {
+                onScan: () => scanMutation.mutate(),
+                isScanning: scanMutation.isPending,
+              }
+            : undefined,
+          upload: canUpload
+            ? {
+                onUpload: () => uploadMutation.mutate(),
+                isUploading: uploadMutation.isPending,
+                uploadSuccess,
+              }
+            : undefined,
+        }}
       />
     </div>
   );
