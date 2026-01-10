@@ -38,7 +38,7 @@ export const DEFAULT_ANONYMOUS_PERMISSIONS = [
 
 // Roboflow model configuration
 export const ROBOFLOW_MODEL_NAME = 'satellite-sports-facilities-bubrg';
-export const ROBOFLOW_MODEL_VERSION = '10';
+export const ROBOFLOW_MODEL_VERSION = '11';
 
 // Map tile coverage configuration
 export const DEFAULT_TILE_RADIUS = 2;
