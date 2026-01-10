@@ -5,6 +5,7 @@ import { getAuthUserId } from '@convex-dev/auth/server';
 import {
   predictionToFeature,
   tilesIntersectingBbox,
+  styleTileUrl,
   type GeoJSONPointFeature,
 } from './lib/tiles';
 import type { RoboflowPrediction } from './lib/roboflow';
@@ -30,6 +31,66 @@ export const getAvailableZoomLevels = query({
       (a, b) => a - b
     );
     return zoomLevels;
+  },
+});
+
+/**
+ * Get court image data for displaying a zoomed-in satellite image
+ * Returns tile coordinates, pixel bbox, and tile image URL
+ */
+export const getCourtImageData = query({
+  args: {
+    detectionId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const startTs = Date.now();
+
+    // Find the prediction by detection ID
+    const predictions = await ctx.db
+      .query('inference_predictions')
+      .filter((q) => q.eq(q.field('roboflowDetectionId'), args.detectionId))
+      .collect();
+
+    if (predictions.length === 0) {
+      return null;
+    }
+
+    const pred = predictions[0];
+    const tile = await ctx.db.get(pred.tileId);
+    if (!tile) {
+      return null;
+    }
+
+    // Generate tile URL
+    const tileUrl = styleTileUrl(tile.z, tile.x, tile.y);
+
+    const result = {
+      // Tile coordinates
+      tileZ: tile.z,
+      tileX: tile.x,
+      tileY: tile.y,
+      // Court bbox in pixel coordinates within the tile
+      pixelX: pred.x as number,
+      pixelY: pred.y as number,
+      pixelWidth: pred.width as number,
+      pixelHeight: pred.height as number,
+      // Tile image URL
+      tileUrl,
+      // Additional court info
+      class: pred.class,
+      confidence: pred.confidence as number,
+    };
+
+    console.log('getCourtImageData', {
+      durationMs: Date.now() - startTs,
+      detectionId: args.detectionId,
+      result: {
+        tile: { z: tile.z, x: tile.x, y: tile.y },
+        bbox: { x: pred.x, y: pred.y, width: pred.width, height: pred.height },
+      },
+    });
+
+    return result;
   },
 });
 

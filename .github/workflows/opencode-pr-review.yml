@@ -62,9 +62,36 @@ jobs:
             - ⚪ **Suggestion (0-39%)**: Nice-to-have improvement, alternative approach worth considering
 
             ## IMPORTANT - OUTPUT DELIVERY
-            You MUST use the GitHub CLI (gh) to post review comments:
-            - Summary comment: `gh pr comment $PR_NUMBER --body "SUMMARY" --repo $REPO`
-            - Inline comments: `gh pr comment $PR_NUMBER --body "COMMENT" --repo $REPO --path FILE_PATH --line LINE_NUMBER`
+            You MUST create a proper GitHub review using the GitHub API. Do NOT use regular comments.
+
+            ### Step 1: Create Review Comments JSON File
+            Create a JSON file at /tmp/review_comments.json with the following structure:
+            ```json
+            {
+              "body": "OVERALL_SUMMARY_COMMENT",
+              "comments": [
+                {
+                  "path": "path/to/file.ts",
+                  "line": 42,
+                  "body": "Specific feedback for this line"
+                }
+              ],
+              "event": "COMMENT"
+            }
+            ```
+
+            ### Step 2: Submit the Review
+            Use: `gh api --method POST \
+              -H "Accept: application/vnd.github+json" \
+              /repos/$REPO/pulls/$PR_NUMBER/reviews \
+              -f @/tmp/review_comments.json`
+
+            ### Key Requirements:
+            - "event" must be one of: "APPROVE", "REQUEST_CHANGES", "COMMENT"
+            - For issues found, use "REQUEST_CHANGES"
+            - For suggestions only, use "COMMENT"
+            - "line" must be within the PR diff
+            - "body" is the overall review summary
 
             ## PR INFORMATION
             - Repository: ${{ github.repository }}
@@ -78,6 +105,40 @@ jobs:
             - **Focus Areas**: React components, hooks, routing, state management, Convex functions, schema, TailwindCSS
 
             ## REVIEW PROCESS
+
+            ### Phase 0: Fetch Existing PR Comments
+            **CRITICAL - Prevent Duplicate Comments**
+
+            Before analyzing any code, you MUST fetch all existing review comments on this PR:
+
+            ```bash
+            gh api \
+              /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments \
+              > /tmp/existing_comments.json
+            ```
+
+            Also fetch existing review discussions:
+            ```bash
+            gh api \
+              /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
+              > /tmp/existing_reviews.json
+            ```
+
+            **Analyze existing comments** and build a list of issues that have already been flagged:
+            - Extract file paths, line numbers, and comment bodies
+            - Categorize existing issues by type (bug, security, performance, style, etc.)
+            - Identify code sections/functions that already have feedback
+
+            **During your review**, for each potential comment you want to create:
+            1. Check if an existing comment addresses the same issue
+            2. Compare file path + line range + issue type
+            3. If an existing comment covers the same concern, **DO NOT create a duplicate**
+            4. Only add comments for NEW issues not already raised
+
+            **Example duplicate detection:**
+            - Existing comment at `src/components/Example.tsx:42`: "Missing error handling for API call"
+            - Your analysis finds: `src/components/Example.tsx:42` needs error handling
+            - **Action: SKIP** - Issue already flagged
 
             ### Phase 1: Context Gathering & Understanding
             1. **Analyze the entire codebase structure** - Understand project organization, existing patterns, architectural decisions
@@ -158,6 +219,7 @@ jobs:
             - 📝 **Clarity**: Naming, comments, complexity
 
             ## REVIEW GUIDELINES
+            - **NEVER duplicate existing comments** - Check existing PR comments first (Phase 0)
             - **Provide section-level feedback** (functions, components, modules) not just line comments
             - **Always include confidence scores** based on context certainty
             - **Consider the entire project** - reference existing patterns, consistency with codebase
@@ -168,27 +230,57 @@ jobs:
 
             ## DELIVERY INSTRUCTIONS
 
-            1. **Post Summary Comment** using gh CLI:
-               ```bash
-               gh pr comment $PR_NUMBER --body "FULL_REVIEW_SUMMARY" --repo $REPO
-               ```
+            You must create a SINGLE GitHub review with all feedback. Do NOT post individual comments.
 
-               Summary should include:
-               - **Overview**: Changes summary and architectural fit
-               - **Confidence Distribution**: Breakdown by confidence level
-               - **Key Findings**: Top 5 most important issues (high confidence)
-               - **Security Assessment**: Any vulnerabilities found
-               - **Positive Highlights**: Well-implemented patterns
+            ### Step 1: Build the Review JSON
 
-            2. **Post Inline Comments** for each issue using gh CLI:
-               ```bash
-               gh pr comment $PR_NUMBER --body "SECTION_COMMENT" --repo $REPO --path FILE_PATH --line LINE_NUMBER
-               ```
+            **FINAL DUPLICATE CHECK** - Before creating the JSON, verify:
+            - Re-read `/tmp/existing_comments.json`
+            - Ensure no comment in your `comments` array duplicates an existing one
+            - If a duplicate exists, remove it from the `comments` array
+            - Update the summary body to reflect any removed duplicates
 
-            3. **Comment Structure** for inline:
-               - Start with confidence emoji and percentage
-               - Identify the specific section/function being reviewed
-               - Provide context-aware reasoning
-               - Suggest concrete improvements with examples when helpful
+            Create a JSON file at /tmp/review.json with this structure:
+
+            ```json
+            {
+              "body": "## OpenCode Review\n\n### Summary\n[Overview of changes and architectural fit]\n\n### Confidence Breakdown\n- 🟢 High: X issues\n- 🟡 Medium: X issues\n- 🔵 Low: X issues\n- ⚪ Suggestions: X issues\n\n### Key Findings\n1. [Critical issue 1]\n2. [Critical issue 2]\n...\n\n### Security Assessment\n[Report any vulnerabilities or \"No critical security issues found\"]\n\n### Positive Highlights\n[Well-implemented patterns to acknowledge]",
+              "comments": [
+                {
+                  "path": "src/components/Example.tsx",
+                  "line": 42,
+                  "body": "🟢 95% - Missing error handling for API call\n\nThe fetch call lacks error handling which could cause unhandled promise rejections."
+                },
+                {
+                  "path": "src/hooks/useData.ts",
+                  "line": 15,
+                  "body": "🟡 75% - Consider memoizing this callback\n\nThis function is recreated on every render. Use useCallback to prevent unnecessary re-renders."
+                }
+              ],
+              "event": "COMMENT"
+            }
+            ```
+
+            ### Step 2: Submit the Review
+            Execute:
+            ```bash
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
+              --input /tmp/review.json
+            ```
+
+            ### Review Event Types
+            - **"COMMENT"** - General feedback without blocking merge (use for suggestions)
+            - **"REQUEST_CHANGES"** - Blocking review (use for critical/high confidence bugs)
+            - **"APPROVE"** - No issues found (use if PR is perfect)
+
+            ### Important Notes
+            - All line-specific comments go in the `comments` array
+            - Each comment must reference a valid file path and line number from the PR diff
+            - The overall summary goes in the `body` field
+            - Only ONE API call to submit the entire review
+            - Line numbers must be within the changed lines of the PR
 
             Begin your context-aware review now.

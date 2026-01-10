@@ -1,3 +1,9 @@
+/* Hide default Mapbox controls */
+.mapboxgl-ctrl-bottom-right {
+  display: none !important;
+}
+
+/* Fix popup styles */
 .mapboxgl-popup-content {
   padding: 0;
   background-color: transparent;

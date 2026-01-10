@@ -65,9 +65,9 @@ function RootComponent() {
   const router = useRouter();
   const location = useLocation();
 
-  // Routes where we don't want to show the footer
-  const hideFooterRoutes = ['/map', '/training-feedback'];
-  const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
+  // Routes where we don't want to show the header
+  const hideHeaderRoutes = ['/map', '/training-feedback'];
+  const shouldHideHeader = hideHeaderRoutes.includes(location.pathname);
 
   useEffect(() => {
     // When auth status changes (e.g., after login)
@@ -91,12 +91,12 @@ function RootComponent() {
       >
         <div
           className={`grid ${
-            shouldHideFooter
-              ? 'grid-rows-[auto_1fr]'
+            shouldHideHeader
+              ? 'grid-rows-[1fr_auto]'
               : 'grid-rows-[auto_1fr_auto]'
           } h-dvh`}
         >
-          <Header />
+          {!shouldHideHeader && <Header />}
           <main className="pb-16 md:pb-0 overflow-auto">
             {isFetching ? <Loader /> : <Outlet />}
           </main>

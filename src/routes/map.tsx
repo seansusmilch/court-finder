@@ -1,9 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { CustomNavigationControls } from '@/components/map/CustomNavigationControls';
 import Map, {
-  GeolocateControl,
-  FullscreenControl,
   ScaleControl,
-  NavigationControl,
 } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -19,6 +17,9 @@ import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
 import MapControls from '@/components/map/MapControls';
+import { FloatingSearchBar } from '@/components/map/FloatingSearchBar';
+import { CourtTypePills } from '@/components/map/CourtTypePills';
+import { CourtDetailDrawer } from '@/components/map/CourtDetailDrawer';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
@@ -95,10 +96,17 @@ function MapPage() {
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
+  // Single filter pill selection (null = all types shown)
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  // Track when map is loaded to prevent adding sources before style is ready
+  const [mapLoaded, setMapLoaded] = useState(false);
+
   // We update state on move end, so no debouncing needed
 
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -258,15 +266,23 @@ function MapPage() {
     }
   }, [featureCollection]);
 
-  const availableCategories = useMemo(() => {
-    return Object.keys(COURT_CLASS_VISUALS).sort();
-  }, []);
-
   const geojson = useMemo(() => {
     if (viewState.zoom < PINS_VISIBLE_FROM_ZOOM)
       return EMPTY_FEATURE_COLLECTION;
     const source =
       featureCollection ?? stableFeatureCollection ?? EMPTY_FEATURE_COLLECTION;
+
+    // If a pill is selected, filter to just that type
+    if (selectedType !== null) {
+      return {
+        type: 'FeatureCollection',
+        features: source.features.filter(
+          (f) => String(f.properties.class) === selectedType
+        ),
+      } as GeoJSONFeatureCollection;
+    }
+
+    // Otherwise use the existing enabledCategories filter
     if (enabledCategories === null) return source;
     if (enabledCategories.length === 0)
       return {
@@ -284,12 +300,13 @@ function MapPage() {
     featureCollection,
     stableFeatureCollection,
     enabledCategories,
+    selectedType,
     viewState.zoom,
     PINS_VISIBLE_FROM_ZOOM,
   ]);
 
   return (
-    <div className='h-[calc(100vh-4rem)] w-full relative'>
+    <div className='h-[100vh] w-full relative'>
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}
@@ -298,6 +315,7 @@ function MapPage() {
         mapStyle={mapStyle}
         onMoveEnd={onMoveEnd}
         onLoad={(e) => {
+          setMapLoaded(true);
           const b = computeBbox({
             getBounds: () => e.target.getBounds?.() ?? undefined,
           });
@@ -314,23 +332,19 @@ function MapPage() {
           if (layerId === 'clusters') onClusterClick(e);
         }}
       >
-        <GeolocateControl
-          position='top-left'
-          trackUserLocation
-          showUserHeading
-          showUserLocation
-          positionOptions={{
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 10000,
-          }}
-        />
-        <FullscreenControl position='top-left' />
-        <NavigationControl position='top-left' />
         <ScaleControl />
-        {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
+        <CustomNavigationControls
+          mapRef={mapRef}
+          showLocate={false}
+          showCompass={false}
+          showScan={!!canScan}
+          onScanClick={() => scanMutation.mutate()}
+          isScanning={scanMutation.isPending}
+          className="hidden md:flex absolute bottom-8 right-4 z-50"
+        />
+        {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
           viewState.zoom <= CLUSTER_MAX_ZOOM && (
-            <CourtClusters data={geojson} />
+            <CourtClusters data={geojson} mapLoaded={mapLoaded} />
           )}
 
         {/* Render individual emoji markers when sufficiently zoomed-in to avoid clutter */}
@@ -353,40 +367,57 @@ function MapPage() {
               />
             );
           })}
-
-        {selectedPin && (
-          <CourtPopup
-            longitude={selectedPin.longitude}
-            latitude={selectedPin.latitude}
-            properties={selectedPin.properties}
-            onClose={() => setSelectedPin(null)}
-          />
-        )}
       </Map>
+
+      {selectedPin && (
+        <CourtDetailDrawer
+          open={!!selectedPin}
+          onOpenChange={(open) => !open && setSelectedPin(null)}
+          longitude={selectedPin.longitude}
+          latitude={selectedPin.latitude}
+          properties={selectedPin.properties}
+        />
+      )}
+
+      <FloatingSearchBar
+        accessToken={MAPBOX_API_KEY as string}
+        mapRef={mapRef}
+      />
+
+      <CourtTypePills
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+      />
 
       <MapControls
         className='absolute inset-0 pointer-events-none'
         mapRef={mapRef}
-        accessToken={MAPBOX_API_KEY as string}
-        zoomLevel={viewState.zoom}
-        pinsVisibleFromZoom={PINS_VISIBLE_FROM_ZOOM}
-        confidenceThreshold={confidenceThreshold}
-        onConfidenceChange={setConfidenceThreshold}
-        courtCount={geojson.features.length}
-        availableZoomLevels={availableZoomLevels}
-        isZoomSufficient={viewState.zoom >= PINS_VISIBLE_FROM_ZOOM}
-        canScan={!!canScan}
-        onScan={() => scanMutation.mutate()}
-        isScanning={scanMutation.isPending}
-        mapStyle={mapStyle}
-        onMapStyleChange={setMapStyle}
-        categories={availableCategories}
-        enabledCategories={enabledCategories ?? availableCategories}
-        onCategoriesChange={(cats: string[]) => setEnabledCategories(cats)}
-        canUpload={!!canUpload}
-        onUpload={() => uploadMutation.mutate()}
-        isUploading={uploadMutation.isPending}
-        uploadSuccess={uploadSuccess}
+        settings={{
+          courtCount: geojson.features.length,
+          isZoomSufficient: viewState.zoom >= PINS_VISIBLE_FROM_ZOOM,
+          confidenceThreshold,
+          onConfidenceChange: setConfidenceThreshold,
+          mapStyle,
+          onMapStyleChange: setMapStyle,
+          scan: canScan
+            ? {
+                onScan: () => scanMutation.mutate(),
+                isScanning: scanMutation.isPending,
+              }
+            : undefined,
+          upload: canUpload
+            ? {
+                onUpload: () => uploadMutation.mutate(),
+                isUploading: uploadMutation.isPending,
+                uploadSuccess,
+              }
+            : undefined,
+          locate: {
+            isLocating,
+            onLocateStart: () => setIsLocating(true),
+            onLocateEnd: () => setIsLocating(false),
+          },
+        }}
       />
     </div>
   );
