@@ -20,7 +20,7 @@ export function CourtTypePills({
   return (
     <div
       className={cn(
-        'fixed top-[4.25rem] left-1/2 -translate-x-1/2 z-40 w-full max-w-md pl-[5%]',
+        'fixed top-[4.25rem] left-1/2 -translate-x-1/2 z-40 w-full max-w-md',
         className
       )}
     >
@@ -29,7 +29,7 @@ export function CourtTypePills({
         <button
           onClick={() => onTypeChange(null)}
           className={cn(
-            'flex-shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all border',
+            'flex-shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all border ml-5',
             selectedType === null
               ? 'border-primary/30 bg-primary text-primary-foreground shadow-sm'
               : 'border-border bg-muted text-muted-foreground hover:bg-muted/80'
