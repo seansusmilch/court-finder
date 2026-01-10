@@ -13,9 +13,15 @@ type FeatureCollection = {
 interface CourtClustersProps {
   id?: string;
   data: FeatureCollection;
+  mapLoaded?: boolean;
 }
 
-export function CourtClusters({ id = 'courts', data }: CourtClustersProps) {
+export function CourtClusters({ id = 'courts', data, mapLoaded = false }: CourtClustersProps) {
+  // Don't render until map style is loaded
+  if (!mapLoaded) {
+    return null;
+  }
+
   return (
     <Source
       id={id}

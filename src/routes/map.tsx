@@ -99,6 +99,9 @@ function MapPage() {
   // Single filter pill selection (null = all types shown)
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
+  // Track when map is loaded to prevent adding sources before style is ready
+  const [mapLoaded, setMapLoaded] = useState(false);
+
   // We update state on move end, so no debouncing needed
 
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
@@ -262,10 +265,6 @@ function MapPage() {
     }
   }, [featureCollection]);
 
-  const availableCategories = useMemo(() => {
-    return Object.keys(COURT_CLASS_VISUALS).sort();
-  }, []);
-
   const geojson = useMemo(() => {
     if (viewState.zoom < PINS_VISIBLE_FROM_ZOOM)
       return EMPTY_FEATURE_COLLECTION;
@@ -315,6 +314,7 @@ function MapPage() {
         mapStyle={mapStyle}
         onMoveEnd={onMoveEnd}
         onLoad={(e) => {
+          setMapLoaded(true);
           const b = computeBbox({
             getBounds: () => e.target.getBounds?.() ?? undefined,
           });
@@ -341,9 +341,9 @@ function MapPage() {
           isScanning={scanMutation.isPending}
           className="hidden md:flex absolute bottom-8 right-4 z-50"
         />
-        {viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
+        {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
           viewState.zoom <= CLUSTER_MAX_ZOOM && (
-            <CourtClusters data={geojson} />
+            <CourtClusters data={geojson} mapLoaded={mapLoaded} />
           )}
 
         {/* Render individual emoji markers when sufficiently zoomed-in to avoid clutter */}
@@ -396,9 +396,6 @@ function MapPage() {
           isZoomSufficient: viewState.zoom >= PINS_VISIBLE_FROM_ZOOM,
           confidenceThreshold,
           onConfidenceChange: setConfidenceThreshold,
-          categories: availableCategories,
-          enabledCategories: enabledCategories ?? availableCategories,
-          onCategoriesChange: (cats: string[]) => setEnabledCategories(cats),
           mapStyle,
           onMapStyleChange: setMapStyle,
           scan: canScan

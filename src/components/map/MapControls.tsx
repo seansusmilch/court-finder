@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader } from '@/components/ui/sheet';
 import {
   createCourtCountSection,
-  createCategoryFilterSection,
   createConfidenceSection,
   createMapStyleSection,
   createActionButtonsSection,
@@ -26,9 +25,6 @@ export interface MapControlsSettings {
   // Filters
   confidenceThreshold: number;
   onConfidenceChange: (value: number) => void;
-  categories: string[];
-  enabledCategories: string[];
-  onCategoriesChange: (categories: string[]) => void;
 
   // Map style
   mapStyle: string;
@@ -71,11 +67,6 @@ export function createDefaultSections(settings: MapControlsSettings): MapSection
       courtCount: settings.courtCount,
       isZoomSufficient: settings.isZoomSufficient,
       showZoomWarning: true,
-    }),
-    createCategoryFilterSection({
-      categories: settings.categories,
-      enabledCategories: settings.enabledCategories,
-      onCategoriesChange: settings.onCategoriesChange,
     }),
     createConfidenceSection({
       confidenceThreshold: settings.confidenceThreshold,
