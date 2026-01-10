@@ -18,6 +18,7 @@ import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
 import MapControls from '@/components/map/MapControls';
 import { FloatingSearchBar } from '@/components/map/FloatingSearchBar';
+import { CourtTypePills } from '@/components/map/CourtTypePills';
 import { CourtDetailSheet } from '@/components/map/CourtDetailSheet';
 import {
   PINS_VISIBLE_FROM_ZOOM,
@@ -94,6 +95,9 @@ function MapPage() {
   );
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
+
+  // Single filter pill selection (null = all types shown)
+  const [selectedType, setSelectedType] = useState<string | null>(null);
 
   // We update state on move end, so no debouncing needed
 
@@ -267,6 +271,18 @@ function MapPage() {
       return EMPTY_FEATURE_COLLECTION;
     const source =
       featureCollection ?? stableFeatureCollection ?? EMPTY_FEATURE_COLLECTION;
+
+    // If a pill is selected, filter to just that type
+    if (selectedType !== null) {
+      return {
+        type: 'FeatureCollection',
+        features: source.features.filter(
+          (f) => String(f.properties.class) === selectedType
+        ),
+      } as GeoJSONFeatureCollection;
+    }
+
+    // Otherwise use the existing enabledCategories filter
     if (enabledCategories === null) return source;
     if (enabledCategories.length === 0)
       return {
@@ -284,6 +300,7 @@ function MapPage() {
     featureCollection,
     stableFeatureCollection,
     enabledCategories,
+    selectedType,
     viewState.zoom,
     PINS_VISIBLE_FROM_ZOOM,
   ]);
@@ -364,6 +381,11 @@ function MapPage() {
       <FloatingSearchBar
         accessToken={MAPBOX_API_KEY as string}
         mapRef={mapRef}
+      />
+
+      <CourtTypePills
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
       />
 
       <MapControls
