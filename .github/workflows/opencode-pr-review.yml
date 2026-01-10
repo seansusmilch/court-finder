@@ -14,6 +14,10 @@ permissions:
   pull-requests: write
   issues: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   opencode:
     # Run automatically on non-draft PRs
