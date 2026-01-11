@@ -31,8 +31,6 @@ export function CustomSearchBar({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  console.log('CustomSearchBar render:', { query, open, suggestionsCount: suggestions.length, isLoading });
-
   // Handle search input
   const handleSearch = useCallback(
     async (value: string) => {

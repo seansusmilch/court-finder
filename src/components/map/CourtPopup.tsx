@@ -20,11 +20,11 @@ export function CourtPopup({
 }: CourtPopupProps) {
   const courtClass = properties.class ? String(properties.class) : '';
   const { emoji, displayName } = getVisualForClass(courtClass);
-  const confidence = properties.confidence != null
+  const isVerified = properties.status === 'verified';
+  const confidence = !isVerified && properties.confidence != null
     ? Math.round(Number(properties.confidence) * 100)
     : null;
 
-  // Determine confidence color
   const getConfidenceColor = () => {
     if (confidence === null) return '';
     if (confidence >= 80) return 'text-success font-semibold';
@@ -42,11 +42,18 @@ export function CourtPopup({
     >
       <div className='flex flex-col items-center justify-center animate-in fade-in zoom-in duration-200'>
         <div className='max-w-xs rounded-lg border border-border bg-card shadow-lg p-4 space-y-3 flex flex-col'>
-          <div className='flex items-center gap-2'>
-            <span className='text-lg' aria-hidden>
-              {emoji}
-            </span>
-            <div className='text-base font-semibold'>{displayName}</div>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <span className='text-lg' aria-hidden>
+                {emoji}
+              </span>
+              <div className='text-base font-semibold'>{displayName}</div>
+            </div>
+            {isVerified && (
+              <span className='text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded'>
+                Verified
+              </span>
+            )}
           </div>
 
           <div className='space-y-1'>
@@ -56,7 +63,7 @@ export function CourtPopup({
             </div>
           </div>
 
-          {confidence !== null && (
+          {!isVerified && confidence !== null && (
             <div className='text-xs'>
               <span className='text-muted-foreground'>Confidence:</span>
               <span className={cn('ml-1', getConfidenceColor())}>
@@ -68,6 +75,14 @@ export function CourtPopup({
             <div className='text-xs'>
               <span className='text-muted-foreground'>Type:</span>
               <span className='ml-1'>{displayName}</span>
+            </div>
+          )}
+          {isVerified && properties.totalFeedbackCount != null && (
+            <div className='text-xs'>
+              <span className='text-muted-foreground'>Verified by</span>
+              <span className='ml-1 font-medium'>
+                {properties.positiveFeedbackCount}/{properties.totalFeedbackCount} users
+              </span>
             </div>
           )}
           {properties.zoom_level != null && (

@@ -10,3 +10,4 @@ export { CategoryFilterSection, createCategoryFilterSection } from './CategoryFi
 export { ConfidenceSection, createConfidenceSection } from './ConfidenceSection';
 export { MapStyleSection, createMapStyleSection } from './MapStyleSection';
 export { ActionButtonsSection, createActionButtonsSection } from './ActionButtonsSection';
+export { StatusFilterSection, createStatusFilterSection } from './StatusFilterSection';

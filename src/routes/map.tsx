@@ -94,6 +94,11 @@ function MapPage() {
     loaderData.defaultMapSettings.enabledCategories
   );
 
+  const [verifiedOnly, setVerifiedOnly] = useLocalStorage<boolean>(
+    `${LOCALSTORAGE_KEYS.MAP_SETTINGS}_verifiedOnly`,
+    false
+  );
+
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
 
   // Single filter pill selection (null = all types shown)
@@ -207,6 +212,7 @@ function MapPage() {
           bbox: bbox as NonNullable<typeof bbox>,
           zoom: viewState.zoom,
           confidenceThreshold,
+          statusFilter: verifiedOnly ? 'verified' : 'all',
         }
       : 'skip'
   ) as GeoJSONFeatureCollection | undefined;
@@ -342,8 +348,7 @@ function MapPage() {
           isScanning={scanMutation.isPending}
           className="hidden md:flex absolute bottom-8 right-4 z-50"
         />
-        {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
-          viewState.zoom <= CLUSTER_MAX_ZOOM && (
+        {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM && viewState.zoom <= CLUSTER_MAX_ZOOM && (
             <CourtClusters data={geojson} mapLoaded={mapLoaded} />
           )}
 
@@ -397,6 +402,8 @@ function MapPage() {
           isZoomSufficient: viewState.zoom >= PINS_VISIBLE_FROM_ZOOM,
           confidenceThreshold,
           onConfidenceChange: setConfidenceThreshold,
+          verifiedOnly,
+          onVerifiedOnlyChange: setVerifiedOnly,
           mapStyle,
           onMapStyleChange: setMapStyle,
           scan: canScan

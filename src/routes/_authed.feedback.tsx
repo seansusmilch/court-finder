@@ -30,7 +30,7 @@ export function TrainingFeedbackPage() {
 
   // Handle feedback submission
   const { submit, isSubmitting } = useFeedbackSubmission({
-    predictionId: displayData?.prediction?._id,
+    detectionId: displayData?.prediction?.roboflowDetectionId,
     onSuccess: clearLock,
   });
 

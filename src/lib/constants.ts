@@ -34,6 +34,8 @@ export type CourtClassVisual = {
   displayName: string;
   colorLight: string; // OKLCH color for light mode
   colorDark: string; // OKLCH color for dark mode
+  colorLightMuted: string; // Muted variant for light mode
+  colorDarkMuted: string; // Muted variant for dark mode
 };
 
 export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
@@ -44,6 +46,8 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     displayName: 'Basketball Court',
     colorLight: 'oklch(0.65 0.18 45)',
     colorDark: 'oklch(0.70 0.20 45)',
+    colorLightMuted: 'oklch(0.60 0.07 45)',
+    colorDarkMuted: 'oklch(0.55 0.06 45)',
   },
   'tennis-court': {
     emoji: '🎾',
@@ -52,6 +56,8 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     displayName: 'Tennis Court',
     colorLight: 'oklch(0.70 0.16 145)',
     colorDark: 'oklch(0.75 0.18 145)',
+    colorLightMuted: 'oklch(0.65 0.06 145)',
+    colorDarkMuted: 'oklch(0.60 0.05 145)',
   },
   'soccer-ball-field': {
     emoji: '🏈',
@@ -60,6 +66,8 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     displayName: 'Soccer/Football Field',
     colorLight: 'oklch(0.68 0.20 25)',
     colorDark: 'oklch(0.73 0.22 25)',
+    colorLightMuted: 'oklch(0.63 0.08 25)',
+    colorDarkMuted: 'oklch(0.58 0.07 25)',
   },
   'baseball-diamond': {
     emoji: '⚾',
@@ -68,6 +76,8 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     displayName: 'Baseball Field',
     colorLight: 'oklch(0.75 0.18 75)',
     colorDark: 'oklch(0.80 0.20 75)',
+    colorLightMuted: 'oklch(0.70 0.07 75)',
+    colorDarkMuted: 'oklch(0.65 0.06 75)',
   },
   'ground-track-field': {
     emoji: '🏃',
@@ -76,6 +86,8 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     displayName: 'Track & Field',
     colorLight: 'oklch(0.65 0.19 270)',
     colorDark: 'oklch(0.70 0.21 270)',
+    colorLightMuted: 'oklch(0.60 0.07 270)',
+    colorDarkMuted: 'oklch(0.55 0.06 270)',
   },
 };
 
@@ -91,6 +103,8 @@ export function getVisualForClass(predictionClass: string): CourtClassVisual {
         .replace(/\b\w/g, (l) => l.toUpperCase())}`,
       colorLight: 'oklch(0.68 0.19 35)',
       colorDark: 'oklch(0.72 0.21 35)',
+      colorLightMuted: 'oklch(0.63 0.07 35)',
+      colorDarkMuted: 'oklch(0.58 0.06 35)',
     }
   );
 }
