@@ -14,7 +14,6 @@ import type * as auth from "../auth.js";
 import type * as courts from "../courts.js";
 import type * as feedback_submissions from "../feedback_submissions.js";
 import type * as geocoding from "../geocoding.js";
-import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as inference_predictions from "../inference_predictions.js";
 import type * as inferences from "../inferences.js";
@@ -50,7 +49,6 @@ declare const fullApi: ApiFromModules<{
   courts: typeof courts;
   feedback_submissions: typeof feedback_submissions;
   geocoding: typeof geocoding;
-  healthCheck: typeof healthCheck;
   http: typeof http;
   inference_predictions: typeof inference_predictions;
   inferences: typeof inferences;
