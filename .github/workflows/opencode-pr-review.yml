@@ -116,14 +116,14 @@ jobs:
             Before analyzing any code, you MUST fetch all existing review comments on this PR:
 
             ```bash
-            timeout 30 gh api \
+            GH_PAGER= timeout 30 gh api \
               /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments \
               2>/dev/null || echo "[]" > /tmp/existing_comments.json
             ```
 
             Also fetch existing review discussions:
             ```bash
-            timeout 30 gh api \
+            GH_PAGER= timeout 30 gh api \
               /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
               2>/dev/null || echo "[]" > /tmp/existing_reviews.json
             ```
@@ -270,7 +270,7 @@ jobs:
             ### Step 2: Submit the Review
             Execute:
             ```bash
-            timeout 30 gh api \
+            GH_PAGER= timeout 30 gh api \
               --method POST \
               -H "Accept: application/vnd.github+json" \
               "/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
