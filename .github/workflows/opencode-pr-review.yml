@@ -47,7 +47,7 @@ jobs:
           ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          model: zai-coding-plan/glm-4.6-flash
+          model: zai-coding-plan/glm-4.5-flash
           prompt: |
             You are performing an AI-powered code review for a TypeScript/React web application using CodeRabbit's methodology. The gh CLI is available and authenticated.
 
