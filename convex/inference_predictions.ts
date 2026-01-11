@@ -1,6 +1,8 @@
 import { internalMutation, internalQuery, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
+import { pixelOnTileToLngLat } from './lib/tiles';
+import { internal } from './_generated/api';
 
 /**
  * Upsert an inference prediction: if a prediction with the same inferenceId and detection_id exists, update it; otherwise, insert a new one.
@@ -64,6 +66,8 @@ export const upsert = internalMutation({
       version: args.version,
     };
 
+    let predictionId: typeof existing._id | string;
+
     if (existing) {
       await ctx.db.patch(existing._id, updateData);
       console.log('patched', {
@@ -74,7 +78,7 @@ export const upsert = internalMutation({
         model: args.model,
         version: args.version,
       });
-      return existing._id;
+      predictionId = existing._id;
     } else {
       const id = await ctx.db.insert('inference_predictions', updateData);
       console.log('created', {
@@ -88,8 +92,57 @@ export const upsert = internalMutation({
           confidence: args.prediction.confidence,
         },
       });
-      return id;
+      predictionId = id;
     }
+
+    const tile = await ctx.db.get(args.tileId);
+    if (!tile) {
+      console.error('error: tile not found during court linking', {
+        tileId: args.tileId,
+        predictionId,
+        action: 'upsert_prediction',
+      });
+      return predictionId as Id<'inference_predictions'>;
+    }
+
+    const { lon, lat } = pixelOnTileToLngLat(
+      tile.z,
+      tile.x,
+      tile.y,
+      updateData.x,
+      updateData.y,
+      1024,
+      1024,
+      512
+    );
+
+    const nearbyCourt = await ctx.runQuery(
+      internal.courts.findNearbyCourt,
+      { latitude: lat, longitude: lon, class: updateData.class }
+    );
+
+    if (nearbyCourt) {
+      await ctx.db.patch(predictionId, { courtId: nearbyCourt.id });
+      console.log('linked_to_existing_court', {
+        predictionId,
+        courtId: nearbyCourt.id,
+        distance: nearbyCourt.distance,
+      });
+    } else {
+      const courtId = await ctx.runMutation(
+        internal.courts.createPendingCourtFromPrediction,
+        {
+          predictionId: predictionId as Id<'inference_predictions'>,
+        }
+      );
+      await ctx.db.patch(predictionId, { courtId });
+      console.log('created_new_court', {
+        predictionId,
+        courtId,
+      });
+    }
+
+    return predictionId as Id<'inference_predictions'>;
   },
 });
 

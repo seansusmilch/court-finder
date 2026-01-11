@@ -348,8 +348,7 @@ function MapPage() {
           isScanning={scanMutation.isPending}
           className="hidden md:flex absolute bottom-8 right-4 z-50"
         />
-        {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
-          viewState.zoom <= CLUSTER_MAX_ZOOM && (
+        {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM && viewState.zoom <= CLUSTER_MAX_ZOOM && (
             <CourtClusters data={geojson} mapLoaded={mapLoaded} />
           )}
 

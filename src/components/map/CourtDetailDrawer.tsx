@@ -93,7 +93,14 @@ export function CourtDetailDrawer({
               <div className="flex items-center gap-3">
                 <div className="text-4xl">{emoji}</div>
                 <div>
-                  <DrawerTitle className="text-xl">{displayName}</DrawerTitle>
+                  <div className="flex items-center gap-2">
+                    <DrawerTitle className="text-xl">{displayName}</DrawerTitle>
+                    {isVerified && (
+                      <span className="text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded">
+                        Verified
+                      </span>
+                    )}
+                  </div>
                   {confidence !== null && (
                     <div className={cn(
                       'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border mt-1',

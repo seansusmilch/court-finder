@@ -1,9 +1,10 @@
 import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api';
-import type { DataModel } from './_generated/dataModel';
+import type { DataModel, Id } from './_generated/dataModel';
 import { pointToTile, tileCenterLatLng } from './lib/tiles';
-import { COURT_VERIFICATION } from './lib/constants';
+import { COURT_VERIFICATION, MARKER_DEDUP_BASE_RADIUS_M, MARKER_DEDUP_RADIUS_BY_CLASS_M } from './lib/constants';
 import type { CourtStatus } from './lib/types';
+import { haversineMeters } from './lib/spatial';
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -203,6 +204,51 @@ export const migrateTilesReverseGeocode = migrations.define({
   },
 });
 
+export const linkPredictionsToNearbyCourts = migrations.define({
+  table: 'inference_predictions',
+  migrateOne: async (ctx, doc) => {
+    if (doc.courtId) return;
+
+    const tile = await ctx.db.get(doc.tileId);
+    if (!tile) return;
+
+    const { lat, lng } = tileCenterLatLng(tile.z, tile.x, tile.y);
+
+    const radiusMeters =
+      MARKER_DEDUP_RADIUS_BY_CLASS_M[doc.class] ?? MARKER_DEDUP_BASE_RADIUS_M;
+
+    const courts = await ctx.db.query('courts').collect();
+
+    let nearestCourt: { id: Id<'courts'>; distance: number } | null = null;
+    let nearestDistance = Infinity;
+
+    for (const court of courts) {
+      if (court.class !== doc.class) continue;
+
+      const distance = haversineMeters(
+        { lat, lng },
+        { lat: court.latitude, lng: court.longitude }
+      );
+
+      if (distance <= radiusMeters && distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestCourt = { id: court._id, distance };
+      }
+    }
+
+    if (!nearestCourt) return;
+
+    await ctx.db.patch(doc._id, { courtId: nearestCourt.id });
+
+    console.log('[linkPredictionsToNearbyCourts] linked prediction to court', {
+      predictionId: doc._id,
+      courtId: nearestCourt.id,
+      distance: nearestCourt.distance,
+      class: doc.class,
+    });
+  },
+});
+
 export const generateCourtsFromExistingFeedback = migrations.define({
   table: 'inference_predictions',
   migrateOne: async (ctx, doc) => {
@@ -284,5 +330,6 @@ export const runAll = migrations.runner([
   // internal.migrations.migrateInferencesDeletedFields,
   // internal.migrations.migrateInferenceToPredictions,
   internal.migrations.migrateTilesReverseGeocode,
+  internal.migrations.linkPredictionsToNearbyCourts,
   internal.migrations.generateCourtsFromExistingFeedback,
 ]);

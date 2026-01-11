@@ -31,195 +31,157 @@ export const verifyFromFeedback = internalMutation({
       throw new Error('Prediction not found');
     }
 
+    if (!prediction.courtId) {
+      console.error('error: prediction has no courtId', {
+        predictionId: args.predictionId,
+        action: 'verify_from_feedback',
+      });
+      throw new Error('Prediction has no courtId');
+    }
+
+    const court = await ctx.db.get(prediction.courtId);
+    if (!court) {
+      console.error('error: court not found', {
+        courtId: prediction.courtId,
+        predictionId: args.predictionId,
+        action: 'verify_from_feedback',
+      });
+      throw new Error('Court not found');
+    }
+
+    const allCourtPredictions = await ctx.db
+      .query('inference_predictions')
+      .withIndex('by_court', (q) => q.eq('courtId', court._id))
+      .collect();
+
+    if (allCourtPredictions.length === 0) {
+      console.error('error: court has no predictions', {
+        courtId: court._id,
+        predictionId: args.predictionId,
+        action: 'verify_from_feedback',
+      });
+      throw new Error('Court has no predictions linked to it');
+    }
+
+    const allPredictionIds = allCourtPredictions.map((p) => p._id);
+
+    const allFeedback = await ctx.db
+      .query('feedback_submissions')
+      .filter((q) =>
+        q.or(
+          ...allPredictionIds.map((id) => q.eq(q.field('predictionId'), id))
+        )
+      )
+      .collect();
+
+    const positiveFeedbackCount = allFeedback.filter(
+      (f) => f.userResponse === 'yes'
+    ).length;
+    const totalFeedbackCount = allFeedback.length;
+    const positivePercentage =
+      totalFeedbackCount > 0 ? positiveFeedbackCount / totalFeedbackCount : 0;
+
+    const meetsThresholds =
+      totalFeedbackCount >= COURT_VERIFICATION.MIN_FEEDBACK_COUNT &&
+      positivePercentage >= COURT_VERIFICATION.MIN_POSITIVE_PERCENTAGE;
+
+    const courtStatus: CourtStatus = meetsThresholds ? 'verified' : 'pending';
+
+    await ctx.db.patch(court._id, {
+      status: courtStatus,
+      verifiedAt: courtStatus === 'verified' ? Date.now() : court.verifiedAt,
+      totalFeedbackCount,
+      positiveFeedbackCount,
+    });
+
+    for (const feedback of allFeedback) {
+      if (feedback.courtId !== court._id) {
+        await ctx.db.patch(feedback._id, { courtId: court._id });
+      }
+    }
+
+    console.log('complete', {
+      durationMs: Date.now() - startTs,
+      action: 'verify_from_feedback',
+      predictionId: args.predictionId,
+      courtId: court._id,
+      previousStatus: court.status,
+      newStatus: courtStatus,
+      linkedPredictionsCount: allCourtPredictions.length,
+      totalFeedbackCount,
+      positiveFeedbackCount,
+      positivePercentage: (positivePercentage * 100).toFixed(2),
+      meetsThresholds,
+    });
+
+    return court._id;
+  },
+});
+
+export const createPendingCourtFromPrediction = internalMutation({
+  args: {
+    predictionId: v.id('inference_predictions'),
+  },
+  handler: async (ctx, args) => {
+    const prediction = await ctx.db.get(args.predictionId);
+    if (!prediction) {
+      console.error('error: prediction not found', {
+        predictionId: args.predictionId,
+        action: 'create_pending_court',
+      });
+      throw new Error('Prediction not found');
+    }
+
     const tile = await ctx.db.get(prediction.tileId);
     if (!tile) {
       console.error('error: tile not found', {
         tileId: prediction.tileId,
         predictionId: args.predictionId,
-        action: 'verify_from_feedback',
+        action: 'create_pending_court',
       });
       throw new Error('Tile not found');
     }
 
-    const feedback = await ctx.db
-      .query('feedback_submissions')
-      .filter((q) => q.eq(q.field('predictionId'), args.predictionId))
-      .collect();
+    const { lon, lat } = pixelOnTileToLngLat(
+      tile.z,
+      tile.x,
+      tile.y,
+      prediction.x as number,
+      prediction.y as number,
+      1024,
+      1024,
+      512
+    );
 
-    const positiveCount = feedback.filter((f) => f.userResponse === 'yes').length;
-    const positivePercentage = feedback.length > 0 ? positiveCount / feedback.length : 0;
-
-    const hasPositiveFeedback = positiveCount > 0;
-    const meetsThresholds =
-      feedback.length >= COURT_VERIFICATION.MIN_FEEDBACK_COUNT &&
-      positivePercentage >= COURT_VERIFICATION.MIN_POSITIVE_PERCENTAGE;
-
-    const existingCourt = prediction.courtId ? await ctx.db.get(prediction.courtId) : null;
-
-    if (existingCourt) {
-      if (existingCourt.status === 'verified') {
-        console.log('skipped', {
-          durationMs: Date.now() - startTs,
-          action: 'verify_from_feedback',
-          predictionId: args.predictionId,
-          courtId: existingCourt._id,
-          reason: 'already_verified',
-        });
-        return existingCourt._id;
-      }
-
-    if (meetsThresholds) {
-      await ctx.db.patch(existingCourt._id, {
-        status: 'verified' as CourtStatus,
-        verifiedAt: Date.now(),
-        totalFeedbackCount: feedback.length,
-        positiveFeedbackCount: positiveCount,
-      });
-
-      await updateFeedbackCourtIds(ctx, args.predictionId, existingCourt._id);
-
-        console.log('complete', {
-          durationMs: Date.now() - startTs,
-          action: 'verify_from_feedback',
-          predictionId: args.predictionId,
-          courtId: existingCourt._id,
-          previousStatus: existingCourt.status,
-          newStatus: 'verified',
-          feedbackCount: feedback.length,
-          positiveCount,
-          positivePercentage: (positivePercentage * 100).toFixed(2),
-        });
-        return existingCourt._id;
-      }
-
-      console.log('skipped', {
-        durationMs: Date.now() - startTs,
-        action: 'verify_from_feedback',
-        predictionId: args.predictionId,
-        courtId: existingCourt._id,
-        reason: 'pending_but_thresholds_not_met',
-        feedbackCount: feedback.length,
-        positiveCount,
-        positivePercentage: (positivePercentage * 100).toFixed(2),
-        minCount: COURT_VERIFICATION.MIN_FEEDBACK_COUNT,
-        minPercentage: (
-          COURT_VERIFICATION.MIN_POSITIVE_PERCENTAGE * 100
-        ).toFixed(2),
-      });
-      return null;
-    }
-
-    if (hasPositiveFeedback) {
-      const courtStatus: CourtStatus = meetsThresholds ? 'verified' : 'pending';
-      const court = await createCourtFromPrediction(ctx, {
-        prediction,
-        tile,
-        positiveCount,
-        totalFeedbackCount: feedback.length,
-        courtStatus,
-      });
-
-      await updateFeedbackCourtIds(ctx, args.predictionId, court.id);
-
-      console.log('complete', {
-        durationMs: Date.now() - startTs,
-        action: 'verify_from_feedback',
-        predictionId: args.predictionId,
-        courtId: court.id,
-        status: courtStatus,
-        feedbackCount: feedback.length,
-        positiveCount,
-        positivePercentage: (positivePercentage * 100).toFixed(2),
-      });
-      return court.id;
-    }
-
-    console.log('skipped', {
-      durationMs: Date.now() - startTs,
-      action: 'verify_from_feedback',
-      predictionId: args.predictionId,
-      reason: 'no_positive_feedback_yet',
-      feedbackCount: feedback.length,
-      positiveCount,
+    const courtId = await ctx.db.insert('courts', {
+      latitude: lat,
+      longitude: lon,
+      class: prediction.class,
+      status: 'pending' as CourtStatus,
+      sourcePredictionId: args.predictionId,
+      sourceModel: prediction.model,
+      sourceVersion: prediction.version,
+      sourceConfidence: prediction.confidence as number,
+      totalFeedbackCount: 0,
+      positiveFeedbackCount: 0,
+      tileId: prediction.tileId,
+      pixelX: prediction.x as number,
+      pixelY: prediction.y as number,
+      pixelWidth: prediction.width as number,
+      pixelHeight: prediction.height as number,
     });
-    return null;
+
+    console.log('created_pending_court', {
+      predictionId: args.predictionId,
+      courtId,
+      class: prediction.class,
+      latitude: lat,
+      longitude: lon,
+    });
+
+    return courtId;
   },
 });
-
-async function updateFeedbackCourtIds(
-  ctx: MutationCtx,
-  predictionId: Id<'inference_predictions'>,
-  courtId: Id<'courts'>
-) {
-  const feedback = await ctx.db
-    .query('feedback_submissions')
-    .filter((q) => q.eq(q.field('predictionId'), predictionId))
-    .collect();
-
-  for (const f of feedback) {
-    await ctx.db.patch(f._id, { courtId });
-  }
-}
-
-async function createCourtFromPrediction(
-  ctx: MutationCtx,
-  args: {
-    prediction: {
-      _id: Id<'inference_predictions'>;
-      tileId: Id<'tiles'>;
-      class: string;
-      confidence: number;
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      model?: string;
-      version?: string;
-    };
-    tile: { z: number; x: number; y: number };
-    positiveCount: number;
-    totalFeedbackCount: number;
-    courtStatus: CourtStatus;
-  }
-) {
-  const { lon, lat } = pixelOnTileToLngLat(
-    args.tile.z,
-    args.tile.x,
-    args.tile.y,
-    args.prediction.x,
-    args.prediction.y,
-    1024,
-    1024,
-    512
-  );
-
-  const isVerified = args.courtStatus === 'verified';
-
-  const courtId = await ctx.db.insert('courts', {
-    latitude: lat,
-    longitude: lon,
-    class: args.prediction.class,
-    status: args.courtStatus,
-    verifiedAt: isVerified ? Date.now() : undefined,
-    sourcePredictionId: args.prediction._id,
-    sourceModel: args.prediction.model,
-    sourceVersion: args.prediction.version,
-    sourceConfidence: args.prediction.confidence,
-    totalFeedbackCount: args.totalFeedbackCount,
-    positiveFeedbackCount: args.positiveCount,
-    tileId: args.prediction.tileId,
-    pixelX: args.prediction.x,
-    pixelY: args.prediction.y,
-    pixelWidth: args.prediction.width,
-    pixelHeight: args.prediction.height,
-  });
-
-  await ctx.db.patch(args.prediction._id, {
-    courtId,
-  });
-
-  return { id: courtId, status: args.courtStatus };
-}
 
 export const autoLinkPrediction = internalMutation({
   args: {
@@ -289,10 +251,7 @@ export const findNearbyCourt = internalQuery({
     const radiusMeters =
       MARKER_DEDUP_RADIUS_BY_CLASS_M[args.class] ?? MARKER_DEDUP_BASE_RADIUS_M;
 
-    const courts = await ctx.db
-      .query('courts')
-      .withIndex('by_status', (q) => q.eq('status', 'verified'))
-      .collect();
+    const courts = await ctx.db.query('courts').collect();
 
     let nearestCourt: { id: Id<'courts'>; distance: number } | null = null;
     let nearestDistance = Infinity;

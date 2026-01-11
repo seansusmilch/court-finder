@@ -285,6 +285,62 @@ const tileId = await ctx.db.insert('tiles', { x, y, z });
 return tileId;
 ```
 
+## Convex CLI
+
+Use the Convex CLI to run functions directly from the terminal:
+
+### Run Functions
+
+```bash
+# Run a query or mutation without arguments
+npx convex run users.me
+
+# Run with JSON arguments
+npx convex run users.updateProfile --args '{"name": "John Doe"}'
+
+# Run a specific function from a module
+npx convex run scans.getScan --args '{"scanId": "..."}'
+
+# Run an action
+npx convex run actions.scanArea --args '{"latitude": 37.7749, "longitude": -122.4194}'
+```
+
+### Run Queries (Read-only)
+
+```bash
+# List all tiles
+npx convex run tiles.list
+
+# Query with filters
+npx convex run tiles.getByCoordinates --args '{"x": 123, "y": 456, "z": 14}'
+```
+
+### Run Mutations (Write Operations)
+
+```bash
+# Create a new scan
+npx convex run scans.create --args '{"latitude": 37.7749, "longitude": -122.4194, "zoom": 14}'
+
+# Update a record
+npx convex run users.updateProfile --args '{"name": "New Name"}'
+```
+
+### Useful CLI Commands
+
+```bash
+# Start Convex dev server
+bun dev:backend
+
+# Open Convex dashboard
+npx convex dashboard
+
+# Check deployment status
+npx convex deploy
+
+# View logs
+npx convex logs
+```
+
 ## Key Files
 
 - `convex/schema.ts` - Database schema and indexes
