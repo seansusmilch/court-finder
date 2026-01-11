@@ -300,6 +300,12 @@ export const featuresByViewport = query({
 
 **Modify**: `/home/sean/code/court-finder/convex/courts.ts`
 
+**Import additions** (add to top of file):
+```typescript
+import { internalMutation, internalQuery, query, mutation } from './_generated/server';
+import { internal } from './_generated/api';  // ADD THIS for internal.courts.setCourtStatus
+```
+
 **Add internal mutation**:
 
 ```typescript
@@ -369,82 +375,67 @@ export const updateCourtStatus = mutation({
 
 **Create/Modify**: `/home/sean/code/court-finder/convex/migrations.ts`
 
+**Important**: Use `migrations.define()` pattern (not standalone `internalMutation`) so it can be included in the `runAll` runner.
+
 ```typescript
-export const linkPredictionsToCourtsByBboxOverlap = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    console.log('[migration] starting bbox overlap linking');
+export const linkPredictionsToCourtsByBboxOverlap = migrations.define({
+  table: 'inference_predictions',
+  migrateOne: async (ctx, doc) => {
+    // Skip if already linked
+    if (doc.courtId) return;
 
-    // Get all predictions without courts
-    const allPredictions = await ctx.db.query('inference_predictions').collect();
-    const predictionsWithoutCourts = allPredictions.filter(p => !p.courtId);
-
-    console.log('[migration] found predictions without courts', {
-      total: allPredictions.length,
-      withoutCourts: predictionsWithoutCourts.length,
-    });
-
-    let linkedCount = 0;
-    let createdCount = 0;
-    let errorCount = 0;
-
-    for (const prediction of predictionsWithoutCourts) {
-      try {
-        const overlappingCourt = await ctx.runQuery(
-          internal.courts.findOverlappingCourt,
-          {
-            tileId: prediction.tileId,
-            pixelX: prediction.x as number,
-            pixelY: prediction.y as number,
-            pixelWidth: prediction.width as number,
-            pixelHeight: prediction.height as number,
-            class: prediction.class,
-          }
-        );
-
-        if (overlappingCourt) {
-          await ctx.db.patch(prediction._id, { courtId: overlappingCourt.courtId });
-          linkedCount++;
-        } else {
-          const courtId = await ctx.runMutation(
-            internal.courts.createPendingCourtFromPrediction,
-            { predictionId: prediction._id }
-          );
-          await ctx.db.patch(prediction._id, { courtId: courtId });
-          createdCount++;
+    try {
+      const overlappingCourt = await ctx.runQuery(
+        internal.courts.findOverlappingCourt,
+        {
+          tileId: doc.tileId,
+          pixelX: doc.x as number,
+          pixelY: doc.y as number,
+          pixelWidth: doc.width as number,
+          pixelHeight: doc.height as number,
+          class: doc.class,
         }
+      );
 
-        if ((linkedCount + createdCount) % 100 === 0) {
-          console.log('[migration] progress', {
-            linked: linkedCount,
-            created: createdCount,
-            processed: linkedCount + createdCount,
-          });
-        }
-      } catch (error) {
-        console.error('[migration] error', {
-          predictionId: prediction._id,
-          error: error instanceof Error ? error.message : String(error),
+      if (overlappingCourt) {
+        await ctx.db.patch(doc._id, { courtId: overlappingCourt.courtId });
+        console.log('[linkPredictionsToCourtsByBboxOverlap] linked to existing court', {
+          predictionId: doc._id,
+          courtId: overlappingCourt.courtId,
+          overlapRatio: overlappingCourt.overlap,
         });
-        errorCount++;
+      } else {
+        const courtId = await ctx.runMutation(
+          internal.courts.createPendingCourtFromPrediction,
+          { predictionId: doc._id }
+        );
+        await ctx.db.patch(doc._id, { courtId: courtId });
+        console.log('[linkPredictionsToCourtsByBboxOverlap] created new court', {
+          predictionId: doc._id,
+          courtId,
+        });
       }
+    } catch (error) {
+      console.error('[linkPredictionsToCourtsByBboxOverlap] error', {
+        predictionId: doc._id,
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
-
-    console.log('[migration] complete', {
-      total: predictionsWithoutCourts.length,
-      linked: linkedCount,
-      created: createdCount,
-      errors: errorCount,
-    });
-
-    return { total: predictionsWithoutCourts.length, linked: linkedCount, created: createdCount, errors: errorCount };
   },
 });
 ```
 
+**Add to runAll** (in the same file):
+```typescript
+export const runAll = migrations.runner([
+  // ... other migrations ...
+  internal.migrations.linkPredictionsToCourtsByBboxOverlap,  // ADD THIS
+]);
+```
+
 **Execute migration**:
 ```bash
-bun convex run --no-push internal:migrations:linkPredictionsToCourtsByBboxOverlap
+bun convex run --no-push migrations:runAll
 ```
 
 ---
@@ -455,9 +446,21 @@ bun convex run --no-push internal:migrations:linkPredictionsToCourtsByBboxOverla
 
 1. `/home/sean/code/court-finder/convex/courts.ts` - Remove `findNearbyCourt` query (proximity-based)
 2. `/home/sean/code/court-finder/convex/inferences.ts` - Remove `autoLinkPredictionsToCourts` mutation (lines 575-638)
-3. Mark proximity constants as deprecated in `/home/sean/code/court-finder/convex/lib/constants.ts`:
-   - `MARKER_DEDUP_BASE_RADIUS_M`
-   - `MARKER_DEDUP_RADIUS_BY_CLASS_M`
+
+**Clean up unused imports**:
+
+3. `/home/sean/code/court-finder/convex/courts.ts` - Remove:
+   - `import { haversineMeters } from './lib/spatial';`
+   - `import { MARKER_DEDUP_BASE_RADIUS_M, MARKER_DEDUP_RADIUS_BY_CLASS_M } from './lib/constants';`
+
+4. `/home/sean/code/court-finder/convex/inferences.ts` - Remove (after Phase 4 refactor):
+   - `import type { RoboflowPrediction } from './lib/roboflow';`
+   - `import type { CourtStatus } from './lib/types';`
+   - `import { MARKER_DEDUP_RADIUS_BY_CLASS_M, MARKER_DEDUP_BASE_RADIUS_M, MARKER_DEDUP_CONFIDENCE_TIE_EPSILON } from './lib/constants';`
+   - `import { metersToLatDegrees, metersToLngDegrees, haversineMeters } from './lib/spatial';`
+   - `import { predictionToFeature } from './lib/tiles';` (if no longer used)
+
+**Note**: The proximity constants (`MARKER_DEDUP_BASE_RADIUS_M`, `MARKER_DEDUP_RADIUS_BY_CLASS_M`) can remain in `constants.ts` for now - they may be used elsewhere.
 
 ---
 
@@ -504,3 +507,33 @@ bun convex run --no-push internal:migrations:linkPredictionsToCourtsByBboxOverla
 4. **Stage 4**: Deploy admin override controls
 
 **Rollback**: Revert `featuresByViewport` if issues occur.
+
+---
+
+## Implementation Notes & Lessons Learned
+
+### Import Requirements
+- **courts.ts**: Must add `import { internal } from './_generated/api';` to access `internal.courts.setCourtStatus` in the public mutation
+- **courts.ts**: Must add `mutation` to the import from `./_generated/server`
+
+### Migration Pattern
+- Use `migrations.define()` instead of standalone `internalMutation` for data migrations
+- This allows the migration to be included in the `runAll` runner
+- The `migrateOne` function processes each document individually with automatic retry logic
+
+### Import Cleanup
+After simplifying `featuresByViewport`, these imports are no longer needed in `inferences.ts`:
+- `internalMutation` (no internal mutations after cleanup)
+- `RoboflowPrediction` type (no prediction processing)
+- `CourtStatus` type (status comes from court records)
+- `MARKER_DEDUP_*` constants (no deduplication needed)
+- `metersToLatDegrees`, `metersToLngDegrees`, `haversineMeters` (no spatial calculations)
+- `predictionToFeature` (predictions not converted to features)
+
+After removing `findNearbyCourt`, these imports are no longer needed in `courts.ts`:
+- `haversineMeters` (no distance calculations)
+- `MARKER_DEDUP_BASE_RADIUS_M`, `MARKER_DEDUP_RADIUS_BY_CLASS_M` (proximity-based constants)
+
+### Type Safety
+- All modified files pass TypeScript type checking
+- Run `bun check-types` to verify after each phase

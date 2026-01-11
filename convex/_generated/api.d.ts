@@ -20,6 +20,7 @@ import type * as inference_predictions from "../inference_predictions.js";
 import type * as inferences from "../inferences.js";
 import type * as internal_accounts from "../internal/accounts.js";
 import type * as internal_sessions from "../internal/sessions.js";
+import type * as lib_bbox from "../lib/bbox.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_createml from "../lib/createml.js";
 import type * as lib_geocoding from "../lib/geocoding.js";
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   inferences: typeof inferences;
   "internal/accounts": typeof internal_accounts;
   "internal/sessions": typeof internal_sessions;
+  "lib/bbox": typeof lib_bbox;
   "lib/constants": typeof lib_constants;
   "lib/createml": typeof lib_createml;
   "lib/geocoding": typeof lib_geocoding;

@@ -22,12 +22,27 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { emoji, bgClass, colorLight, colorDark } = getVisualForClass(courtClass);
+  const { emoji, bgClass, colorLight, colorDark, colorLightMuted, colorDarkMuted } =
+    getVisualForClass(courtClass);
   const { theme, systemTheme } = useTheme();
   const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const isVerified = properties.status === 'verified';
 
-  const arrowColor = isDark ? colorDark : colorLight;
+  const arrowColor = isDark
+    ? isVerified
+      ? colorDark
+      : colorDarkMuted
+    : isVerified
+      ? colorLight
+      : colorLightMuted;
+
+  const bgColor = isDark
+    ? isVerified
+      ? colorDark
+      : colorDarkMuted
+    : isVerified
+      ? colorLight
+      : colorLightMuted;
 
   return (
     <Marker
@@ -43,13 +58,10 @@ export function CourtMarker({
       <div className='flex flex-col items-center transition-transform duration-200 hover:scale-110'>
         <div
           className={cn(
-            'w-10 h-10 flex items-center justify-center rounded-full text-white shadow-lg hover:shadow-xl transition-shadow duration-200',
-            bgClass,
-            isVerified ? '' : 'opacity-60'
+            'w-10 h-10 flex items-center justify-center rounded-full text-white transition-shadow duration-200',
+            isVerified ? 'shadow-lg hover:shadow-xl' : ''
           )}
-          style={{
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 0, 0, 0.1)',
-          }}
+          style={{ backgroundColor: bgColor }}
         >
           <span className='text-[20px]' aria-hidden>
             {emoji}
@@ -57,10 +69,7 @@ export function CourtMarker({
         </div>
         {/* Arrow pointing down */}
         <div
-          className={cn(
-            'w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-1',
-            isVerified ? '' : 'opacity-60'
-          )}
+          className='w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-1'
           style={{ borderTopColor: arrowColor }}
           aria-hidden
         />

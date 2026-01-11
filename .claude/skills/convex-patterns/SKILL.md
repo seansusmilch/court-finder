@@ -243,6 +243,109 @@ const mapboxToken = process.env[ENV_VARS.MAPBOX_API_KEY];
 
 Environment variable names are defined in `convex/lib/constants.ts` as `ENV_VARS`.
 
+## Migrations
+
+Use the `@convex-dev/migrations` package with `migrations.define()` for data migrations. This pattern allows migrations to be included in the `runAll` runner and executed in a controlled sequence.
+
+```typescript
+import { Migrations } from '@convex-dev/migrations';
+import { components } from './_generated/api';
+import type { DataModel } from './_generated/dataModel';
+
+export const migrations = new Migrations<DataModel>(components.migrations);
+
+export const myMigration = migrations.define({
+  table: 'tableName',
+  migrateOne: async (ctx, doc) => {
+    // Modify and return partial document updates
+    // Or return undefined to skip the document
+    return { field: newValue, oldField: undefined };
+  },
+});
+
+export const runAll = migrations.runner([
+  internal.migrations.myMigration,
+  // Add more migrations in execution order
+]);
+```
+
+### Migration Patterns
+
+**Delete documents** matching criteria:
+```typescript
+export const removeDocuments = migrations.define({
+  table: 'inference_predictions',
+  migrateOne: async (ctx, doc) => {
+    if (doc.class === 'swimming-pool') {
+      await ctx.db.delete(doc._id);
+    }
+  },
+});
+```
+
+**Update fields** on documents:
+```typescript
+export const updateFields = migrations.define({
+  table: 'scans',
+  migrateOne: async (ctx, doc) => {
+    const centerTile = pointToTile(doc.centerLat, doc.centerLong);
+    return { centerTile };
+  },
+});
+```
+
+**Create related documents** and link them:
+```typescript
+export const createAndLink = migrations.define({
+  table: 'inference_predictions',
+  migrateOne: async (ctx, doc) => {
+    if (doc.courtId) return;
+
+    const courtId = await ctx.db.insert('courts', { /* ... */ });
+    await ctx.db.patch(doc._id, { courtId });
+  },
+});
+```
+
+**Schedule async work** with the scheduler:
+```typescript
+export const migrateTilesReverseGeocode = migrations.define({
+  table: 'tiles',
+  migrateOne: async (ctx, doc) => {
+    const { lat, lng } = tileCenterLatLng(doc.z, doc.x, doc.y);
+    await ctx.scheduler.runAfter(0, internal.geocoding.revGeocode, {
+      lat,
+      lng,
+      tileId: doc._id,
+    });
+  },
+});
+```
+
+**Call internal functions** from migrations:
+```typescript
+export const complexMigration = migrations.define({
+  table: 'inference_predictions',
+  migrateOne: async (ctx, doc) => {
+    const overlappingCourt = await ctx.runQuery(
+      internal.courts.findOverlappingCourt,
+      { /* args */ }
+    );
+
+    if (overlappingCourt) {
+      await ctx.db.patch(doc._id, { courtId: overlappingCourt.courtId });
+    }
+  },
+});
+```
+
+### Running Migrations
+
+Execute all migrations:
+```bash
+bun convex run migrations:runAll
+```
+
 ## Common Patterns
 
 ### Upsert Pattern
@@ -293,53 +396,78 @@ Use the Convex CLI to run functions directly from the terminal:
 
 ```bash
 # Run a query or mutation without arguments
-npx convex run users.me
+npx convex run users.me '{}'
 
-# Run with JSON arguments
-npx convex run users.updateProfile --args '{"name": "John Doe"}'
+# Run with JSON arguments (passed directly after function name)
+npx convex run users.updateProfile '{"name": "John Doe"}'
 
-# Run a specific function from a module
-npx convex run scans.getScan --args '{"scanId": "..."}'
+# Function naming uses colons (module:function)
+npx convex run courts:listByViewport '{"bbox": {"minLat": 44.9, "maxLat": 45.0, "minLng": -93.1, "maxLng": -93.0}, "zoom": 14}'
 
 # Run an action
-npx convex run actions.scanArea --args '{"latitude": 37.7749, "longitude": -122.4194}'
+npx convex run actions.scanArea '{"latitude": 37.7749, "longitude": -122.4194}'
 ```
+
+**Important**: Arguments are passed as JSON directly after the function name, NOT with a `--args` flag.
 
 ### Run Queries (Read-only)
 
 ```bash
 # List all tiles
-npx convex run tiles.list
+npx convex run tiles:getAllTiles '{}'
 
 # Query with filters
-npx convex run tiles.getByCoordinates --args '{"x": 123, "y": 456, "z": 14}'
+npx convex run tiles:getTileByCoordinates '{"x": 123, "y": 456, "z": 14}'
 ```
 
 ### Run Mutations (Write Operations)
 
 ```bash
 # Create a new scan
-npx convex run scans.create --args '{"latitude": 37.7749, "longitude": -122.4194, "zoom": 14}'
+npx convex run scans:create '{"latitude": 37.7749, "longitude": -122.4194, "zoom": 14}'
 
 # Update a record
-npx convex run users.updateProfile --args '{"name": "New Name"}'
+npx convex run users:updateProfile '{"name": "New Name"}'
+
+# Admin status override
+npx convex run courts:updateCourtStatus '{"courtId": "...", "status": "rejected"}'
+```
+
+### Running Migrations
+
+```bash
+# Run all pending migrations
+npx convex run migrations:runAll
+
+# Run a specific migration (will do dry run by default)
+npx convex run migrations:myMigration
+
+# Note: Migrations using @convex-dev/migrations track state and will skip already-completed migrations
 ```
 
 ### Useful CLI Commands
 
 ```bash
-# Start Convex dev server
+# Start Convex dev server (recommended to use bun)
 bun dev:backend
 
-# Open Convex dashboard
-npx convex dashboard
+# Start both backend and frontend
+bun dev
 
-# Check deployment status
+# Deploy to production
 npx convex deploy
 
-# View logs
+# View logs (not available on self-hosted deployments)
 npx convex logs
 ```
+
+### CLI Gotchas
+
+- **No `--args` flag**: Pass JSON arguments directly after the function name
+- **Function naming**: Use `module:functionName` format with colons, not dots
+- **Self-hosted deployments**: The `npx convex dashboard` command is NOT supported for self-hosted deployments
+- **Migration dry runs**: Migrations run in dry-run mode by default - check logs for "DRY RUN" messages
+- **Watch mode**: The dev server automatically syncs code changes and runs migrations
 
 ## Key Files
 
