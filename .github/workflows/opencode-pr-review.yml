@@ -270,7 +270,7 @@ jobs:
             ### Step 2: Submit the Review
             Execute:
             ```bash
-            gh api \
+            timeout 30 gh api \
               --method POST \
               -H "Accept: application/vnd.github+json" \
               "/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
