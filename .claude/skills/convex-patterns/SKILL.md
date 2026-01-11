@@ -402,7 +402,7 @@ npx convex run users.me '{}'
 npx convex run users.updateProfile '{"name": "John Doe"}'
 
 # Function naming uses colons (module:function)
-npx convex run courts:listByViewport '{"bbox": {"minLat": 44.9, "maxLat": 45.0, "minLng": -93.1, "maxLng": -93.0}, "zoom": 14}'
+npx convex run inferences:featuresByViewport '{"bbox": {"minLat": 44.9, "maxLat": 45.0, "minLng": -93.1, "maxLng": -93.0}, "zoom": 14}'
 
 # Run an action
 npx convex run actions.scanArea '{"latitude": 37.7749, "longitude": -122.4194}'

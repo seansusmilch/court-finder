@@ -90,7 +90,7 @@ function shouldIncludeCourt(court: { status: string }, statusFilter: string): bo
   return true;
 }
 
-function buildCourtFeature(
+async function buildCourtFeature(
   court: {
     class?: string;
     sourceConfidence?: number | null;
@@ -103,9 +103,20 @@ function buildCourtFeature(
     latitude: number;
     longitude: number;
     tileId?: Id<'tiles'>;
+    sourcePredictionId?: Id<'inference_predictions'>;
   },
-  tile: { z: number; x: number; y: number }
-): GeoJSONPointFeature {
+  tile: { z: number; x: number; y: number },
+  ctx: any
+): Promise<GeoJSONPointFeature> {
+  // Get the roboflowDetectionId from the source prediction if available
+  let detectionId = '';
+  if (court.sourcePredictionId) {
+    const sourcePrediction = await ctx.db.get(court.sourcePredictionId);
+    if (sourcePrediction) {
+      detectionId = sourcePrediction.roboflowDetectionId;
+    }
+  }
+
   return {
     type: 'Feature',
     geometry: {
@@ -119,7 +130,7 @@ function buildCourtFeature(
       class: court.class,
       class_id: 0,
       confidence: court.sourceConfidence ?? 1.0,
-      detection_id: '',
+      detection_id: detectionId,
       status: court.status,
       verifiedAt: court.verifiedAt,
       sourceModel: court.sourceModel ?? '',
@@ -151,12 +162,14 @@ export const featuresByViewport = query({
   handler: async (ctx, args) => {
     const startTs = Date.now();
     const statusFilter = args.statusFilter ?? 'all';
+    const confidenceThreshold = args.confidenceThreshold ?? 0;
 
     console.log('start', {
       startTs,
       bbox: args.bbox,
       zoom: args.zoom,
       statusFilter,
+      confidenceThreshold,
     });
 
     const courts = await ctx.db.query('courts').collect();
@@ -173,15 +186,22 @@ export const featuresByViewport = query({
         continue;
       }
 
+      // Apply confidence threshold filter (undefined confidence is treated as 1.0)
+      const courtConfidence = court.sourceConfidence ?? 1.0;
+      if (courtConfidence < confidenceThreshold) {
+        continue;
+      }
+
       const tile = court.tileId ? await ctx.db.get(court.tileId) : null;
       if (!tile) continue;
 
-      features.push(buildCourtFeature(court, tile));
+      features.push(await buildCourtFeature(court, tile, ctx));
     }
 
     console.log('complete', {
       durationMs: Date.now() - startTs,
       statusFilter,
+      confidenceThreshold,
       bbox: args.bbox,
       zoom: args.zoom,
       featureCount: features.length,
