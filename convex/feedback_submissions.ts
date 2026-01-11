@@ -283,7 +283,7 @@ export const submitFeedback = mutation({
       durationMs: Date.now() - startTs,
     });
 
-    await ctx.runMutation(internal.courts.verifyFromFeedback, {
+    await ctx.scheduler.runAfter(0, internal.courts.verifyFromFeedback, {
       predictionId: prediction._id,
     });
   },

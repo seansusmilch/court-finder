@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { pixelOnTileToLngLat } from './lib/tiles';
 import { internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 
 /**
  * Upsert an inference prediction: if a prediction with the same inferenceId and detection_id exists, update it; otherwise, insert a new one.
@@ -66,7 +67,7 @@ export const upsert = internalMutation({
       version: args.version,
     };
 
-    let predictionId: typeof existing._id | string;
+    let predictionId: Id<'inference_predictions'>;
 
     if (existing) {
       await ctx.db.patch(existing._id, updateData);
@@ -92,7 +93,7 @@ export const upsert = internalMutation({
           confidence: args.prediction.confidence,
         },
       });
-      predictionId = id;
+      predictionId = id as Id<'inference_predictions'>;
     }
 
     const tile = await ctx.db.get(args.tileId);
@@ -102,7 +103,7 @@ export const upsert = internalMutation({
         predictionId,
         action: 'upsert_prediction',
       });
-      return predictionId as Id<'inference_predictions'>;
+      return predictionId;
     }
 
     const { lon, lat } = pixelOnTileToLngLat(
@@ -132,7 +133,7 @@ export const upsert = internalMutation({
       const courtId = await ctx.runMutation(
         internal.courts.createPendingCourtFromPrediction,
         {
-          predictionId: predictionId as Id<'inference_predictions'>,
+          predictionId,
         }
       );
       await ctx.db.patch(predictionId, { courtId });
@@ -142,7 +143,7 @@ export const upsert = internalMutation({
       });
     }
 
-    return predictionId as Id<'inference_predictions'>;
+    return predictionId;
   },
 });
 

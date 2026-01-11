@@ -1,7 +1,7 @@
 import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api';
 import type { DataModel, Id } from './_generated/dataModel';
-import { pointToTile, tileCenterLatLng } from './lib/tiles';
+import { pointToTile, tileCenterLatLng, pixelOnTileToLngLat } from './lib/tiles';
 import { COURT_VERIFICATION, MARKER_DEDUP_BASE_RADIUS_M, MARKER_DEDUP_RADIUS_BY_CLASS_M } from './lib/constants';
 import type { CourtStatus } from './lib/types';
 import { haversineMeters } from './lib/spatial';
