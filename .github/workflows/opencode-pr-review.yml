@@ -116,28 +116,30 @@ jobs:
             Before analyzing any code, you MUST fetch all existing review comments on this PR:
 
             ```bash
-            gh api \
+            timeout 30 gh api \
               /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/comments \
-              > /tmp/existing_comments.json
+              2>/dev/null || echo "[]" > /tmp/existing_comments.json
             ```
 
             Also fetch existing review discussions:
             ```bash
-            gh api \
+            timeout 30 gh api \
               /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews \
-              > /tmp/existing_reviews.json
+              2>/dev/null || echo "[]" > /tmp/existing_reviews.json
             ```
 
-            **Analyze existing comments** and build a list of issues that have already been flagged:
+            **IMPORTANT**: These commands have a 30-second timeout and will return empty arrays if they fail. Proceed with your review regardless of whether these commands succeed.
+
+            **Analyze existing comments** (if successfully fetched):
             - Extract file paths, line numbers, and comment bodies
             - Categorize existing issues by type (bug, security, performance, style, etc.)
             - Identify code sections/functions that already have feedback
 
-            **During your review**, for each potential comment you want to create:
-            1. Check if an existing comment addresses the same issue
+            **During your review**, be mindful of duplicates but don't let this block your review:
+            1. If you can read the fetched comments, check if an existing comment addresses the same issue
             2. Compare file path + line range + issue type
-            3. If an existing comment covers the same concern, **DO NOT create a duplicate**
-            4. Only add comments for NEW issues not already raised
+            3. If an existing comment covers the same concern, prefer to skip it
+            4. Focus on providing NEW feedback not already raised
 
             **Example duplicate detection:**
             - Existing comment at `src/components/Example.tsx:42`: "Missing error handling for API call"
@@ -238,11 +240,11 @@ jobs:
 
             ### Step 1: Build the Review JSON
 
-            **FINAL DUPLICATE CHECK** - Before creating the JSON, verify:
-            - Re-read `/tmp/existing_comments.json`
+            **FINAL DUPLICATE CHECK (Optional)** - Before creating the JSON:
+            - If `/tmp/existing_comments.json` exists and is readable, check it for duplicates
             - Ensure no comment in your `comments` array duplicates an existing one
             - If a duplicate exists, remove it from the `comments` array
-            - Update the summary body to reflect any removed duplicates
+            - Don't let this step block your review - if you can't read the file, proceed anyway
 
             Create a JSON file at /tmp/review.json with this structure:
 
