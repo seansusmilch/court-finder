@@ -12,6 +12,7 @@ tools:
   edit: false
   webfetch: false
 permission:
+  external_directory: allow
   task:
     "*": deny
     "review-formatter": allow

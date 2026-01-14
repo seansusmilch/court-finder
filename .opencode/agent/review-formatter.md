@@ -10,6 +10,7 @@ tools:
   edit: false
   webfetch: false
 permission:
+  external_directory: allow 
   write:
     "/tmp/*": allow
 ---
