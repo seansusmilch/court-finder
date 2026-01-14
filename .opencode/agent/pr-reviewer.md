@@ -4,15 +4,17 @@ mode: primary
 model: zai-coding-plan/glm-4.6
 temperature: 0.0
 tools:
-  bash: false
+  bash: true
   read: true
   grep: true
   glob: true
-  write: false
+  write: true
   edit: false
   webfetch: false
 permission:
   external_directory: allow
+  write:
+    "*": allow
   task:
     "*": deny
     "review-formatter": allow

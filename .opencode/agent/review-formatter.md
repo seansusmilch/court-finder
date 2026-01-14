@@ -4,15 +4,15 @@ mode: subagent
 model: zai-coding-plan/glm-4.6
 temperature: 0.0
 tools:
-  bash: false
-  read: false
+  bash: true
+  read: true
   write: true
   edit: false
   webfetch: false
 permission:
-  external_directory: allow 
+  external_directory: allow
   write:
-    "/tmp/*": allow
+    "*": allow
 ---
 
 You are the Review Formatter Agent. Your role is to format review findings into GitHub's API JSON structure.
