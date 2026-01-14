@@ -50,3 +50,4 @@ jobs:
           model: zai-coding-plan/glm-4.6
           agent: github-pr-orchestrator
           prompt: review this pull request
+          share: true
