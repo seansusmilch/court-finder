@@ -46,7 +46,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           model: zai-coding-plan/glm-4.6
           agent: github-pr-orchestrator
           prompt: review this pull request
