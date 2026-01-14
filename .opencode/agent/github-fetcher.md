@@ -80,6 +80,8 @@ Return structured data in a readable format, indicating:
 - What failed (if anything)
 - File paths where results are stored (if saved to disk)
 
+IMPORTANT: Return the complete diffs and comments without summarization. The reviewer needs full context to analyze code changes.
+
 Example:
 ```
 Successfully fetched:
@@ -91,3 +93,10 @@ Successfully fetched:
 Failed:
 - Reviews fetch timed out (will proceed without this data)
 ```
+
+## Data Storage Guidelines
+
+- Store complete PR diff at `/tmp/pr_diff.txt` - do not truncate or summarize
+- Store complete comments at `/tmp/existing_comments.json` - include all comment data
+- Store file list at `/tmp/files.json` - include full file paths and line counts
+- Return these paths so the orchestrator can pass them to the reviewer

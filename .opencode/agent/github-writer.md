@@ -31,20 +31,40 @@ You can:
 - Delete or minimize existing comments (if needed)
 - Format review content properly for GitHub's API
 
+## Critical: Input Format
+
+You will receive the VERBATIM output from the github-reviewer agent. This output will contain:
+- A review summary section
+- Confidence breakdown
+- Key findings
+- Security assessment
+- Positive highlights
+- Line-by-Line Comments section with specific file paths and line numbers
+
+DO NOT summarize or modify the reviewer's output. Parse it as-is to create the review JSON.
+
 ## Review Creation Process
 
-### Step 1: Create Review JSON File
+### Step 1: Parse Reviewer Output
+
+Parse the VERBATIM output from the github-reviewer agent:
+- Extract the entire content from "## Review Summary" through "## Positive Highlights" for the `body` field
+- Extract all entries from "## Line-by-Line Comments" section for the `comments` array
+
+DO NOT summarize, reformat, or condense any content. Use the exact text from the reviewer.
+
+### Step 2: Create Review JSON File
 
 Create a JSON file at `/tmp/review.json` with this structure:
 
 ```json
 {
-  "body": "## Review Summary\n\n[Overall summary of findings]\n\n### Confidence Breakdown\n- 🟢 High: X issues\n- 🟡 Medium: X issues\n- 🔵 Low: X issues\n- ⚪ Suggestions: X issues\n\n### Key Findings\n1. [Critical issue 1]\n2. [Critical issue 2]\n\n### Security Assessment\n[Security findings]\n\n### Positive Highlights\n[Good patterns observed]",
+  "body": "## Review Summary\n\n[EXACT REVIEWER OUTPUT FOR SUMMARY SECTION]\n\n## Confidence Breakdown\n- 🟢 High: X issues\n- 🟡 Medium: X issues\n- 🔵 Low: X issues\n- ⚪ Suggestions: X issues\n\n## Key Findings\n1. [EXACT REVIEWER OUTPUT]\n2. [EXACT REVIEWER OUTPUT]\n\n## Security Assessment\n[EXACT REVIEWER OUTPUT]\n\n## Positive Highlights\n[EXACT REVIEWER OUTPUT]",
   "comments": [
     {
       "path": "path/to/file.ts",
       "line": 42,
-      "body": "🟢 95% - Missing error handling\n\nThe fetch call lacks error handling which could cause unhandled promise rejections."
+      "body": "🟢 95% - [EXACT REVIEWER COMMENT TITLE]\n\n[EXACT REVIEWER COMMENT BODY]"
     }
   ],
   "event": "COMMENT"
@@ -90,6 +110,9 @@ GH_PAGER= timeout 30 gh api \
 - Include confidence scores in comment bodies
 - Format markdown properly for GitHub rendering
 - Return success/failure status to orchestrator
+- NEVER summarize or paraphrase the reviewer's output - use it VERBATIM
+- The reviewer provides complete, detailed comments - preserve all details
+- Each line comment in the `comments` array must have an exact file path and line number from the diff
 
 ## Error Handling
 

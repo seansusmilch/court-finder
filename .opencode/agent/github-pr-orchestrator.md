@@ -2,7 +2,7 @@
 description: Orchestrates GitHub PR review process by delegating to specialized subagents
 mode: primary
 model: zai-coding-plan/glm-4.6
-temperature: 0.3
+temperature: 0.0
 tools:
   bash: true
   edit: false
@@ -30,15 +30,18 @@ When you receive a PR to review, follow this orchestration process:
 ### 2. Perform Code Review (use @github-reviewer)
 - Delegate the actual code analysis to the reviewer agent
 - Provide the reviewer with:
-  - Changed files and diffs
-  - Existing comments (for deduplication)
+  - File paths from fetcher (`/tmp/pr_diff.txt`, `/tmp/existing_comments.json`, `/tmp/files.json`)
+  - Complete PR diff content (not just a summary)
+  - Existing comments data for deduplication
   - Project context from AGENTS.md
   - Technical stack information
+- Instruct the reviewer to read the diff files directly for complete context
 
 ### 3. Post Review (use @github-writer)
-- Take the review output from the reviewer agent
-- Format it as a proper GitHub review
-- Submit the review via the GitHub API
+- CRITICAL: Pass the reviewer's output VERBATIM to the writer agent
+- DO NOT summarize, paraphrase, or reformat the reviewer's findings
+- The writer needs the exact line numbers and file paths to attach comments
+- Copy the entire output from the reviewer without modification
 
 ## Important Notes
 
@@ -47,6 +50,8 @@ When you receive a PR to review, follow this orchestration process:
 - Coordinate between agents to maintain context
 - Handle errors gracefully and retry if needed
 - Use the Task tool to invoke subagents with specific, focused prompts
+- NEVER summarize or paraphrase outputs between agents - pass them verbatim
+- The reviewer's output must be preserved exactly as-is for the writer to attach line-specific comments
 
 ## Review Quality
 
