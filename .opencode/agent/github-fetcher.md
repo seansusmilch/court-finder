@@ -96,7 +96,20 @@ Failed:
 
 ## Data Storage Guidelines
 
-- Store complete PR diff at `/tmp/pr_diff.txt` - do not truncate or summarize
-- Store complete comments at `/tmp/existing_comments.json` - include all comment data
-- Store file list at `/tmp/files.json` - include full file paths and line counts
-- Return these paths so the orchestrator can pass them to the reviewer
+You must save data to these specific files in `/tmp/`:
+
+1. **`/tmp/pr_diff.txt`** - Complete PR diff
+   - Use `gh pr diff $PR_NUMBER > /tmp/pr_diff.txt`
+   - Do NOT truncate or summarize - save the full diff
+
+2. **`/tmp/existing_comments.json`** - Existing PR comments
+   - Use `gh api /repos/$REPO/pulls/$PR_NUMBER/comments > /tmp/existing_comments.json`
+   - Include all comment data
+
+3. **`/tmp/files.json`** - List of changed files
+   - Use `gh api /repos/$REPO/pulls/$PR_NUMBER/files > /tmp/files.json`
+   - Include full file paths and line counts
+
+These files follow the standardized schema defined in @review-data-schema and will be read by the github-reviewer agent.
+
+Return these paths so the orchestrator can pass them to the reviewer.

@@ -31,47 +31,77 @@ You can:
 - Delete or minimize existing comments (if needed)
 - Format review content properly for GitHub's API
 
-## Critical: Input Format
+## Input Format
 
-You will receive the VERBATIM output from the github-reviewer agent. This output will contain:
-- A review summary section
-- Confidence breakdown
-- Key findings
-- Security assessment
-- Positive highlights
-- Line-by-Line Comments section with specific file paths and line numbers
+You will receive a file path to `/tmp/review_findings.json` from the orchestrator. This JSON file contains:
+- PR information
+- Review summary (overview, confidence breakdown, key findings, security assessment, positive highlights)
+- Line comments with file paths, line numbers, confidence, severity, titles, and descriptions
+- Review event type (COMMENT, REQUEST_CHANGES, APPROVE)
 
-DO NOT summarize or modify the reviewer's output. Parse it as-is to create the review JSON.
+Read the JSON file and convert it to GitHub's API format.
 
 ## Review Creation Process
 
-### Step 1: Parse Reviewer Output
+### Step 1: Read Review Findings
 
-Parse the VERBATIM output from the github-reviewer agent:
-- Extract the entire content from "## Review Summary" through "## Positive Highlights" for the `body` field
-- Extract all entries from "## Line-by-Line Comments" section for the `comments` array
+Read `/tmp/review_findings.json` using the Read tool. The file contains the standardized schema defined in @review-data-schema.
 
-DO NOT summarize, reformat, or condense any content. Use the exact text from the reviewer.
+### Step 2: Format for GitHub API
 
-### Step 2: Create Review JSON File
+Convert the review findings to GitHub's API format:
 
-Create a JSON file at `/tmp/review.json` with this structure:
+**Body Format** (markdown for the overall review):
+```markdown
+## Review Summary
+
+[overview from review_summary.overview]
+
+## Confidence Breakdown
+- 🟢 High: [high count] issues
+- 🟡 Medium: [medium count] issues
+- 🔵 Low: [low count] issues
+- ⚪ Suggestions: [suggestions count] issues
+
+## Key Findings
+1. [finding 1]
+2. [finding 2]
+...
+
+## Security Assessment
+[security_assessment]
+
+## Positive Highlights
+[positive_highlights]
+```
+
+**Comments Array**: Transform each `line_comments` entry to GitHub format.
+
+### Step 3: Create Review JSON File
+
+Create `/tmp/review.json` with GitHub's API structure:
 
 ```json
 {
-  "body": "## Review Summary\n\n[EXACT REVIEWER OUTPUT FOR SUMMARY SECTION]\n\n## Confidence Breakdown\n- 🟢 High: X issues\n- 🟡 Medium: X issues\n- 🔵 Low: X issues\n- ⚪ Suggestions: X issues\n\n## Key Findings\n1. [EXACT REVIEWER OUTPUT]\n2. [EXACT REVIEWER OUTPUT]\n\n## Security Assessment\n[EXACT REVIEWER OUTPUT]\n\n## Positive Highlights\n[EXACT REVIEWER OUTPUT]",
+  "body": "## Review Summary\n\n[formatted summary as above]",
   "comments": [
     {
       "path": "path/to/file.ts",
       "line": 42,
-      "body": "🟢 95% - [EXACT REVIEWER COMMENT TITLE]\n\n[EXACT REVIEWER COMMENT BODY]"
+      "body": "🟢 95% - [title]\n\n[description]\n\n**Suggestion**: [suggestion]"
     }
   ],
   "event": "COMMENT"
 }
 ```
 
-### Step 2: Submit the Review
+**Formatting Notes**:
+- Prepend confidence emoji and score to each comment title: `🟢 95% - [title]`
+- Include the full description
+- Add "**Suggestion**: [suggestion]" section if a suggestion is provided
+- Keep all markdown formatting intact
+
+### Step 4: Submit the Review
 
 Execute:
 ```bash
@@ -84,17 +114,20 @@ GH_PAGER= timeout 30 gh api \
 
 ## Review Event Types
 
+Use the `review_event` value from the findings file:
 - **"COMMENT"** - General feedback without blocking merge (use for suggestions)
 - **"REQUEST_CHANGES"** - Blocking review (use for critical/high confidence bugs)
 - **"APPROVE"** - No issues found (use if PR is perfect)
 
 ## Important Requirements
 
+- Read the complete `/tmp/review_findings.json` file
 - Each line comment must reference a valid file path and line number from the PR diff
 - Line numbers must be within the changed lines of the PR
 - The overall summary goes in the `body` field
 - Only ONE API call to submit the entire review
 - All line-specific comments go in the `comments` array
+- Preserve all reviewer data without summarization
 
 ## Environment Variables
 
@@ -106,12 +139,10 @@ GH_PAGER= timeout 30 gh api \
 - Validate JSON structure before submission
 - Ensure line numbers are valid (in the diff)
 - Handle API errors gracefully and report back
-- Use appropriate review event type based on severity
-- Include confidence scores in comment bodies
+- Use the exact `review_event` from the findings file
+- Include confidence scores in comment bodies with emojis
 - Format markdown properly for GitHub rendering
 - Return success/failure status to orchestrator
-- NEVER summarize or paraphrase the reviewer's output - use it VERBATIM
-- The reviewer provides complete, detailed comments - preserve all details
 - Each line comment in the `comments` array must have an exact file path and line number from the diff
 
 ## Error Handling
@@ -121,3 +152,4 @@ If submission fails:
 - Try to identify the cause (invalid line number, permission issue, etc.)
 - Return the review JSON file path for manual submission if needed
 - Provide clear error messages for troubleshooting
+- Check if the issue is with the GitHub API response or the JSON structure
