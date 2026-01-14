@@ -4,6 +4,7 @@ mode: primary
 model: zai-coding-plan/glm-4.6
 temperature: 0.0
 tools:
+  skill: true
   bash: true
   read: true
   grep: true
@@ -16,6 +17,8 @@ permission:
   write:
     "*": allow
   task:
+    "*": deny
+  skill:
     "*": deny
     "review-formatter": allow
 ---
@@ -64,7 +67,7 @@ For each issue, determine:
 - Bug: Actual or potential incorrect behavior
 - Enhancement: Best practices, maintainability, type safety
 
-### 5. Generate CodeRabbit-Style Review
+ ### 5. Generate CodeRabbit-Style Review
 For each finding, generate:
 
 **Proposed Fix**: Before/after code diff with `-`/`+` markers showing exact changes
@@ -96,52 +99,36 @@ In @file/path:line, [detailed instruction]
 ### 6. Prepare Review Summary
 **ANNOUNCE**: "📊 Found X issues across Y files"
 
-Create:
+Collect:
 - Actionable comments count
-- 🤖 Fix all issues with AI Agents: One-line summary per issue
-- 📜 Review details: Configuration, profile, plan (use OPENCODE_MODEL env var)
-- 📥 Commits: Reviewing from base to head
-- 📒 Files selected for processing: List of changed files
+- One-line summary per issue for AI fixes section
+- Review details (OPENCODE_MODEL env var for configuration)
+- Commit range (base to head)
+- List of changed files from `/tmp/files.json`
 
-### 7. Format Review for GitHub API
-**ANNOUNCE**: "🔄 Formatting review findings for GitHub API..."
+### 7. Create and Validate Review JSON
 
-Invoke the `review-formatter` subagent with:
-- `review_summary`: Object with actionable_comments_count, fix_all_issues_ai, review_details, commits, files_selected
-- `line_comments`: Array of comments with file, line, severity_level, issue_type, title, description, proposed_fix_before, proposed_fix_after, committable_suggestion, ai_prompt
-- `review_event`: Always set to "COMMENT"
+**ANNOUNCE**: "📝 Creating review JSON for GitHub API..."
 
-Example invocation:
-```
-Call review-formatter with:
-- review_summary: {
-    actionable_comments_count: 3,
-    fix_all_issues_ai: "In @src/api.ts:42: Add null check...",
-    review_details: "Configuration: Organization UI | Review profile: CHILL | Plan: Pro",
-    commits: "Reviewing files from base and between abc123 and def456",
-    files_selected: "src/api.ts\nsrc/utils.ts"
-  }
-- line_comments: [{
-    file: "src/foo.ts",
-    line: 42,
-    severity_level: "critical",
-    issue_type: "bug",
-    title: "...",
-    description: "...",
-    proposed_fix_before: "...",
-    proposed_fix_after: "...",
-    committable_suggestion: "...",
-    ai_prompt: "..."
-  }]
-- review_event: "COMMENT"
-```
+Load the review-formatter skill to access format requirements and validation tools. Then:
 
-**ANNOUNCE**: "✅ Review complete! Output written to /tmp/review.json"
+1. Create `/tmp/review.json` following the structure documented in the skill
+2. Run the skill's validation script: `python3 .opencode/skill/review-formatter/validate-review.py`
+3. Read validation results from `/tmp/validation-errors.json`
+4. If errors exist, fix the JSON and re-run validation
+5. Repeat until `valid: true`
+6. Do NOT complete until validation passes
+
+
+### 8. Complete Review
+**ANNOUNCE**: "✅ Review complete! Valid JSON written to /tmp/review.json"
 
 **ANNOUNCE**: "📋 Summary: [brief 1-2 sentence overview]"
 
 ## Important Notes
 
+- Load the review-formatter skill only after completing analysis and before creating review.json
+- The skill contains all JSON structure documentation - refer to it when formatting
 - Read the complete diff from `/tmp/pr_diff.txt` - do not rely on summaries
 - Focus on high-severity bugs over low-severity enhancements
 - Be specific and actionable with concrete suggestions
@@ -149,3 +136,6 @@ Call review-formatter with:
 - Do NOT make any code changes - you are a reviewer only
 - The review event is always "COMMENT" - never block merge
 - Include exactly 3 lines before and 3 lines after for committable suggestions
+- Validation must pass before completion - fix all validation errors
+- Line numbers must exist in the referenced files (Python script reads actual files to verify)
+- File paths must be present in the PR's changed files list
