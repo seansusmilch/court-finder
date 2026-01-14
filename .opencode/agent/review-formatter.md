@@ -154,6 +154,10 @@ Suggested change
 
 Write the complete JSON to `/tmp/review.json`
 
-## Return
+## IMPORTANT: Validate JSON Output
 
-Confirm the file path: `/tmp/review.json` written successfully
+Use this command to check for any parsing errors on your json and fix the errors. Repeat until no parsing errors are left.
+
+```bash
+cat /tmp/review.json | json_pp
+```
