@@ -9,7 +9,7 @@ import {
   type GeoJSONPointFeature,
 } from './lib/tiles';
 import { bboxOverlapMeetsThreshold, bboxIntersectionArea, type BBox } from './lib/bbox';
-import { COURT_VERIFICATION } from './lib/constants';
+import { COURT_VERIFICATION, BBOX_OVERLAP_THRESHOLD } from './lib/constants';
 import type { CourtStatus } from './lib/types';
 
 interface CourtVerificationMetrics {
@@ -257,8 +257,6 @@ export const autoLinkPrediction = internalMutation({
   },
 });
 
-const OVERLAP_THRESHOLD = 0.75;
-
 export const findOverlappingCourt = internalQuery({
   args: {
     tileId: v.id('tiles'),
@@ -269,6 +267,24 @@ export const findOverlappingCourt = internalQuery({
     class: v.string(),
   },
   handler: async (ctx, args) => {
+    if (args.pixelX < 0 || args.pixelY < 0) {
+      console.error('error: invalid pixel coordinates', {
+        tileId: args.tileId,
+        pixelX: args.pixelX,
+        pixelY: args.pixelY,
+      });
+      throw new Error('Pixel coordinates must be non-negative');
+    }
+
+    if (args.pixelWidth <= 0 || args.pixelHeight <= 0) {
+      console.error('error: invalid dimensions', {
+        tileId: args.tileId,
+        pixelWidth: args.pixelWidth,
+        pixelHeight: args.pixelHeight,
+      });
+      throw new Error('Width and height must be positive');
+    }
+
     const searchBbox: BBox = {
       x: args.pixelX,
       y: args.pixelY,
@@ -299,7 +315,7 @@ export const findOverlappingCourt = internalQuery({
         height: court.pixelHeight!,
       };
 
-      if (bboxOverlapMeetsThreshold(searchBbox, courtBbox, OVERLAP_THRESHOLD)) {
+      if (bboxOverlapMeetsThreshold(searchBbox, courtBbox, BBOX_OVERLAP_THRESHOLD)) {
         const intersection = bboxIntersectionArea(searchBbox, courtBbox);
         const searchArea = args.pixelWidth * args.pixelHeight;
         const courtArea = court.pixelWidth! * court.pixelHeight!;

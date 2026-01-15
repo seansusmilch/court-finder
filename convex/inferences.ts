@@ -90,57 +90,6 @@ function shouldIncludeCourt(court: { status: string }, statusFilter: string): bo
   return true;
 }
 
-async function buildCourtFeature(
-  court: {
-    class?: string;
-    sourceConfidence?: number | null;
-    status: string;
-    verifiedAt?: number;
-    sourceModel?: string;
-    sourceVersion?: string;
-    totalFeedbackCount: number;
-    positiveFeedbackCount: number;
-    latitude: number;
-    longitude: number;
-    tileId?: Id<'tiles'>;
-    sourcePredictionId?: Id<'inference_predictions'>;
-  },
-  tile: { z: number; x: number; y: number },
-  ctx: any
-): Promise<GeoJSONPointFeature> {
-  // Get the roboflowDetectionId from the source prediction if available
-  let detectionId = '';
-  if (court.sourcePredictionId) {
-    const sourcePrediction = await ctx.db.get(court.sourcePredictionId);
-    if (sourcePrediction) {
-      detectionId = sourcePrediction.roboflowDetectionId;
-    }
-  }
-
-  return {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [court.longitude, court.latitude],
-    },
-    properties: {
-      z: tile.z,
-      x: tile.x,
-      y: tile.y,
-      class: court.class,
-      class_id: 0,
-      confidence: court.sourceConfidence ?? 1.0,
-      detection_id: detectionId,
-      status: court.status,
-      verifiedAt: court.verifiedAt,
-      sourceModel: court.sourceModel ?? '',
-      sourceVersion: court.sourceVersion ?? '',
-      totalFeedbackCount: court.totalFeedbackCount,
-      positiveFeedbackCount: court.positiveFeedbackCount,
-    },
-  };
-}
-
 export const featuresByViewport = query({
   args: {
     bbox: v.object({
@@ -172,30 +121,90 @@ export const featuresByViewport = query({
       confidenceThreshold,
     });
 
-    const courts = await ctx.db.query('courts').collect();
-    const features: GeoJSONPointFeature[] = [];
+    const allCourts = await ctx.db.query('courts').collect();
 
-    for (const court of courts) {
-      // Apply status filter
+    const filteredCourts = allCourts.filter((court) => {
       if (!shouldIncludeCourt(court, statusFilter)) {
-        continue;
+        return false;
       }
 
-      // Filter by geographic bbox
       if (!isCourtInBounds(court, args.bbox)) {
-        continue;
+        return false;
       }
 
-      // Apply confidence threshold filter (undefined confidence is treated as 1.0)
       const courtConfidence = court.sourceConfidence ?? 1.0;
       if (courtConfidence < confidenceThreshold) {
-        continue;
+        return false;
       }
 
-      const tile = court.tileId ? await ctx.db.get(court.tileId) : null;
+      return court.tileId !== null && court.tileId !== undefined;
+    });
+
+    const tileIds = [
+      ...new Set(filteredCourts.map((court) => court.tileId!)),
+    ];
+    const tiles = await Promise.all(
+      tileIds.map((tileId) => ctx.db.get(tileId))
+    );
+    const tileMap = new Map(
+      tiles
+        .filter((tile): tile is NonNullable<typeof tile> => tile !== null)
+        .map((tile) => [tile._id, tile])
+    );
+
+    const sourcePredictionIds = [
+      ...new Set(
+        filteredCourts
+          .map((court) => court.sourcePredictionId)
+          .filter(
+            (id): id is NonNullable<typeof id> => id !== null && id !== undefined
+          )
+      ),
+    ];
+    const sourcePredictions = await Promise.all(
+      sourcePredictionIds.map((id) => ctx.db.get(id))
+    );
+    const sourcePredictionMap = new Map(
+      sourcePredictions
+        .filter(
+          (prediction): prediction is NonNullable<typeof prediction> =>
+            prediction !== null
+        )
+        .map((prediction) => [prediction._id, prediction.roboflowDetectionId])
+    );
+
+    const features: GeoJSONPointFeature[] = [];
+
+    for (const court of filteredCourts) {
+      const tile = tileMap.get(court.tileId!);
       if (!tile) continue;
 
-      features.push(await buildCourtFeature(court, tile, ctx));
+      const detectionId = court.sourcePredictionId
+        ? sourcePredictionMap.get(court.sourcePredictionId) ?? ''
+        : '';
+
+      features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [court.longitude, court.latitude],
+        },
+        properties: {
+          z: tile.z,
+          x: tile.x,
+          y: tile.y,
+          class: court.class,
+          class_id: 0,
+          confidence: court.sourceConfidence ?? 1.0,
+          detection_id: detectionId,
+          status: court.status,
+          verifiedAt: court.verifiedAt,
+          sourceModel: court.sourceModel ?? '',
+          sourceVersion: court.sourceVersion ?? '',
+          totalFeedbackCount: court.totalFeedbackCount,
+          positiveFeedbackCount: court.positiveFeedbackCount,
+        },
+      });
     }
 
     console.log('complete', {
