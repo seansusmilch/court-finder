@@ -1,6 +1,4 @@
 import { Link } from '@tanstack/react-router';
-import { useQuery } from 'convex/react';
-import { api } from '@backend/_generated/api';
 import { Authenticated, Unauthenticated } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { UserIcon } from 'lucide-react';
@@ -11,7 +9,6 @@ import { Button } from '@/components/ui/button';
 
 export default function Header() {
   const { signOut } = useAuthActions();
-  const healthCheck = useQuery(api.healthCheck.get);
   return (
     <div className='sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b no-zoom'>
       <div className='grid grid-cols-2 md:grid-cols-3 items-center px-4 py-2'>
@@ -54,25 +51,6 @@ export default function Header() {
 
         {/* Right: Controls */}
         <div className='flex items-center justify-end gap-3'>
-          <div className='hidden md:flex items-center gap-2 text-xs text-muted-foreground'>
-            <div
-              className={`h-2 w-2 rounded-full ${
-                healthCheck === 'OK'
-                  ? 'bg-accent shadow-[0_0_8px_rgba(0,0,0,0.3)]'
-                  : healthCheck === undefined
-                  ? 'bg-warning shadow-[0_0_8px_rgba(0,0,0,0.3)]'
-                  : 'bg-destructive shadow-[0_0_8px_rgba(0,0,0,0.3)]'
-              }`}
-              title={
-                healthCheck === undefined
-                  ? 'Checking API…'
-                  : healthCheck === 'OK'
-                  ? 'API Connected'
-                  : 'API Error'
-              }
-            />
-            <span className='hidden lg:inline'>API</span>
-          </div>
           <div className='hidden md:flex items-center gap-2'>
             <Authenticated>
               <Button variant='ghost' size='sm' asChild>

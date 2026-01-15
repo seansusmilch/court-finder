@@ -16,7 +16,7 @@ export function FloatingSearchBar({
   return (
     <div
       className={cn(
-        'fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md no-zoom',
+        'fixed top-4 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-md no-zoom md:top-[4.5rem] md:z-50',
         className
       )}
     >

@@ -17,7 +17,6 @@ interface CourtClustersProps {
 }
 
 export function CourtClusters({ id = 'courts', data, mapLoaded = false }: CourtClustersProps) {
-  // Don't render until map style is loaded
   if (!mapLoaded) {
     return null;
   }
@@ -69,8 +68,7 @@ export function CourtClusters({ id = 'courts', data, mapLoaded = false }: CourtC
           'text-color': '#ffffff',
         }}
       />
-      {/* Intentionally omit unclustered layer; we render custom React markers instead. */}
-    </Source>
+      </Source>
   );
 }
 

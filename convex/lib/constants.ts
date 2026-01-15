@@ -67,3 +67,12 @@ export const MARKER_DEDUP_RADIUS_BY_CLASS_M: Record<string, number> = {
   'baseball-diamond': 32,
   'ground-track-field': 16,
 };
+
+// Court verification configuration
+export const COURT_VERIFICATION = {
+  MIN_FEEDBACK_COUNT: 3,
+  MIN_POSITIVE_PERCENTAGE: 0.75,
+} as const;
+
+// Bounding box overlap configuration
+export const BBOX_OVERLAP_THRESHOLD = 0.75;

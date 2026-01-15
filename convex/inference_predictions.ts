@@ -1,18 +1,107 @@
-import { internalMutation, internalQuery, query } from './_generated/server';
+import { internalMutation, internalQuery, type MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
-import { getAuthUserId } from '@convex-dev/auth/server';
+import { internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 
-/**
- * Upsert an inference prediction: if a prediction with the same inferenceId and detection_id exists, update it; otherwise, insert a new one.
- * Returns the id of the upserted prediction.
- */
+interface PredictionUpsertData {
+  roboflowInferenceId: string;
+  roboflowDetectionId: string;
+  tileId: Id<'tiles'>;
+  class: string;
+  classId: number | undefined;
+  confidence: number;
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+  model: string;
+  version: string;
+}
+
+interface RoboflowPrediction {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  confidence: number;
+  class: string;
+  class_id?: number;
+  detection_id: string;
+}
+
+function buildPredictionUpsertData(
+  tileId: Id<'tiles'>,
+  model: string,
+  version: string,
+  inference_id: string,
+  prediction: RoboflowPrediction
+): PredictionUpsertData {
+  return {
+    roboflowInferenceId: inference_id,
+    roboflowDetectionId: prediction.detection_id,
+    tileId,
+    class: prediction.class,
+    classId: prediction.class_id,
+    confidence: prediction.confidence,
+    height: prediction.height,
+    width: prediction.width,
+    x: prediction.x,
+    y: prediction.y,
+    model,
+    version,
+  };
+}
+
+async function linkPredictionToCourt(
+  ctx: MutationCtx,
+  predictionId: Id<'inference_predictions'>,
+  tileId: Id<'tiles'>,
+  pixelX: number,
+  pixelY: number,
+  pixelWidth: number,
+  pixelHeight: number,
+  courtClass: string
+): Promise<void> {
+  const overlappingCourt = await ctx.runQuery(
+    internal.courts.findOverlappingCourt,
+    {
+      tileId,
+      pixelX,
+      pixelY,
+      pixelWidth,
+      pixelHeight,
+      class: courtClass,
+    }
+  );
+
+  if (overlappingCourt) {
+    await ctx.db.patch(predictionId, { courtId: overlappingCourt.courtId });
+    console.log('linked_to_existing_court', {
+      predictionId,
+      courtId: overlappingCourt.courtId,
+      overlapRatio: overlappingCourt.overlap,
+      algorithm: 'bbox_overlap_75pct',
+    });
+  } else {
+    const courtId = await ctx.runMutation(
+      internal.courts.createPendingCourtFromPrediction,
+      { predictionId }
+    );
+    await ctx.db.patch(predictionId, { courtId });
+    console.log('created_new_court', {
+      predictionId,
+      courtId,
+      reason: 'no_overlapping_court_found',
+    });
+  }
+}
+
 export const upsert = internalMutation({
   args: {
     tileId: v.id('tiles'),
     model: v.string(),
     version: v.string(),
     inference_id: v.string(),
-    // ROBOFLOW RESPONSE
     prediction: v.object({
       x: v.number(),
       y: v.number(),
@@ -25,6 +114,7 @@ export const upsert = internalMutation({
     }),
   },
   handler: async (ctx, args) => {
+    // Check for existing prediction
     const existing = await ctx.db
       .query('inference_predictions')
       .withIndex('by_tile_model_version_detection', (q) =>
@@ -36,34 +126,16 @@ export const upsert = internalMutation({
       )
       .unique();
 
-    console.log('query', {
-      table: 'inference_predictions',
-      index: 'by_tile_model_version_detection',
-      params: {
-        tileId: args.tileId,
-        model: args.model,
-        version: args.version,
-        detectionId: args.prediction.detection_id,
-      },
-      found: !!existing,
-      predictionId: existing?._id,
-    });
+    const updateData = buildPredictionUpsertData(
+      args.tileId,
+      args.model,
+      args.version,
+      args.inference_id,
+      args.prediction
+    );
+    let predictionId: Id<'inference_predictions'>;
 
-    const updateData = {
-      roboflowInferenceId: args.inference_id,
-      roboflowDetectionId: args.prediction.detection_id,
-      tileId: args.tileId,
-      class: args.prediction.class,
-      classId: args.prediction.class_id,
-      confidence: args.prediction.confidence,
-      height: args.prediction.height,
-      width: args.prediction.width,
-      x: args.prediction.x,
-      y: args.prediction.y,
-      model: args.model,
-      version: args.version,
-    };
-
+    // Upsert prediction
     if (existing) {
       await ctx.db.patch(existing._id, updateData);
       console.log('patched', {
@@ -74,7 +146,7 @@ export const upsert = internalMutation({
         model: args.model,
         version: args.version,
       });
-      return existing._id;
+      predictionId = existing._id;
     } else {
       const id = await ctx.db.insert('inference_predictions', updateData);
       console.log('created', {
@@ -88,8 +160,33 @@ export const upsert = internalMutation({
           confidence: args.prediction.confidence,
         },
       });
-      return id;
+      predictionId = id as Id<'inference_predictions'>;
     }
+
+    // Verify tile exists before court linking
+    const tile = await ctx.db.get(args.tileId);
+    if (!tile) {
+      console.error('error: tile not found during court linking', {
+        tileId: args.tileId,
+        predictionId,
+        action: 'upsert_prediction',
+      });
+      return predictionId;
+    }
+
+    // Link prediction to court (find existing or create new)
+    await linkPredictionToCourt(
+      ctx,
+      predictionId,
+      args.tileId,
+      updateData.x,
+      updateData.y,
+      updateData.width,
+      updateData.height,
+      updateData.class
+    );
+
+    return predictionId;
   },
 });
 
@@ -100,7 +197,7 @@ export const listByTileModelVersion = internalQuery({
     version: v.string(),
   },
   handler: async (ctx, args) => {
-    const preds = await ctx.db
+    return await ctx.db
       .query('inference_predictions')
       .withIndex('by_tile_model_version', (q) =>
         q
@@ -109,17 +206,15 @@ export const listByTileModelVersion = internalQuery({
           .eq('version', args.version)
       )
       .collect();
-    return preds;
   },
 });
 
 export const listByTile = internalQuery({
   args: { tileId: v.id('tiles') },
   handler: async (ctx, args) => {
-    const preds = await ctx.db
+    return await ctx.db
       .query('inference_predictions')
       .withIndex('by_tile', (q) => q.eq('tileId', args.tileId))
       .collect();
-    return preds;
   },
 });

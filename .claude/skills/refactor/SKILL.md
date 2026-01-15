@@ -14,7 +14,6 @@ This skill provides a systematic approach to refactoring code for better maintai
 - **First rule of refactoring:** Do not change what the code does, only how it does it
 - **DRY (Don't Repeat Yourself):** Every piece of knowledge must have a single, unambiguous representation
 - **Decouple:** Reduce dependencies between modules—components should know as little as possible about each other
-- **Small steps:** Refactor in increments, verify after each change
 
 ## Process Overview
 

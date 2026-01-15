@@ -52,6 +52,8 @@ export const create = internalMutation({
       version: ROBOFLOW_MODEL_VERSION,
       radius: DEFAULT_TILE_RADIUS,
       userId: args.userId,
+      tilesProcessed: 0,
+      predictionsFound: 0,
     });
 
     console.log('created', {
@@ -69,6 +71,45 @@ export const create = internalMutation({
     });
 
     return id;
+  },
+});
+
+export const initializeProgress = internalMutation({
+  args: {
+    scanId: v.id('scans'),
+    totalTiles: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.scanId, {
+      totalTiles: args.totalTiles,
+      tilesProcessed: 0,
+      predictionsFound: 0,
+    });
+
+    console.log('progress_initialized', {
+      scanId: args.scanId,
+      totalTiles: args.totalTiles,
+    });
+  },
+});
+
+export const updateProgress = internalMutation({
+  args: {
+    scanId: v.id('scans'),
+    tilesProcessed: v.number(),
+    predictionsFound: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.scanId, {
+      tilesProcessed: args.tilesProcessed,
+      predictionsFound: args.predictionsFound,
+    });
+
+    console.log('progress_updated', {
+      scanId: args.scanId,
+      tilesProcessed: args.tilesProcessed,
+      predictionsFound: args.predictionsFound,
+    });
   },
 });
 
@@ -107,5 +148,24 @@ export const listAll = query({
         createdAt: s._creationTime as number,
       }))
     );
+  },
+});
+
+export const getProgress = query({
+  args: {
+    scanId: v.id('scans'),
+  },
+  handler: async (ctx, args) => {
+    const scan = await ctx.db.get(args.scanId);
+    if (!scan) {
+      return null;
+    }
+
+    return {
+      totalTiles: scan.totalTiles,
+      tilesProcessed: scan.tilesProcessed,
+      predictionsFound: scan.predictionsFound,
+      isComplete: scan.totalTiles !== undefined && scan.tilesProcessed === scan.totalTiles,
+    };
   },
 });

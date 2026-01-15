@@ -20,11 +20,11 @@ export function CourtTypePills({
   return (
     <div
       className={cn(
-        'fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-40 w-full max-w-md no-zoom',
+        'fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-30 w-full max-w-md no-zoom md:top-[8rem]',
         className
       )}
     >
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide pl-[5%] pr-[5%]">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide pl-[5%] pr-[5%] md:pl-0 md:pr-0">
         {/* All Courts option */}
         <button
           onClick={() => onTypeChange(null)}

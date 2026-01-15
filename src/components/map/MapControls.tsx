@@ -7,6 +7,7 @@ import {
   createConfidenceSection,
   createMapStyleSection,
   createActionButtonsSection,
+  createStatusFilterSection,
 } from './sections';
 import { CustomNavigationControls } from './CustomNavigationControls';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,8 @@ export interface MapControlsSettings {
   // Filters
   confidenceThreshold: number;
   onConfidenceChange: (value: number) => void;
+  verifiedOnly?: boolean;
+  onVerifiedOnlyChange?: (value: boolean) => void;
 
   // Map style
   mapStyle: string;
@@ -34,6 +37,7 @@ export interface MapControlsSettings {
   scan?: {
     onScan: () => void;
     isScanning?: boolean;
+    scanProgress?: import('./CustomNavigationControls').ScanProgress | null;
   };
   upload?: {
     onUpload: () => void;
@@ -72,6 +76,10 @@ export function createDefaultSections(settings: MapControlsSettings): MapSection
       courtCount: settings.courtCount,
       isZoomSufficient: settings.isZoomSufficient,
       showZoomWarning: true,
+    }),
+    createStatusFilterSection({
+      verifiedOnly: settings.verifiedOnly ?? false,
+      onVerifiedOnlyChange: settings.onVerifiedOnlyChange ?? (() => {}),
     }),
     createConfidenceSection({
       confidenceThreshold: settings.confidenceThreshold,
@@ -136,6 +144,23 @@ export function MapControls({
         {controlsCard}
       </div>
 
+      {/* Desktop: Navigation controls (locate, compass, scan) */}
+      <div className='hidden md:block no-zoom'>
+        <CustomNavigationControls
+          mapRef={mapRef}
+          showLocate
+          showCompass
+          showScan={!!settings.scan}
+          onScanClick={settings.scan?.onScan}
+          isScanning={settings.scan?.isScanning}
+          scanProgress={settings.scan?.scanProgress}
+          isLocating={settings.locate?.isLocating}
+          onLocateStart={settings.locate?.onLocateStart}
+          onLocateEnd={settings.locate?.onLocateEnd}
+          className='fixed bottom-24 right-4 pointer-events-auto'
+        />
+      </div>
+
       {/* Mobile: FAB + drawer */}
       <div className='md:hidden no-zoom'>
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
@@ -143,8 +168,11 @@ export function MapControls({
             mapRef={mapRef}
             showSettings={!!settings.scan}
             showScan={!!settings.scan}
+            showLocate
+            showCompass
             onScanClick={settings.scan?.onScan}
             isScanning={settings.scan?.isScanning}
+            scanProgress={settings.scan?.scanProgress}
             isLocating={settings.locate?.isLocating}
             onLocateStart={settings.locate?.onLocateStart}
             onLocateEnd={settings.locate?.onLocateEnd}

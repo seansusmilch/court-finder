@@ -14,7 +14,7 @@ import {
 import { api } from '@backend/_generated/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { ConvexReactClient, useConvexAuth, useMutation } from 'convex/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import type { Doc } from '@backend/_generated/dataModel';
 import '../index.css';
@@ -64,10 +64,22 @@ function RootComponent() {
   const ensureDefaults = useMutation(api.users.ensureDefaultPermissions);
   const router = useRouter();
   const location = useLocation();
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Routes where we don't want to show the header
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    const handleResize = () => checkMobile();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Routes where we don't want to show the header (only on mobile)
   const hideHeaderRoutes = ['/map', '/training-feedback'];
-  const shouldHideHeader = hideHeaderRoutes.includes(location.pathname);
+  const shouldHideHeader = isMobile && hideHeaderRoutes.includes(location.pathname);
+  // Routes where we don't want scrolling on desktop
+  const noScrollRoutes = ['/map'];
+  const isMapRoute = noScrollRoutes.includes(location.pathname);
 
   useEffect(() => {
     // When auth status changes (e.g., after login)
@@ -91,13 +103,15 @@ function RootComponent() {
       >
         <div
           className={`grid ${
-            shouldHideHeader
+            isMapRoute
+              ? 'grid-rows-[auto_1fr_auto] md:grid-rows-[1fr_auto]'
+              : shouldHideHeader
               ? 'grid-rows-[1fr_auto]'
               : 'grid-rows-[auto_1fr_auto]'
           } h-dvh`}
         >
           {!shouldHideHeader && <Header />}
-          <main className="pb-16 md:pb-0 overflow-auto">
+          <main className={`pb-16 md:pb-0 ${isMapRoute ? 'overflow-hidden' : 'overflow-auto'}`}>
             {isFetching ? <Loader /> : <Outlet />}
           </main>
           <BottomNav />
