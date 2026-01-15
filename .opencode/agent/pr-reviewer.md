@@ -18,6 +18,7 @@ permission:
     "*": allow
   task:
     "*": deny
+    "validation-fixer": allow
   skill:
     "*": deny
     "review-formatter": allow
@@ -115,8 +116,12 @@ Load the review-formatter skill to access format requirements and validation too
 1. Create `/tmp/review.json` following the structure documented in the skill
 2. Run the skill's validation script: `python3 .opencode/skill/review-formatter/validate-review.py`
 3. Read validation results from `/tmp/validation-errors.json`
-4. If errors exist, fix the JSON and re-run validation
-5. Repeat until `valid: true`
+4. If errors exist, invoke the validation-fixer subagent:
+   - ANNOUNCE: "⚠️ Validation failed, invoking fast fixer..."
+   - Use Task tool: @validation-fixer to fix all validation errors
+   - Wait for validation-fixer to complete
+   - Read validation results again from `/tmp/validation-errors.json`
+5. Repeat from step 4 if errors still exist
 6. Do NOT complete until validation passes
 
 
