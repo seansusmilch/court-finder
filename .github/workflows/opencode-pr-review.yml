@@ -52,7 +52,7 @@ jobs:
           PR_NUMBER: ${{ steps.pr-number.outputs.number }}
           PR_HEAD_SHA: ${{ steps.pr-context.outputs.head_sha }}
           OPENCODE_MODEL: ${{ github.event.inputs.model || 'zai-coding-plan/glm-4.6' }}
-          OPENCODE_FAST_MODEL: ${{ github.event.inputs.fast_model || 'zai-coding-plan/GLM-4.5-Flash' }}
+          OPENCODE_FAST_MODEL: ${{ github.event.inputs.fast_model || 'zai-coding-plan/glm-4.5-flash' }}
         run: |
           opencode run --agent pr-reviewer --model "$OPENCODE_MODEL" "Review PR #${{ steps.pr-number.outputs.number }}"
 
