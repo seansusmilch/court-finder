@@ -80,6 +80,9 @@ export default defineSchema({
       y: v.float64(),
       z: v.float64(),
     }),
+    totalTiles: v.optional(v.number()),
+    tilesProcessed: v.optional(v.number()),
+    predictionsFound: v.optional(v.number()),
   }).index('by_center_tile', ['centerTile']),
   upload_batches: defineTable({
     tileId: v.id('tiles'),

@@ -1,5 +1,5 @@
 'use node';
-import { action } from './_generated/server';
+import { action, internalAction } from './_generated/server';
 import { v } from 'convex/values';
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
@@ -64,43 +64,6 @@ const validateEnvironmentVariables = (): {
   }
 
   return { mapboxToken, roboflowKey };
-};
-
-const findOrCreateScan = async (
-  ctx: ActionCtx,
-  latitude: number,
-  longitude: number,
-  userId: Id<'users'>
-): Promise<Id<'scans'>> => {
-  const centerTile = pointToTile(latitude, longitude);
-  const existingScans = await ctx.runQuery(internal.scans.findByCenterTile, {
-    centerTile,
-  });
-
-  if (existingScans?.length) {
-    console.log('query', {
-      table: 'scans',
-      index: 'by_center_tile',
-      params: { centerTile },
-      found: true,
-      scanId: existingScans[0]._id,
-      userId,
-    });
-    return existingScans[0]._id;
-  }
-
-  const scanId: Id<'scans'> = await ctx.runMutation(internal.scans.create, {
-    centerLat: latitude,
-    centerLong: longitude,
-    userId,
-  });
-  console.log('created', {
-    table: 'scans',
-    scanId,
-    data: { centerLat: latitude, centerLong: longitude, centerTile },
-    userId,
-  });
-  return scanId;
 };
 
 type TileWithUrl = TileCoordinate & { url: string };
@@ -176,18 +139,18 @@ const processTile = async (
     ? detections.predictions.length
     : undefined;
 
-  // Upsert inference predictions
-  const predictionIds = await Promise.all(
-    detections.predictions.map(async (prediction) => {
-      return await ctx.runMutation(internal.inference_predictions.upsert, {
-        tileId,
-        model: ROBOFLOW_MODEL_NAME,
-        version: ROBOFLOW_MODEL_VERSION,
-        inference_id: detections.inference_id,
-        prediction,
-      });
-    })
-  );
+  // Upsert inference predictions sequentially to avoid concurrency conflicts
+  const predictionIds: Id<'inference_predictions'>[] = [];
+  for (const prediction of detections.predictions) {
+    const id = await ctx.runMutation(internal.inference_predictions.upsert, {
+      tileId,
+      model: ROBOFLOW_MODEL_NAME,
+      version: ROBOFLOW_MODEL_VERSION,
+      inference_id: detections.inference_id,
+      prediction,
+    });
+    predictionIds.push(id);
+  }
 
   console.log('tile:complete', {
     index: index + 1,
@@ -209,6 +172,150 @@ const processTile = async (
     scanTile: { z: tile.z, x: tile.x, y: tile.y },
   };
 };
+
+export const startScanArea = action({
+  args: {
+    latitude: v.number(),
+    longitude: v.number(),
+  },
+  handler: async (ctx, args: ScanAreaArgs): Promise<{ scanId: Id<'scans'> }> => {
+    // Validate permissions
+    const canScan = await ctx.runQuery(api.users.hasPermission, {
+      permission: PERMISSIONS.SCANS.EXECUTE,
+    });
+    const userId = await getAuthUserId(ctx);
+    if (!canScan || !userId) {
+      console.error('error: unauthorized', {
+        userId,
+        canScan,
+        permission: PERMISSIONS.SCANS.EXECUTE,
+        requestedAction: 'startScanArea',
+      });
+      throw new Error('Unauthorized');
+    }
+
+    // Validate environment variables
+    const { mapboxToken } = validateEnvironmentVariables();
+
+    // Generate tile coverage
+    const coverage = tilesInRadiusFromPoint(
+      args.latitude,
+      args.longitude,
+      DEFAULT_TILE_RADIUS,
+      undefined,
+      { accessToken: mapboxToken }
+    );
+
+    // Create new scan
+    const scanId: Id<'scans'> = await ctx.runMutation(internal.scans.create, {
+      centerLat: args.latitude,
+      centerLong: args.longitude,
+      userId,
+    });
+
+    // Initialize scan progress
+    await ctx.runMutation(internal.scans.initializeProgress, {
+      scanId,
+      totalTiles: coverage.tiles.length,
+    });
+
+    // Schedule the scan to run in background
+    await ctx.scheduler.runAfter(0, internal.actions.processScanArea, {
+      scanId,
+      latitude: args.latitude,
+      longitude: args.longitude,
+    });
+
+    console.log('scan_started', {
+      scanId,
+      userId,
+      latitude: args.latitude,
+      longitude: args.longitude,
+      totalTiles: coverage.tiles.length,
+    });
+
+    return { scanId };
+  },
+});
+
+export const processScanArea = internalAction({
+  args: {
+    scanId: v.id('scans'),
+    latitude: v.number(),
+    longitude: v.number(),
+  },
+  handler: async (ctx: ActionCtx, args) => {
+    const startTs = Date.now();
+
+    // Validate environment variables
+    const { mapboxToken, roboflowKey } = validateEnvironmentVariables();
+
+    // Generate tile coverage (same as startScanArea)
+    const coverage = tilesInRadiusFromPoint(
+      args.latitude,
+      args.longitude,
+      DEFAULT_TILE_RADIUS,
+      undefined,
+      { accessToken: mapboxToken }
+    );
+
+    console.log('processing_scan', {
+      scanId: args.scanId,
+      totalTiles: coverage.tiles.length,
+    });
+
+    // Process all tiles
+    const results: ScanResult[] = [];
+    let totalPredictionsFound = 0;
+
+    for (let i = 0; i < coverage.tiles.length; i++) {
+      const tileId = await ctx.runMutation(
+        internal.tiles.insertTileIfNotExists,
+        {
+          x: coverage.tiles[i].x,
+          y: coverage.tiles[i].y,
+          z: coverage.tiles[i].z,
+        }
+      );
+      // Ensure scan<->tile relationship exists
+      await ctx.runMutation(
+        internal.scans_x_tiles.insertScanTileRelationshipIfNotExists,
+        {
+          scanId: args.scanId,
+          tileId,
+        }
+      );
+      const { result } = await processTile(
+        ctx,
+        coverage.tiles[i],
+        i,
+        coverage.tiles.length,
+        roboflowKey
+      );
+
+      results.push(result);
+
+      // Update progress
+      const detections = result.detections as RoboflowResponse;
+      const predictionsCount = detections.predictions?.length ?? 0;
+      totalPredictionsFound += predictionsCount;
+
+      await ctx.runMutation(internal.scans.updateProgress, {
+        scanId: args.scanId,
+        tilesProcessed: i + 1,
+        predictionsFound: totalPredictionsFound,
+      });
+    }
+
+    // Log completion
+    console.log('scan_complete', {
+      durationMs: Date.now() - startTs,
+      scanId: args.scanId,
+      tilesProcessed: results.length,
+      totalPredictions: totalPredictionsFound,
+    });
+  },
+});
 
 export const scanArea = action({
   args: {
@@ -260,16 +367,22 @@ export const scanArea = action({
       gridSize: { rows: coverage.rows, cols: coverage.cols },
     });
 
-    // Find or create scan
-    const scanId: Id<'scans'> = await findOrCreateScan(
-      ctx,
-      args.latitude,
-      args.longitude,
-      userId
-    );
+    // Create new scan (always create fresh scan for progress tracking)
+    const scanId: Id<'scans'> = await ctx.runMutation(internal.scans.create, {
+      centerLat: args.latitude,
+      centerLong: args.longitude,
+      userId,
+    });
+
+    // Initialize scan progress
+    await ctx.runMutation(internal.scans.initializeProgress, {
+      scanId,
+      totalTiles: coverage.tiles.length,
+    });
 
     // Process all tiles
     const results: ScanResult[] = [];
+    let totalPredictionsFound = 0;
 
     for (let i = 0; i < coverage.tiles.length; i++) {
       const tileId = await ctx.runMutation(
@@ -297,6 +410,17 @@ export const scanArea = action({
       );
 
       results.push(result);
+
+      // Update progress
+      const detections = result.detections as RoboflowResponse;
+      const predictionsCount = detections.predictions?.length ?? 0;
+      totalPredictionsFound += predictionsCount;
+
+      await ctx.runMutation(internal.scans.updateProgress, {
+        scanId,
+        tilesProcessed: i + 1,
+        predictionsFound: totalPredictionsFound,
+      });
     }
 
     // Log completion and return results
@@ -306,10 +430,7 @@ export const scanArea = action({
       input: { latitude: args.latitude, longitude: args.longitude },
       scanId,
       tilesProcessed: results.length,
-      totalPredictions: results.reduce((sum, t) => {
-        const detections = t.detections as RoboflowResponse;
-        return sum + (detections.predictions?.length ?? 0);
-      }, 0),
+      totalPredictions: totalPredictionsFound,
       tilesFromCache: results.filter((t) => {
         // This is approximate - we'd need to track this better
         return false;

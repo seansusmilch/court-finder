@@ -55,10 +55,18 @@ export function MapControlButton({
   );
 }
 
+export interface ScanProgress {
+  totalTiles: number;
+  tilesProcessed: number;
+  predictionsFound: number;
+  isComplete: boolean;
+}
+
 export interface DefaultButtonFactoriesOptions {
   onSettingsClick?: () => void;
   onScanClick?: () => void;
   isScanning?: boolean;
+  scanProgress?: ScanProgress | null;
   isLocating?: boolean;
   onLocateStart?: () => void;
   onLocateEnd?: () => void;
@@ -72,6 +80,7 @@ export function createDefaultButtons(
     onSettingsClick,
     onScanClick,
     isScanning = false,
+    scanProgress,
     isLocating = false,
     onLocateStart,
     onLocateEnd,
@@ -109,20 +118,35 @@ export function createDefaultButtons(
     });
   }, [mapRef]);
 
+  const getScanButtonLabel = () => {
+    if (!isScanning || !scanProgress) return 'Scan this area';
+    const { totalTiles, tilesProcessed } = scanProgress;
+    return `${tilesProcessed}/${totalTiles}`;
+  };
+
+  const getScanButtonIcon = () => {
+    if (!isScanning || !scanProgress) return <Radar className="h-6 w-6" />;
+    return null;
+  };
+
   return [
     {
       id: 'scan',
-      icon: <Radar className="h-6 w-6" />,
-      label: 'Scan this area',
+      icon: getScanButtonIcon(),
+      label: getScanButtonLabel(),
       variant: 'default',
       onClick: onScanClick ?? (() => {}),
       disabled: isScanning,
       show: false,
       order: 1,
       className: 'bg-orange-500 border-orange-500 hover:bg-orange-600 text-white',
-      renderIcon: (icon) => (
-        <span className={isScanning ? 'animate-scan-spin' : ''}>{icon}</span>
-      ),
+      renderIcon: (icon) => {
+        if (!isScanning || !scanProgress || scanProgress.totalTiles === 0) {
+          return <span className={isScanning ? 'animate-scan-spin' : ''}>{icon}</span>;
+        }
+        const progress = (scanProgress.tilesProcessed / scanProgress.totalTiles) * 100;
+        return <span className="text-sm font-semibold">{Math.round(progress)}%</span>;
+      },
     },
     {
       id: 'settings',
@@ -168,6 +192,7 @@ export interface CustomNavigationControlsProps {
   onSettingsClick?: () => void;
   onScanClick?: () => void;
   isScanning?: boolean;
+  scanProgress?: ScanProgress | null;
   isLocating?: boolean;
   onLocateStart?: () => void;
   onLocateEnd?: () => void;
@@ -187,6 +212,7 @@ export function CustomNavigationControls({
   onSettingsClick,
   onScanClick,
   isScanning = false,
+  scanProgress,
   isLocating = false,
   onLocateStart,
   onLocateEnd,
@@ -197,6 +223,7 @@ export function CustomNavigationControls({
         onSettingsClick,
         onScanClick,
         isScanning,
+        scanProgress,
         isLocating,
         onLocateStart,
         onLocateEnd,

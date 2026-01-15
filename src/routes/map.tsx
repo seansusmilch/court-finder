@@ -7,10 +7,11 @@ import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
-import { useLocalStorage } from '@/hooks';
+import { useLocalStorage, useIsMobile } from '@/hooks';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@backend/_generated/api';
+import type { Id } from '@backend/_generated/dataModel';
 import { MAPBOX_TILE_DEFAULTS } from '@backend/lib/constants';
 import type { MapMouseEvent } from 'mapbox-gl';
 import { CourtPopup } from '@/components/map/CourtPopup';
@@ -20,6 +21,7 @@ import MapControls from '@/components/map/MapControls';
 import { FloatingSearchBar } from '@/components/map/FloatingSearchBar';
 import { CourtTypePills } from '@/components/map/CourtTypePills';
 import { CourtDetailDrawer } from '@/components/map/CourtDetailDrawer';
+import { CourtModal } from '@/components/map/CourtModal';
 import {
   PINS_VISIBLE_FROM_ZOOM,
   DEFAULT_MAP_CENTER,
@@ -71,6 +73,7 @@ function MapPage() {
     defaultViewState: MapViewState;
     defaultMapSettings: MapSettings;
   };
+  const isMobile = useIsMobile();
 
   // Use localStorage hooks for persistent state
   const [viewState, setViewState] = useLocalStorage<MapViewState>(
@@ -112,6 +115,8 @@ function MapPage() {
   const [selectedPin, setSelectedPin] = useState<SelectedPin | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [currentScanId, setCurrentScanId] = useState<string | null>(null);
+  const [isScanningState, setIsScanningState] = useState(false);
 
   const onClusterClick = useCallback((event: MapMouseEvent) => {
     const features = event.features;
@@ -152,13 +157,18 @@ function MapPage() {
     };
     const [longitude, latitude] = geometry.coordinates;
 
-    // Type assertion for properties - the convex query ensures this structure
+    // Type assertion for properties - convex query ensures this structure
     const properties = feature.properties as CourtFeatureProperties;
 
     setSelectedPin({
       longitude,
       latitude,
       properties,
+    });
+
+    event.target.easeTo({
+      center: [longitude, latitude],
+      duration: 500,
     });
   }, []);
 
@@ -168,7 +178,7 @@ function MapPage() {
   const canUpload = useQuery(api.users.hasPermission, {
     permission: 'admin.access',
   }) as boolean | undefined;
-  const scanArea = useAction(api.actions.scanArea);
+  const startScanArea = useAction(api.actions.startScanArea);
   const uploadCenterTile = useAction(api.upload_batches.uploadCenterTile);
 
   const scanMutation = useMutation({
@@ -176,7 +186,13 @@ function MapPage() {
     mutationFn: async () => {
       const center = mapRef.current?.getCenter?.();
       if (!center) throw new Error('Map center not available');
-      return scanArea({ latitude: center.lat, longitude: center.lng });
+      const result = await startScanArea({ latitude: center.lat, longitude: center.lng });
+      setCurrentScanId(result.scanId as string);
+      setIsScanningState(true);
+      return result;
+    },
+    onError: () => {
+      setIsScanningState(false);
     },
   });
 
@@ -203,6 +219,26 @@ function MapPage() {
     api.inferences.getAvailableZoomLevels,
     {}
   ) as number[] | undefined;
+
+  const scanProgress = useQuery(
+    api.scans.getProgress,
+    currentScanId ? { scanId: currentScanId as Id<'scans'> } : 'skip'
+  ) as
+    | { totalTiles: number; tilesProcessed: number; predictionsFound: number; isComplete: boolean }
+    | undefined
+    | null;
+
+  // Clear scan ID and scanning state when scan is complete
+  useEffect(() => {
+    if (scanProgress?.isComplete && isScanningState) {
+      // Delay clearing to show final progress briefly
+      const timer = setTimeout(() => {
+        setCurrentScanId(null);
+        setIsScanningState(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [scanProgress?.isComplete]);
 
   const shouldQuery = Boolean(bbox && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM);
   const featureCollection = useQuery(
@@ -339,15 +375,6 @@ function MapPage() {
         }}
       >
         <ScaleControl />
-        <CustomNavigationControls
-          mapRef={mapRef}
-          showLocate={false}
-          showCompass={false}
-          showScan={!!canScan}
-          onScanClick={() => scanMutation.mutate()}
-          isScanning={scanMutation.isPending}
-          className="hidden md:flex absolute bottom-8 right-4 z-50"
-        />
         {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM && viewState.zoom <= CLUSTER_MAX_ZOOM && (
             <CourtClusters data={geojson} mapLoaded={mapLoaded} />
           )}
@@ -366,16 +393,30 @@ function MapPage() {
                 longitude={lng}
                 latitude={lat}
                 properties={f.properties}
-                onClick={(longitude, latitude, properties) =>
-                  setSelectedPin({ longitude, latitude, properties })
-                }
+                onClick={(longitude, latitude, properties) => {
+                  setSelectedPin({ longitude, latitude, properties });
+                  mapRef.current?.easeTo({
+                    center: [longitude, latitude],
+                    duration: 500,
+                  });
+                }}
               />
             );
           })}
       </Map>
 
-      {selectedPin && (
+      {isMobile && selectedPin && (
         <CourtDetailDrawer
+          open={!!selectedPin}
+          onOpenChange={(open) => !open && setSelectedPin(null)}
+          longitude={selectedPin.longitude}
+          latitude={selectedPin.latitude}
+          properties={selectedPin.properties}
+        />
+      )}
+
+      {!isMobile && selectedPin && (
+        <CourtModal
           open={!!selectedPin}
           onOpenChange={(open) => !open && setSelectedPin(null)}
           longitude={selectedPin.longitude}
@@ -409,7 +450,8 @@ function MapPage() {
           scan: canScan
             ? {
                 onScan: () => scanMutation.mutate(),
-                isScanning: scanMutation.isPending,
+                isScanning: isScanningState,
+                scanProgress,
               }
             : undefined,
           upload: canUpload

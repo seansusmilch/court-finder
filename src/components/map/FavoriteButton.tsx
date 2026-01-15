@@ -25,9 +25,10 @@ function saveFavorites(favorites: string[]) {
 interface FavoriteButtonProps {
   courtId: string;
   className?: string;
+  showLabel?: boolean;
 }
 
-export function FavoriteButton({ courtId, className }: FavoriteButtonProps) {
+export function FavoriteButton({ courtId, className, showLabel = true }: FavoriteButtonProps) {
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
@@ -53,17 +54,18 @@ export function FavoriteButton({ courtId, className }: FavoriteButtonProps) {
   return (
     <Button
       variant="outline"
-      className={cn('w-full', className)}
+      className={className}
       size="lg"
       onClick={toggleFavorite}
     >
       <Heart
         className={cn(
-          'mr-2 h-4 w-4 transition-all',
+          showLabel && 'mr-2',
+          'h-4 w-4 transition-all',
           isFavorite && 'fill-current text-red-500'
         )}
       />
-      {isFavorite ? 'Saved to Favorites' : 'Save to Favorites'}
+      {showLabel && (isFavorite ? 'Saved' : 'Save')}
     </Button>
   );
 }

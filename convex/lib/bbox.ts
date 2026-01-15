@@ -1,3 +1,5 @@
+import { BBOX_OVERLAP_THRESHOLD } from './constants';
+
 /**
  * Bounding box representation with pixel coordinates
  */
@@ -31,7 +33,7 @@ export function bboxIntersectionArea(
 export function bboxOverlapMeetsThreshold(
   bbox1: BBox,
   bbox2: BBox,
-  overlapThreshold: number = 0.75
+  overlapThreshold: number = BBOX_OVERLAP_THRESHOLD
 ): boolean {
   const area1 = bbox1.width * bbox1.height;
   const area2 = bbox2.width * bbox2.height;
