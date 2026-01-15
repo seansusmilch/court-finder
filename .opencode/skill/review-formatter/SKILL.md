@@ -43,7 +43,7 @@ Construct the GitHub API JSON structure and write to `/tmp/review.json`:
     {
       "path": "path/to/file.ts",
       "line": 42,
-      "body": "<details>\n<summary>⚠️ Potential issue | 🔴 Critical</summary>\n\nBug: [title]\n\n[description]\n\n🐛 Proposed fix\n<details>\n<summary>...</summary>\n```python\n...\n```\n</details>\n\n📝 Committable suggestion\n<details>\n<summary>...</summary>\n...\n</details>\n\n🤖 Prompt for AI Agents\n<details>\n<summary>...</summary>\n...\n</details>\n</details>"
+      "body": "⚠️ Potential issue | 🔴 Critical\n\n[Bug/Enhancement]: [title]\n\n[description]\n\n🐛 Proposed fix\n<details>\n<summary>...</summary>\n```typescript\n...\n```\n</details>\n\n📝 Committable suggestion\n<details>\n<summary>...</summary>\n...\n</details>\n\n🤖 Prompt for AI Agents\n<details>\n<summary>...</summary>\n...\n</details>"
     }
   ],
   "event": "COMMENT"
@@ -70,10 +70,9 @@ Reviewing files that changed from the base of the PR and between [commit1] and [
 [file list]
 ```
 
-For each comment body, use collapsible sections:
+For each comment body, use this format:
 ```
-<details>
-<summary>⚠️ Potential issue | 🔴 Critical</summary>
+⚠️ Potential issue | 🔴 Critical
 
 [Bug/Enhancement]: [title]
 
@@ -82,7 +81,7 @@ For each comment body, use collapsible sections:
 🐛 Proposed fix
 <details>
 <summary>...</summary>
-```python
+```typescript
  before code
 +after code
 ```
@@ -93,7 +92,7 @@ For each comment body, use collapsible sections:
 <summary>‼️ IMPORTANT
 Carefully review the code before committing. Ensure that it accurately replaces the highlighted code, contains no missing lines, and has no issues with indentation. Thoroughly test & benchmark the code to ensure it meets the requirements.</summary>
 Suggested change
-```python
+```typescript
 [code block]
 ```
 </details>
@@ -102,7 +101,6 @@ Suggested change
 <details>
 <summary>...</summary>
 [ai_prompt]
-</details>
 </details>
 ```
 
