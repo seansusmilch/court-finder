@@ -29,6 +29,7 @@ import type * as lib_spatial from "../lib/spatial.js";
 import type * as lib_tiles from "../lib/tiles.js";
 import type * as lib_types from "../lib/types.js";
 import type * as migrations from "../migrations.js";
+import type * as migrations_fetchRecords from "../migrations/fetchRecords.js";
 import type * as scanResults from "../scanResults.js";
 import type * as scans from "../scans.js";
 import type * as scans_x_tiles from "../scans_x_tiles.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   "lib/tiles": typeof lib_tiles;
   "lib/types": typeof lib_types;
   migrations: typeof migrations;
+  "migrations/fetchRecords": typeof migrations_fetchRecords;
   scanResults: typeof scanResults;
   scans: typeof scans;
   scans_x_tiles: typeof scans_x_tiles;
