@@ -1,5 +1,6 @@
 import type { RoboflowPrediction } from './roboflow';
-import { ENV_VARS, MAPBOX_TILE_DEFAULTS } from './constants';
+import { MAPBOX_TILE_DEFAULTS } from './constants';
+import { env } from '../env';
 
 export type TileCoordinate = {
   z: number;
@@ -78,7 +79,7 @@ export function styleTileUrl(
   }>
 ): string {
   const { username, styleId, tileSize, accessToken } = {
-    accessToken: process.env[ENV_VARS.MAPBOX_API_KEY],
+    accessToken: env.MAPBOX_API_KEY,
     ...MAPBOX_TILE_DEFAULTS,
     ...opts,
   };

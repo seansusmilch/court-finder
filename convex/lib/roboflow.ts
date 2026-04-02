@@ -1,5 +1,6 @@
 import type { CreateMLAnnotation } from './createml';
-import { ENV_VARS, ROBOFLOW_MODEL_NAME } from './constants';
+import { ROBOFLOW_MODEL_NAME } from './constants';
+import { env } from '../env';
 
 export interface RoboflowPrediction {
   x: number;
@@ -91,10 +92,10 @@ export async function detectObjectsWithRoboflow(
 export async function uploadImageToRoboflow({
   imageUrl,
   imageName,
-  apiKey = process.env[ENV_VARS.ROBOFLOW_API_KEY] || '',
+  apiKey = env.ROBOFLOW_API_KEY || '',
   datasetName = ROBOFLOW_MODEL_NAME || '',
   split = 'train',
-  batch = process.env[ENV_VARS.ROBOFLOW_BATCH] || 'User Contributed',
+  batch = env.ROBOFLOW_BATCH || 'User Contributed',
 }: {
   imageUrl: string;
   imageName: string;
@@ -187,7 +188,7 @@ export interface AnnotationUploadResponse {
 export async function uploadAnnotationToRoboflow({
   imageId,
   annotation,
-  apiKey = process.env[ENV_VARS.ROBOFLOW_API_KEY] || '',
+  apiKey = env.ROBOFLOW_API_KEY || '',
   datasetName = ROBOFLOW_MODEL_NAME || '',
   format = 'createml-json',
   name,

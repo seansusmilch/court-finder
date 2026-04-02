@@ -16,9 +16,9 @@ import {
   ROBOFLOW_MODEL_NAME,
   ROBOFLOW_MODEL_VERSION,
   DEFAULT_TILE_RADIUS,
-  ENV_VARS,
 } from './lib/constants';
 import { getAuthUserId } from '@convex-dev/auth/server';
+import { env } from './env';
 
 // Types
 type ScanResult = {
@@ -53,8 +53,8 @@ const validateEnvironmentVariables = (): {
   mapboxToken: string;
   roboflowKey: string;
 } => {
-  const mapboxToken = process.env[ENV_VARS.MAPBOX_API_KEY];
-  const roboflowKey = process.env[ENV_VARS.ROBOFLOW_API_KEY];
+  const mapboxToken = env.MAPBOX_API_KEY;
+  const roboflowKey = env.ROBOFLOW_API_KEY;
 
   if (!mapboxToken) {
     throw new Error('Missing MAPBOX_API_KEY environment variable');
