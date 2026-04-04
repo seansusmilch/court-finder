@@ -48,24 +48,6 @@ type ScanAreaReturn = {
   tiles: ScanResult[];
 };
 
-// Helper functions
-const validateEnvironmentVariables = (): {
-  mapboxToken: string;
-  roboflowKey: string;
-} => {
-  const mapboxToken = env.MAPBOX_API_KEY;
-  const roboflowKey = env.ROBOFLOW_API_KEY;
-
-  if (!mapboxToken) {
-    throw new Error('Missing MAPBOX_API_KEY environment variable');
-  }
-  if (!roboflowKey) {
-    throw new Error('Missing ROBOFLOW_API_KEY environment variable');
-  }
-
-  return { mapboxToken, roboflowKey };
-};
-
 type TileWithUrl = TileCoordinate & { url: string };
 
 const processTile = async (
@@ -194,8 +176,7 @@ export const startScanArea = action({
       throw new Error('Unauthorized');
     }
 
-    // Validate environment variables
-    const { mapboxToken } = validateEnvironmentVariables();
+    const mapboxToken = env.MAPBOX_API_KEY;
 
     // Generate tile coverage
     const coverage = tilesInRadiusFromPoint(
@@ -247,8 +228,8 @@ export const processScanArea = internalAction({
   handler: async (ctx: ActionCtx, args) => {
     const startTs = Date.now();
 
-    // Validate environment variables
-    const { mapboxToken, roboflowKey } = validateEnvironmentVariables();
+    const mapboxToken = env.MAPBOX_API_KEY;
+    const roboflowKey = env.ROBOFLOW_API_KEY;
 
     // Generate tile coverage (same as startScanArea)
     const coverage = tilesInRadiusFromPoint(
@@ -340,8 +321,8 @@ export const scanArea = action({
       throw new Error('Unauthorized');
     }
 
-    // Validate environment variables
-    const { mapboxToken, roboflowKey } = validateEnvironmentVariables();
+    const mapboxToken = env.MAPBOX_API_KEY;
+    const roboflowKey = env.ROBOFLOW_API_KEY;
 
     // Log scan start
     console.log('start', {
