@@ -92,10 +92,10 @@ export async function detectObjectsWithRoboflow(
 export async function uploadImageToRoboflow({
   imageUrl,
   imageName,
-  apiKey = env.ROBOFLOW_API_KEY || '',
+  apiKey = env.ROBOFLOW_API_KEY,
   datasetName = ROBOFLOW_MODEL_NAME || '',
   split = 'train',
-  batch = env.ROBOFLOW_BATCH || 'User Contributed',
+  batch = env.ROBOFLOW_BATCH,
 }: {
   imageUrl: string;
   imageName: string;
@@ -188,7 +188,7 @@ export interface AnnotationUploadResponse {
 export async function uploadAnnotationToRoboflow({
   imageId,
   annotation,
-  apiKey = env.ROBOFLOW_API_KEY || '',
+  apiKey = env.ROBOFLOW_API_KEY,
   datasetName = ROBOFLOW_MODEL_NAME || '',
   format = 'createml-json',
   name,
