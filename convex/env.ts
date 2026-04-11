@@ -1,13 +1,14 @@
-import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+const required = (name: string, value: string | undefined): string => {
+  if (!value) {
+    throw new Error(`Missing ${name} environment variable`);
+  }
 
-export const env = createEnv({
-  server: {
-    MAPBOX_API_KEY: z.string().min(1),
-    ROBOFLOW_API_KEY: z.string().min(1),
-    ROBOFLOW_BATCH: z.string().default('User Contributed'),
-    CONVEX_SITE_URL: z.string().optional(),
-  },
-  runtimeEnv: process.env,
-  emptyStringAsUndefined: true,
-});
+  return value;
+};
+
+export const env = {
+  MAPBOX_API_KEY: required('MAPBOX_API_KEY', process.env.MAPBOX_API_KEY),
+  ROBOFLOW_API_KEY: required('ROBOFLOW_API_KEY', process.env.ROBOFLOW_API_KEY),
+  ROBOFLOW_BATCH: process.env.ROBOFLOW_BATCH || 'User Contributed',
+  CONVEX_SITE_URL: process.env.CONVEX_SITE_URL,
+};

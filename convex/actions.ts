@@ -17,7 +17,6 @@ import {
   ROBOFLOW_MODEL_VERSION,
   DEFAULT_TILE_RADIUS,
 } from './lib/constants';
-import { getAuthUserId } from '@convex-dev/auth/server';
 import { env } from './env';
 
 // Types
@@ -162,13 +161,16 @@ export const startScanArea = action({
   },
   handler: async (ctx, args: ScanAreaArgs): Promise<{ scanId: Id<'scans'> }> => {
     // Validate permissions
+    const user = await ctx.runQuery(api.users.me, {});
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
     const canScan = await ctx.runQuery(api.users.hasPermission, {
       permission: PERMISSIONS.SCANS.EXECUTE,
     });
-    const userId = await getAuthUserId(ctx);
-    if (!canScan || !userId) {
+    if (!canScan) {
       console.error('error: unauthorized', {
-        userId,
+        userId: user._id,
         canScan,
         permission: PERMISSIONS.SCANS.EXECUTE,
         requestedAction: 'startScanArea',
@@ -191,7 +193,7 @@ export const startScanArea = action({
     const scanId: Id<'scans'> = await ctx.runMutation(internal.scans.create, {
       centerLat: args.latitude,
       centerLong: args.longitude,
-      userId,
+      userId: user._id,
     });
 
     // Initialize scan progress
@@ -209,7 +211,7 @@ export const startScanArea = action({
 
     console.log('scan_started', {
       scanId,
-      userId,
+      userId: user._id,
       latitude: args.latitude,
       longitude: args.longitude,
       totalTiles: coverage.tiles.length,
@@ -307,13 +309,16 @@ export const scanArea = action({
     const startTs = Date.now();
 
     // Validate permissions
+    const user = await ctx.runQuery(api.users.me, {});
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
     const canScan = await ctx.runQuery(api.users.hasPermission, {
       permission: PERMISSIONS.SCANS.EXECUTE,
     });
-    const userId = await getAuthUserId(ctx);
-    if (!canScan || !userId) {
+    if (!canScan) {
       console.error('error: unauthorized', {
-        userId,
+        userId: user._id,
         canScan,
         permission: PERMISSIONS.SCANS.EXECUTE,
         requestedAction: 'scanArea',
@@ -327,7 +332,7 @@ export const scanArea = action({
     // Log scan start
     console.log('start', {
       startTs,
-      userId,
+      userId: user._id,
       latitude: args.latitude,
       longitude: args.longitude,
       centerTile: pointToTile(args.latitude, args.longitude),
@@ -352,7 +357,7 @@ export const scanArea = action({
     const scanId: Id<'scans'> = await ctx.runMutation(internal.scans.create, {
       centerLat: args.latitude,
       centerLong: args.longitude,
-      userId,
+      userId: user._id,
     });
 
     // Initialize scan progress
@@ -407,7 +412,7 @@ export const scanArea = action({
     // Log completion and return results
     console.log('complete', {
       durationMs: Date.now() - startTs,
-      userId,
+      userId: user._id,
       input: { latitude: args.latitude, longitude: args.longitude },
       scanId,
       tilesProcessed: results.length,
@@ -426,56 +431,5 @@ export const scanArea = action({
       rows: coverage.rows,
       tiles: results,
     };
-  },
-});
-
-export const changePassword = action({
-  args: {
-    currentPassword: v.string(),
-    newPassword: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error('Unauthorized');
-    }
-
-    const user = await ctx.runQuery(api.users.me, {});
-    if (!user || !user.email) {
-      throw new Error('User not found or no email');
-    }
-
-    // Import password utilities
-    const { verifyPassword, hashPassword } = await import('./actions/password');
-
-    // Get account info using mutation (since we can't query accounts directly from action)
-    const accountInfo = await ctx.runMutation(api.users._changePasswordInternal, {
-      userId,
-    });
-
-    if (!accountInfo) {
-      throw new Error('Account not found');
-    }
-
-    // Verify current password
-    const isValid = await verifyPassword(
-      args.currentPassword,
-      accountInfo.hashedPassword
-    );
-
-    if (!isValid) {
-      throw new Error('Current password is incorrect');
-    }
-
-    // Hash new password
-    const newHashedPassword = await hashPassword(args.newPassword);
-
-    // Update account with new password
-    await ctx.runMutation(api.users._updateAccountPassword, {
-      accountId: accountInfo.accountId,
-      hashedPassword: newHashedPassword,
-    });
-
-    return { success: true };
   },
 });

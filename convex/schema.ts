@@ -5,13 +5,22 @@ import { authTables } from '@convex-dev/auth/server';
 export default defineSchema({
   ...authTables,
   users: defineTable({
+    externalId: v.optional(v.string()),
     name: v.optional(v.string()),
     image: v.optional(v.id('_storage')),
+    imageUrl: v.optional(v.string()),
     email: v.optional(v.string()),
+    emailVerified: v.optional(v.boolean()),
     emailVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
+    role: v.optional(v.union(v.literal('user'), v.literal('admin'))),
+    migratedFromConvexId: v.optional(v.id('users')),
+    createdAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
     permissions: v.array(v.string()),
-  }).index('email', ['email']),
+  })
+    .index('by_external_id', ['externalId'])
+    .index('email', ['email']),
   courts: defineTable({
     latitude: v.float64(),
     longitude: v.float64(),

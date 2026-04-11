@@ -3,7 +3,6 @@ import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { internal } from './_generated/api';
-import { getAuthUserId } from '@convex-dev/auth/server';
 import {
   pixelOnTileToLngLat,
   type GeoJSONPointFeature,
@@ -11,6 +10,7 @@ import {
 import { bboxOverlapMeetsThreshold, bboxIntersectionArea, type BBox } from './lib/bbox';
 import { COURT_VERIFICATION, BBOX_OVERLAP_THRESHOLD } from './lib/constants';
 import type { CourtStatus } from './lib/types';
+import { requireCurrentUser } from './lib/auth';
 
 interface CourtVerificationMetrics {
   totalFeedbackCount: number;
@@ -373,19 +373,14 @@ export const updateCourtStatus = mutation({
     status: v.union(v.literal('verified'), v.literal('pending'), v.literal('rejected')),
   },
   handler: async (ctx, args): Promise<Id<'courts'>> => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      throw new Error('Unauthorized');
-    }
-
-    const user = await ctx.db.get(userId);
+    const user = await requireCurrentUser(ctx);
     const isAdmin = user?.permissions?.includes('admin.access');
 
     if (!isAdmin) {
       throw new Error('Insufficient permissions');
     }
 
-    return updateCourtStatusInternal(ctx, args.courtId, args.status, userId);
+    return updateCourtStatusInternal(ctx, args.courtId, args.status, user._id);
   },
 });
 
