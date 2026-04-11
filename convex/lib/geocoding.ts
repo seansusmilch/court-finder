@@ -1,6 +1,5 @@
-import { ENV_VARS } from './constants';
+import { env } from '../env';
 
-// Geocoding function to convert coordinates to readable location
 export async function reverseGeocode(
   lat: number,
   lng: number
@@ -8,7 +7,7 @@ export async function reverseGeocode(
   const apiStartTs = Date.now();
 
   try {
-    const MAPBOX_API_KEY = process.env[ENV_VARS.MAPBOX_API_KEY];
+    const MAPBOX_API_KEY = env.MAPBOX_API_KEY;
     if (!MAPBOX_API_KEY) {
       console.error('error: missing api key', {
         lat,
