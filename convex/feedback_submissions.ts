@@ -1,11 +1,11 @@
 import { internalMutation, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import { getAuthUserId } from '@convex-dev/auth/server';
 import { styleTileUrl } from './lib/tiles';
 import { RANDOMIZE_PREDICTION_FEEDBACK } from './lib/constants';
 import type { QueryCtx } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { internal } from './_generated/api';
+import { getCurrentUser, requireCurrentUser } from './lib/auth';
 
 // Utility: Get all feedback submissions for a user
 async function getUserSubmissions(
@@ -111,12 +111,12 @@ export const getNextPredictionForFeedback = query({
     currentPredictionId: v.optional(v.id('inference_predictions')),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const user = await getCurrentUser(ctx);
+    if (!user) {
       return null;
     }
 
-    const userSubmissions = await getUserSubmissions(ctx, userId);
+    const userSubmissions = await getUserSubmissions(ctx, user._id);
     const submittedPredictionIds =
       getSubmittedPredictionIds(userSubmissions);
 
@@ -153,12 +153,12 @@ export const getNextPredictionForFeedback = query({
 
 export const getFeedbackStats = query({
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const user = await getCurrentUser(ctx);
+    if (!user) {
       return null;
     }
 
-    const userSubmissions = await getUserSubmissions(ctx, userId);
+    const userSubmissions = await getUserSubmissions(ctx, user._id);
     const totalPredictions = await getTotalPredictionCount(ctx);
 
     return {
@@ -173,10 +173,8 @@ export const getUserFeedbackForPrediction = query({
     detectionId: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return null;
-    }
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
 
     const prediction = await ctx.db
       .query('inference_predictions')
@@ -190,7 +188,7 @@ export const getUserFeedbackForPrediction = query({
     const feedback = await ctx.db
       .query('feedback_submissions')
       .withIndex('by_user_and_prediction', (q) =>
-        q.eq('userId', userId).eq('predictionId', prediction._id)
+        q.eq('userId', user._id).eq('predictionId', prediction._id)
       )
       .first();
 
@@ -209,8 +207,8 @@ export const submitFeedback = mutation({
   },
   handler: async (ctx, args) => {
     const startTs = Date.now();
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    const user = await requireCurrentUser(ctx);
+    if (!user) {
       console.error('error: unauthorized', {
         requestedAction: 'submit_feedback',
         detectionId: args.detectionId,
@@ -220,7 +218,7 @@ export const submitFeedback = mutation({
 
     console.log('start', {
       startTs,
-      userId,
+      userId: user._id,
       detectionId: args.detectionId,
       userResponse: args.userResponse,
     });
@@ -233,7 +231,7 @@ export const submitFeedback = mutation({
     if (!prediction) {
       console.error('error: prediction not found', {
         detectionId: args.detectionId,
-        userId,
+        userId: user._id,
         requestedAction: 'submit_feedback',
       });
       throw new Error('Prediction not found');
@@ -242,21 +240,21 @@ export const submitFeedback = mutation({
     const existingFeedback = await ctx.db
       .query('feedback_submissions')
       .withIndex('by_user_and_prediction', (q) =>
-        q.eq('userId', userId).eq('predictionId', prediction._id)
+        q.eq('userId', user._id).eq('predictionId', prediction._id)
       )
       .first();
 
     console.log('query', {
       table: 'feedback_submissions',
       index: 'by_user_and_prediction',
-      params: { userId, predictionId: prediction._id },
+      params: { userId: user._id, predictionId: prediction._id },
       found: !!existingFeedback,
     });
 
     if (existingFeedback) {
       console.log('complete', {
         durationMs: Date.now() - startTs,
-        userId,
+        userId: user._id,
         action: 'skipped_existing',
         detectionId: args.detectionId,
         feedbackId: existingFeedback._id,
@@ -267,7 +265,7 @@ export const submitFeedback = mutation({
     const feedbackId = await ctx.db.insert('feedback_submissions', {
       tileId: prediction.tileId,
       predictionId: prediction._id,
-      userId: userId,
+      userId: user._id,
       userResponse: args.userResponse,
     });
 
@@ -279,7 +277,7 @@ export const submitFeedback = mutation({
         predictionId: prediction._id,
         userResponse: args.userResponse,
       },
-      userId,
+      userId: user._id,
       durationMs: Date.now() - startTs,
     });
 

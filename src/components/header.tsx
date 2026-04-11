@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { Authenticated, Unauthenticated } from 'convex/react';
-import { useAuthActions } from '@convex-dev/auth/react';
+import { useClerk, UserButton } from '@clerk/react';
 import { UserIcon } from 'lucide-react';
 
 import { ModeToggle } from './mode-toggle';
@@ -8,7 +8,7 @@ import { NAVIGATION_LINKS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 
 export default function Header() {
-  const { signOut } = useAuthActions();
+  const { signOut } = useClerk();
   return (
     <div className='sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b no-zoom'>
       <div className='grid grid-cols-2 md:grid-cols-3 items-center px-4 py-2'>
@@ -58,7 +58,8 @@ export default function Header() {
                   <UserIcon className='mr-2 size-4' /> Account
                 </Link>
               </Button>
-              <Button variant='ghost' size='sm' onClick={() => signOut()}>
+              <UserButton />
+              <Button variant='ghost' size='sm' onClick={() => signOut({ redirectUrl: '/' })}>
                 Sign out
               </Button>
             </Authenticated>

@@ -13,10 +13,11 @@ import {
 } from '@tanstack/react-router';
 import { api } from '@backend/_generated/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { ConvexReactClient, useConvexAuth, useMutation } from 'convex/react';
+import { ConvexReactClient, useMutation } from 'convex/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import type { Doc } from '@backend/_generated/dataModel';
+import { useAuth } from '@clerk/react';
 import '../index.css';
 
 export interface RouterAppContext {
@@ -60,7 +61,7 @@ function RootComponent() {
   const isFetching = useRouterState({
     select: (s) => s.isLoading,
   });
-  const { isAuthenticated } = useConvexAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const ensureDefaults = useMutation(api.users.ensureDefaultPermissions);
   const router = useRouter();
   const location = useLocation();
@@ -82,15 +83,19 @@ function RootComponent() {
   const isMapRoute = noScrollRoutes.includes(location.pathname);
 
   useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+
     // When auth status changes (e.g., after login)
-    if (isAuthenticated) {
+    if (isSignedIn) {
       ensureDefaults({}).finally(() => {
         router.invalidate();
       });
     } else {
       router.invalidate();
     }
-  }, [isAuthenticated, router, ensureDefaults]);
+  }, [isLoaded, isSignedIn, router, ensureDefaults]);
 
   return (
     <>
