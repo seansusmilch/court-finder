@@ -1,3 +1,5 @@
+import { env } from "@/env";
+
 // Map rendering thresholds
 export const PINS_VISIBLE_FROM_ZOOM = 10;
 
@@ -110,7 +112,7 @@ export function getVisualForClass(predictionClass: string): CourtClassVisual {
 }
 
 // Mapbox API configuration
-export const MAPBOX_API_KEY = import.meta.env.VITE_MAPBOX_API_KEY;
+export const MAPBOX_API_KEY = env.VITE_MAPBOX_API_KEY;
 
 // localStorage keys
 export const LOCALSTORAGE_KEYS = {
