@@ -26,7 +26,11 @@ export type ViewportBbox = {
  * Convert longitude to tile X coordinate at given zoom level
  */
 function lon2tileX(lon: number, z: number): number {
-  return Math.floor(((lon + 180) / 360) * Math.pow(2, z));
+  const maxTile = Math.pow(2, z) - 1;
+  return Math.max(
+    0,
+    Math.min(maxTile, Math.floor(((lon + 180) / 360) * Math.pow(2, z)))
+  );
 }
 
 /**
@@ -35,8 +39,15 @@ function lon2tileX(lon: number, z: number): number {
 function lat2tileY(lat: number, z: number): number {
   const rad = (lat * Math.PI) / 180;
   const n = Math.pow(2, z);
-  return Math.floor(
-    ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n
+  const maxTile = n - 1;
+  return Math.max(
+    0,
+    Math.min(
+      maxTile,
+      Math.floor(
+        ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n
+      )
+    )
   );
 }
 
@@ -54,7 +65,7 @@ function clampLat(lat: number): number {
 export function pointToTile(
   lat: number,
   lon: number,
-  zoom = MAPBOX_TILE_DEFAULTS.zoom
+  zoom: number = MAPBOX_TILE_DEFAULTS.zoom
 ): TileCoordinate {
   const clampedLat = clampLat(lat);
   return {
@@ -78,11 +89,8 @@ export function styleTileUrl(
     accessToken: string;
   }>
 ): string {
-  const { username, styleId, tileSize, accessToken } = {
-    accessToken: env.MAPBOX_API_KEY,
-    ...MAPBOX_TILE_DEFAULTS,
-    ...opts,
-  };
+  const { username, styleId, tileSize } = { ...MAPBOX_TILE_DEFAULTS, ...opts };
+  const accessToken = opts?.accessToken ?? env.MAPBOX_API_KEY;
   if (!accessToken) throw new Error('Mapbox access token is required');
   return `https://api.mapbox.com/styles/v1/${username}/${styleId}/tiles/${tileSize}/${z}/${x}/${y}@2x?access_token=${accessToken}`;
 }
@@ -135,7 +143,7 @@ export function tilesInRadiusFromPoint(
   lat: number,
   lon: number,
   radius: number,
-  zoom = MAPBOX_TILE_DEFAULTS.zoom,
+  zoom: number = MAPBOX_TILE_DEFAULTS.zoom,
   opts?: Partial<{
     username: string;
     styleId: string;
