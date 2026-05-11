@@ -84,6 +84,11 @@ export default defineSchema({
     tilesProcessed: v.optional(v.number()),
     predictionsFound: v.optional(v.number()),
   }).index('by_center_tile', ['centerTile']),
+  scan_rate_limits: defineTable({
+    userId: v.id('users'),
+    windowStartMs: v.number(),
+    count: v.number(),
+  }).index('by_user', ['userId']),
   upload_batches: defineTable({
     tileId: v.id('tiles'),
     roboflowName: v.string(),
