@@ -1,6 +1,6 @@
 'use node';
 import { action, internalAction } from './_generated/server';
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import {
@@ -16,6 +16,7 @@ import {
   ROBOFLOW_MODEL_NAME,
   ROBOFLOW_MODEL_VERSION,
   DEFAULT_TILE_RADIUS,
+  SCAN_INITIATION_RATE_LIMIT,
 } from './lib/constants';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { env } from './env';
@@ -49,6 +50,83 @@ type ScanAreaReturn = {
 };
 
 type TileWithUrl = TileCoordinate & { url: string };
+
+type ScanRateLimitErrorData = {
+  code: string;
+  message: string;
+  limit: number;
+  windowMs: number;
+  resetAtMs?: number;
+  retryAfterMs?: number;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getScanRateLimitErrorData = (
+  error: unknown
+): ScanRateLimitErrorData | null => {
+  if (isRecord(error) && isRecord(error.data)) {
+    const data = error.data;
+    if (data.code === SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE) {
+      return {
+        code: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE,
+        message:
+          typeof data.message === 'string'
+            ? data.message
+            : SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE,
+        limit:
+          typeof data.limit === 'number'
+            ? data.limit
+            : SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        windowMs:
+          typeof data.windowMs === 'number'
+            ? data.windowMs
+            : SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        ...(typeof data.resetAtMs === 'number'
+          ? { resetAtMs: data.resetAtMs }
+          : {}),
+        ...(typeof data.retryAfterMs === 'number'
+          ? { retryAfterMs: data.retryAfterMs }
+          : {}),
+      };
+    }
+  }
+
+  if (
+    error instanceof Error &&
+    error.message.includes(SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE)
+  ) {
+    return {
+      code: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE,
+      message: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE,
+      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+      windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+    };
+  }
+
+  return null;
+};
+
+const consumeScanInitiationLimit = async (
+  ctx: ActionCtx,
+  userId: Id<'users'>,
+  requestedAction: string
+) => {
+  try {
+    await ctx.runMutation(internal.scans.consumeScanInitiation, {
+      userId,
+      requestedAction,
+    });
+  } catch (error) {
+    const rateLimitErrorData = getScanRateLimitErrorData(error);
+    if (rateLimitErrorData) {
+      throw new ConvexError(rateLimitErrorData);
+    }
+
+    throw error;
+  }
+};
 
 const processTile = async (
   ctx: ActionCtx,
@@ -175,6 +253,8 @@ export const startScanArea = action({
       });
       throw new Error('Unauthorized');
     }
+
+    await consumeScanInitiationLimit(ctx, userId, 'startScanArea');
 
     const mapboxToken = env.MAPBOX_API_KEY;
 
@@ -320,6 +400,8 @@ export const scanArea = action({
       });
       throw new Error('Unauthorized');
     }
+
+    await consumeScanInitiationLimit(ctx, userId, 'scanArea');
 
     const mapboxToken = env.MAPBOX_API_KEY;
     const roboflowKey = env.ROBOFLOW_API_KEY;

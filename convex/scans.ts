@@ -1,11 +1,13 @@
 import { api, internal } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
+import { getAuthUserId } from '@convex-dev/auth/server';
 import {
   DEFAULT_TILE_RADIUS,
   PERMISSIONS,
   ROBOFLOW_MODEL_VERSION,
   ROBOFLOW_MODEL_NAME,
+  SCAN_INITIATION_RATE_LIMIT,
 } from './lib/constants';
 import { pointToTile } from './lib/tiles';
 
@@ -33,6 +35,163 @@ export const findByCenterTile = internalQuery({
     });
 
     return scans;
+  },
+});
+
+export const consumeScanInitiation = internalMutation({
+  args: {
+    userId: v.id('users'),
+    requestedAction: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const startTs = Date.now();
+    const now = Date.now();
+    const existing = await ctx.db
+      .query('scan_rate_limits')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .first();
+
+    if (!existing) {
+      const rateLimitId = await ctx.db.insert('scan_rate_limits', {
+        userId: args.userId,
+        windowStartMs: now,
+        count: 1,
+      });
+
+      console.log('scan_rate_limit:created', {
+        startTs,
+        durationMs: Date.now() - startTs,
+        userId: args.userId,
+        requestedAction: args.requestedAction,
+        rateLimitId,
+        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        count: 1,
+      });
+
+      return {
+        allowed: true,
+        remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT - 1,
+        resetAtMs: now + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+      };
+    }
+
+    const resetAtMs =
+      existing.windowStartMs + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS;
+    if (now >= resetAtMs) {
+      await ctx.db.patch(existing._id, {
+        windowStartMs: now,
+        count: 1,
+      });
+
+      console.log('scan_rate_limit:reset', {
+        startTs,
+        durationMs: Date.now() - startTs,
+        userId: args.userId,
+        requestedAction: args.requestedAction,
+        rateLimitId: existing._id,
+        previousCount: existing.count,
+        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        count: 1,
+      });
+
+      return {
+        allowed: true,
+        remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT - 1,
+        resetAtMs: now + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+      };
+    }
+
+    if (existing.count >= SCAN_INITIATION_RATE_LIMIT.LIMIT) {
+      const retryAfterMs = Math.max(0, resetAtMs - now);
+
+      console.warn('scan_rate_limit:exceeded', {
+        startTs,
+        durationMs: Date.now() - startTs,
+        userId: args.userId,
+        requestedAction: args.requestedAction,
+        rateLimitId: existing._id,
+        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        count: existing.count,
+        resetAtMs,
+        retryAfterMs,
+      });
+
+      throw new ConvexError({
+        code: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE,
+        message: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE,
+        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        resetAtMs,
+        retryAfterMs,
+      });
+    }
+
+    const nextCount = existing.count + 1;
+    await ctx.db.patch(existing._id, {
+      count: nextCount,
+    });
+
+    console.log('scan_rate_limit:consumed', {
+      startTs,
+      durationMs: Date.now() - startTs,
+      userId: args.userId,
+      requestedAction: args.requestedAction,
+      rateLimitId: existing._id,
+      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+      windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+      count: nextCount,
+    });
+
+    return {
+      allowed: true,
+      remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT - nextCount,
+      resetAtMs,
+    };
+  },
+});
+
+export const getScanInitiationLimitStatus = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const now = Date.now();
+    const existing = await ctx.db
+      .query('scan_rate_limits')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .first();
+
+    if (!existing) {
+      return {
+        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        count: 0,
+        remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        resetAtMs: null,
+        retryAfterMs: 0,
+      };
+    }
+
+    const resetAtMs =
+      existing.windowStartMs + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS;
+    const windowExpired = now >= resetAtMs;
+    const count = windowExpired ? 0 : existing.count;
+    const remaining = Math.max(0, SCAN_INITIATION_RATE_LIMIT.LIMIT - count);
+
+    return {
+      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+      count,
+      remaining,
+      windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+      resetAtMs: windowExpired ? null : resetAtMs,
+      retryAfterMs: windowExpired ? 0 : Math.max(0, resetAtMs - now),
+    };
   },
 });
 
