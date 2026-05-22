@@ -1,6 +1,7 @@
 import { api, internal } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
 import { ConvexError, v } from 'convex/values';
+import { getAuthUserId } from '@convex-dev/auth/server';
 import {
   DEFAULT_TILE_RADIUS,
   PERMISSIONS,
@@ -148,6 +149,48 @@ export const consumeScanInitiation = internalMutation({
       allowed: true,
       remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT - nextCount,
       resetAtMs,
+    };
+  },
+});
+
+export const getScanInitiationLimitStatus = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const now = Date.now();
+    const existing = await ctx.db
+      .query('scan_rate_limits')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .first();
+
+    if (!existing) {
+      return {
+        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        count: 0,
+        remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        resetAtMs: null,
+        retryAfterMs: 0,
+      };
+    }
+
+    const resetAtMs =
+      existing.windowStartMs + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS;
+    const windowExpired = now >= resetAtMs;
+    const count = windowExpired ? 0 : existing.count;
+    const remaining = Math.max(0, SCAN_INITIATION_RATE_LIMIT.LIMIT - count);
+
+    return {
+      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+      count,
+      remaining,
+      windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+      resetAtMs: windowExpired ? null : resetAtMs,
+      retryAfterMs: windowExpired ? 0 : Math.max(0, resetAtMs - now),
     };
   },
 });

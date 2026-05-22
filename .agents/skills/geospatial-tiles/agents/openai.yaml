@@ -1,0 +1,6 @@
+interface:
+  display_name: "Geospatial Tiles"
+  short_description: "Map tiles, coordinates, and court geometry"
+  default_prompt: "Use $geospatial-tiles to work on map tile or coordinate behavior."
+policy:
+  allow_implicit_invocation: true
