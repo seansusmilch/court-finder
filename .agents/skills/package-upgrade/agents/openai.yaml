@@ -1,0 +1,6 @@
+interface:
+  display_name: "Package Upgrade"
+  short_description: "Research and verify dependency updates"
+  default_prompt: "Use $package-upgrade to upgrade these dependencies safely."
+policy:
+  allow_implicit_invocation: true

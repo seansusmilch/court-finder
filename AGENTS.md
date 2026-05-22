@@ -15,7 +15,6 @@ This file provides guidance to OpenCode when working with code in this repositor
 ### Setup Commands
 - `bun dev:backend:setup` - Configure and set up Convex project
 - `bun generate-pwa-assets` - Generate PWA assets for different screen sizes
-- `bun ruler:apply` - Apply linter rules (Intellectronica Ruler)
 
 ## Architecture Overview
 
