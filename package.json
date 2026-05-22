@@ -6,7 +6,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "ruler:apply": "bunx @intellectronica/ruler@latest apply --local-only",
     "dev": "concurrently -n S,C \"bun run dev:backend\" \"bun run dev:frontend\"",
     "dev:backend": "convex dev",
     "dev:backend:setup": "convex dev --configure --until-success",
