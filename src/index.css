@@ -280,6 +280,31 @@
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+  ::selection {
+    background: oklch(0.68 0.19 35 / 0.35);
+    color: var(--foreground);
+  }
+}
+
+@keyframes orbit-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marketing-orbit {
+    animation: orbit-in 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .marketing-preview {
+    animation: orbit-in 700ms 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
 }
 
 /* Custom animations */
