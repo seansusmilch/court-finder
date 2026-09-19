@@ -29,6 +29,11 @@ export const DEFAULT_ANONYMOUS_PERMISSIONS = [
   PERMISSIONS.TRAINING.READ,
 ];
 
+export const PLAN_TIERS = {
+  FREE: 'free',
+  PRO: 'pro',
+} as const;
+
 // Roboflow model configuration
 export const ROBOFLOW_MODEL_NAME = 'satellite-sports-facilities-bubrg';
 export const ROBOFLOW_MODEL_VERSION = '11';
@@ -42,6 +47,14 @@ export const SCAN_INITIATION_RATE_LIMIT = {
   WINDOW_MS: 60 * 60 * 1000,
   EXCEEDED_CODE: 'SCAN_RATE_LIMIT_EXCEEDED',
   EXCEEDED_MESSAGE: 'Scan limit reached. Please try again in about an hour.',
+} as const;
+
+export const PRO_SCAN_FAIR_USE_LIMIT = {
+  LIMIT: 100,
+  WINDOW_MS: 24 * 60 * 60 * 1000,
+  EXCEEDED_CODE: 'PRO_SCAN_FAIR_USE_EXCEEDED',
+  EXCEEDED_MESSAGE:
+    'Pro fair-use scan limit reached. Please try again tomorrow.',
 } as const;
 
 // Mapbox tile configuration

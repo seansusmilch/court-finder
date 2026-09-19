@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Users } from 'lucide-react';
 
 export const Route = createFileRoute('/_authed/admin/')({
   loader: async ({ context }) => {
@@ -170,6 +170,14 @@ function RouteComponent() {
                     <span className='inline-flex items-center gap-1'>
                       Browse Scans
                       <ChevronRight className='size-4' />
+                    </span>
+                  </Link>
+                </Button>
+                <Button asChild variant='outline' size='sm'>
+                  <Link to={'/admin/users'}>
+                    <span className='inline-flex items-center gap-1'>
+                      <Users className='size-4' />
+                      Manage Users
                     </span>
                   </Link>
                 </Button>

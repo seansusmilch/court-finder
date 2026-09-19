@@ -1,8 +1,17 @@
 import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api';
 import type { DataModel, Id } from './_generated/dataModel';
-import { pointToTile, tileCenterLatLng, pixelOnTileToLngLat } from './lib/tiles';
-import { COURT_VERIFICATION, MARKER_DEDUP_BASE_RADIUS_M, MARKER_DEDUP_RADIUS_BY_CLASS_M } from './lib/constants';
+import {
+  pointToTile,
+  tileCenterLatLng,
+  pixelOnTileToLngLat,
+} from './lib/tiles';
+import {
+  COURT_VERIFICATION,
+  MARKER_DEDUP_BASE_RADIUS_M,
+  MARKER_DEDUP_RADIUS_BY_CLASS_M,
+  PLAN_TIERS,
+} from './lib/constants';
 import type { CourtStatus } from './lib/types';
 import { haversineMeters } from './lib/spatial';
 
@@ -263,6 +272,14 @@ export const fixCourtCoordinatesFromPixels = migrations.define({
   },
 });
 
+export const backfillUserPlanTier = migrations.define({
+  table: 'users',
+  migrateOne: async (_ctx, doc) => {
+    if (doc.planTier) return;
+    return { planTier: PLAN_TIERS.FREE };
+  },
+});
+
 export const runAll = migrations.runner([
   // Scan migrations
   internal.migrations.migrateScansCenterTile,
@@ -286,4 +303,7 @@ export const runAll = migrations.runner([
 
   // Coordinate fixes
   internal.migrations.fixCourtCoordinatesFromPixels,
+
+  // User plan tiers
+  internal.migrations.backfillUserPlanTier,
 ]);

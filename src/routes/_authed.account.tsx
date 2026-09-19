@@ -26,7 +26,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { LogOut, Key, User, Camera, X, Shield, Gauge } from 'lucide-react';
+import {
+  LogOut,
+  Key,
+  User,
+  Camera,
+  X,
+  Shield,
+  Gauge,
+  Crown,
+} from 'lucide-react';
 import { ProfileImageCropper } from '@/components/profile/ProfileImageCropper';
 import { Link } from '@tanstack/react-router';
 
@@ -233,6 +242,7 @@ function AccountPage() {
         Math.max(0, (scanLimitStatus.count / scanLimitStatus.limit) * 100)
       )
     : 0;
+  const isPro = scanLimitStatus?.planTier === 'pro';
   const resetTime =
     scanLimitStatus?.resetAtMs !== null && scanLimitStatus?.resetAtMs
       ? new Intl.DateTimeFormat(undefined, {
@@ -388,7 +398,11 @@ function AccountPage() {
               <CardDescription>Current scan usage for this account</CardDescription>
             </div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-muted/40">
-              <Gauge className="h-5 w-5 text-muted-foreground" />
+              {isPro ? (
+                <Crown className="h-5 w-5 text-primary" />
+              ) : (
+                <Gauge className="h-5 w-5 text-muted-foreground" />
+              )}
             </div>
           </div>
         </CardHeader>
@@ -409,22 +423,40 @@ function AccountPage() {
                 <div>
                   <p className="text-sm font-medium">Area scans</p>
                   <p className="text-sm text-muted-foreground">
-                    {scanLimitStatus.remaining} of {scanLimitStatus.limit} scans remaining
+                    {isPro
+                      ? 'Unlimited scans included with Pro'
+                      : `${scanLimitStatus.remaining} of ${scanLimitStatus.limit} scans remaining`}
                   </p>
                 </div>
                 <Badge
-                  variant={scanLimitStatus.remaining === 0 ? 'destructive' : 'secondary'}
+                  variant={
+                    scanLimitStatus.remaining === 0 && !isPro
+                      ? 'destructive'
+                      : 'secondary'
+                  }
                   className="shrink-0"
                 >
-                  {scanLimitStatus.count}/{scanLimitStatus.limit} used
+                  {isPro
+                    ? 'Pro'
+                    : `${scanLimitStatus.count}/${scanLimitStatus.limit} used`}
                 </Badge>
               </div>
-              <Progress value={scanLimitPercent} className="h-3" />
+              {!isPro && <Progress value={scanLimitPercent} className="h-3" />}
               <div className="rounded-md border bg-muted/30 px-3 py-2">
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-muted-foreground">Window</span>
+                  <span className="text-muted-foreground">Tier</span>
                   <span className="font-medium">
-                    {Math.round(scanLimitStatus.windowMs / (60 * 60 * 1000))} hour
+                    {isPro ? 'Pro' : 'Free'}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">
+                    {isPro ? 'Fair use' : 'Window'}
+                  </span>
+                  <span className="font-medium">
+                    {isPro
+                      ? `${scanLimitStatus.limit} scans/day`
+                      : `${Math.round(scanLimitStatus.windowMs / (60 * 60 * 1000))} hour`}
                   </span>
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-3 text-sm">

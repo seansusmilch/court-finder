@@ -12,6 +12,7 @@ import type * as actions from "../actions.js";
 import type * as actions_password from "../actions/password.js";
 import type * as auth from "../auth.js";
 import type * as courts from "../courts.js";
+import type * as env from "../env.js";
 import type * as feedback_submissions from "../feedback_submissions.js";
 import type * as geocoding from "../geocoding.js";
 import type * as http from "../http.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   "actions/password": typeof actions_password;
   auth: typeof auth;
   courts: typeof courts;
+  env: typeof env;
   feedback_submissions: typeof feedback_submissions;
   geocoding: typeof geocoding;
   http: typeof http;
@@ -169,6 +171,7 @@ export declare const components: {
           name: string;
           next?: Array<{ fnHandle: string; name: string }>;
           oneBatchOnly?: boolean;
+          reset?: boolean;
         },
         {
           batchSize?: number;
