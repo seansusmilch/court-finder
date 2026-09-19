@@ -38,23 +38,39 @@ export function identityToUserFields(identity: NonNullable<ClerkIdentity>) {
 
   return {
     externalId: identity.subject,
-    name: name || undefined,
-    email: email || undefined,
-    imageUrl: imageUrl || undefined,
-    emailVerified: email ? true : undefined,
+    ...(name ? { name } : {}),
+    ...(email ? { email: email.toLowerCase(), emailVerified: true } : {}),
+    ...(imageUrl ? { imageUrl } : {}),
     isAnonymous: false,
     updatedAt: Date.now(),
   };
+}
+
+async function findUserForIdentity(
+  ctx: AuthCtx,
+  identity: NonNullable<ClerkIdentity>
+): Promise<Doc<'users'> | null> {
+  const byExternalId = await ctx.db
+    .query('users')
+    .withIndex('by_external_id', (q) => q.eq('externalId', identity.subject))
+    .unique();
+
+  if (byExternalId) return byExternalId;
+
+  const { email } = identityToUserFields(identity);
+  if (!email) return null;
+
+  return await ctx.db
+    .query('users')
+    .withIndex('email', (q) => q.eq('email', email))
+    .first();
 }
 
 export async function getCurrentUser(ctx: AuthCtx): Promise<Doc<'users'> | null> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
 
-  return await ctx.db
-    .query('users')
-    .withIndex('by_external_id', (q: any) => q.eq('externalId', identity.subject))
-    .unique();
+  return await findUserForIdentity(ctx, identity);
 }
 
 export async function getCurrentUserId(ctx: AuthCtx) {
@@ -66,16 +82,16 @@ export async function ensureCurrentUserRecord(ctx: MutationCtx): Promise<Doc<'us
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
 
-  const existing = await ctx.db
-    .query('users')
-    .withIndex('by_external_id', (q: any) => q.eq('externalId', identity.subject))
-    .unique();
+  const existing = await findUserForIdentity(ctx, identity);
 
   if (existing) {
     const fields = identityToUserFields(identity);
+    const role = existing.role || 'user';
     await ctx.db.patch(existing._id, {
       ...fields,
       createdAt: existing.createdAt ?? Date.now(),
+      role,
+      permissions: getRolePermissions(role),
     });
     return await ctx.db.get(existing._id);
   }

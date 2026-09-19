@@ -1,9 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
-import { authTables } from '@convex-dev/auth/server';
 
 export default defineSchema({
-  ...authTables,
   users: defineTable({
     externalId: v.optional(v.string()),
     name: v.optional(v.string()),
@@ -14,7 +12,6 @@ export default defineSchema({
     emailVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     role: v.optional(v.union(v.literal('user'), v.literal('admin'))),
-    migratedFromConvexId: v.optional(v.id('users')),
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
     permissions: v.array(v.string()),
@@ -93,6 +90,11 @@ export default defineSchema({
     tilesProcessed: v.optional(v.number()),
     predictionsFound: v.optional(v.number()),
   }).index('by_center_tile', ['centerTile']),
+  scan_rate_limits: defineTable({
+    userId: v.id('users'),
+    windowStartMs: v.number(),
+    count: v.number(),
+  }).index('by_user', ['userId']),
   upload_batches: defineTable({
     tileId: v.id('tiles'),
     roboflowName: v.string(),

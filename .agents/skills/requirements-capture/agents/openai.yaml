@@ -1,0 +1,6 @@
+interface:
+  display_name: "Requirements Capture"
+  short_description: "Document behavior before refactors"
+  default_prompt: "Use $requirements-capture to update the requirements for this feature."
+policy:
+  allow_implicit_invocation: true

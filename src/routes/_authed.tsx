@@ -1,13 +1,27 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import Loader from '@/components/loader';
+import { createFileRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
+import { useConvexAuth } from 'convex/react';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_authed')({
-  beforeLoad: async ({ context, location }) => {
-    if (!context.me) {
-      throw redirect({
+  component: AuthenticatedLayout,
+});
+
+function AuthenticatedLayout() {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      void navigate({
         to: '/login',
         search: { redirect: location.href },
+        replace: true,
       });
     }
-  },
-  component: () => <Outlet />,
-});
+  }, [isAuthenticated, isLoading, location.href, navigate]);
+
+  if (isLoading || !isAuthenticated) return <Loader />;
+  return <Outlet />;
+}

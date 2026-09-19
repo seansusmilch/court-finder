@@ -9,16 +9,13 @@
  */
 
 import type * as actions from "../actions.js";
-import type * as actions_password from "../actions/password.js";
-import type * as auth from "../auth.js";
 import type * as courts from "../courts.js";
 import type * as feedback_submissions from "../feedback_submissions.js";
 import type * as geocoding from "../geocoding.js";
 import type * as http from "../http.js";
 import type * as inference_predictions from "../inference_predictions.js";
 import type * as inferences from "../inferences.js";
-import type * as internal_accounts from "../internal/accounts.js";
-import type * as internal_sessions from "../internal/sessions.js";
+import type * as lib_auth from "../lib/auth.js";
 import type * as lib_bbox from "../lib/bbox.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_createml from "../lib/createml.js";
@@ -44,16 +41,13 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
-  "actions/password": typeof actions_password;
-  auth: typeof auth;
   courts: typeof courts;
   feedback_submissions: typeof feedback_submissions;
   geocoding: typeof geocoding;
   http: typeof http;
   inference_predictions: typeof inference_predictions;
   inferences: typeof inferences;
-  "internal/accounts": typeof internal_accounts;
-  "internal/sessions": typeof internal_sessions;
+  "lib/auth": typeof lib_auth;
   "lib/bbox": typeof lib_bbox;
   "lib/constants": typeof lib_constants;
   "lib/createml": typeof lib_createml;

@@ -15,8 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Camera, LogOut, Shield, X } from 'lucide-react';
+import { Camera, Gauge, LogOut, Shield, X } from 'lucide-react';
 import { ProfileImageCropper } from '@/components/profile/ProfileImageCropper';
 
 export const Route = createFileRoute('/_authed/account')({
@@ -28,6 +30,7 @@ function AccountPage() {
   const { signOut } = useClerk();
   const user = useQuery(api.users.me);
   const stats = useQuery(api.feedback_submissions.getFeedbackStats);
+  const scanLimitStatus = useQuery(api.scans.getScanInitiationLimitStatus);
   const profileImageUrl = useQuery(api.users.getProfileImageUrl, {});
   const updateProfile = useMutation(api.users.updateProfile);
   const generateUploadUrl = useMutation(api.users.generateUploadUrl);
@@ -54,9 +57,8 @@ function AccountPage() {
       await updateProfile({ name: name || undefined });
       setIsEditingName(false);
       toast.success('Profile updated');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update profile');
-      console.error(error);
     } finally {
       setIsSavingName(false);
     }
@@ -107,8 +109,7 @@ function AccountPage() {
       await updateProfileImage({ storageId });
       toast.success('Profile picture updated');
       setSelectedFile(null);
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
+    } catch {
       toast.error('Failed to upload profile picture');
     } finally {
       setIsUploadingImage(false);
@@ -119,8 +120,7 @@ function AccountPage() {
     try {
       await removeProfileImage();
       toast.success('Profile picture removed');
-    } catch (error) {
-      console.error('Error removing profile picture:', error);
+    } catch {
       toast.error('Failed to remove profile picture');
     }
   };
@@ -166,6 +166,19 @@ function AccountPage() {
       .join('')
       .toUpperCase()
       .slice(0, 2) || user.email?.[0].toUpperCase() || 'U';
+  const scanLimitPercent = scanLimitStatus
+    ? Math.min(
+        100,
+        Math.max(0, (scanLimitStatus.count / scanLimitStatus.limit) * 100)
+      )
+    : 0;
+  const resetTime =
+    scanLimitStatus?.resetAtMs !== null && scanLimitStatus?.resetAtMs
+      ? new Intl.DateTimeFormat(undefined, {
+          hour: 'numeric',
+          minute: '2-digit',
+        }).format(new Date(scanLimitStatus.resetAtMs))
+      : null;
 
   return (
     <div className='container mx-auto max-w-2xl space-y-6 px-4 py-8 md:pb-8'>
@@ -284,6 +297,63 @@ function AccountPage() {
 
       <Card>
         <CardHeader>
+          <div className='flex items-start justify-between gap-4'>
+            <div>
+              <CardTitle>Limits</CardTitle>
+              <CardDescription>Current scan usage for this account</CardDescription>
+            </div>
+            <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-muted/40'>
+              <Gauge className='h-5 w-5 text-muted-foreground' />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          {scanLimitStatus === undefined ? (
+            <div className='space-y-3'>
+              <Skeleton className='h-5 w-40' />
+              <Skeleton className='h-4 w-full' />
+              <Skeleton className='h-10 w-full' />
+            </div>
+          ) : scanLimitStatus === null ? (
+            <p className='text-sm text-muted-foreground'>
+              Sign in to view account limits.
+            </p>
+          ) : (
+            <>
+              <div className='flex items-end justify-between gap-4'>
+                <div>
+                  <p className='text-sm font-medium'>Area scans</p>
+                  <p className='text-sm text-muted-foreground'>
+                    {scanLimitStatus.remaining} of {scanLimitStatus.limit} scans remaining
+                  </p>
+                </div>
+                <Badge
+                  variant={scanLimitStatus.remaining === 0 ? 'destructive' : 'secondary'}
+                  className='shrink-0'
+                >
+                  {scanLimitStatus.count}/{scanLimitStatus.limit} used
+                </Badge>
+              </div>
+              <Progress value={scanLimitPercent} className='h-3' />
+              <div className='rounded-md border bg-muted/30 px-3 py-2'>
+                <div className='flex items-center justify-between gap-3 text-sm'>
+                  <span className='text-muted-foreground'>Window</span>
+                  <span className='font-medium'>
+                    {Math.round(scanLimitStatus.windowMs / (60 * 60 * 1000))} hour
+                  </span>
+                </div>
+                <div className='mt-1 flex items-center justify-between gap-3 text-sm'>
+                  <span className='text-muted-foreground'>Resets</span>
+                  <span className='font-medium'>{resetTime ?? 'Ready now'}</span>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Activity</CardTitle>
           <CardDescription>Your feedback contribution summary</CardDescription>
         </CardHeader>
@@ -317,6 +387,25 @@ function AccountPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {user.permissions.includes('admin.access') ? (
+        <Card className='border-orange-500/30 bg-orange-500/5 dark:border-orange-500/20 dark:bg-orange-500/10'>
+          <CardHeader>
+            <CardTitle className='text-orange-700 dark:text-orange-400'>
+              Administration
+            </CardTitle>
+            <CardDescription>Admin tools and dashboards</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant='outline' className='w-full justify-start'>
+              <Link to='/admin'>
+                <Shield className='mr-2 h-4 w-4' />
+                Admin Dashboard
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <ProfileImageCropper
         open={showCropDialog}

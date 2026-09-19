@@ -15,7 +15,6 @@ This file provides guidance to OpenCode when working with code in this repositor
 ### Setup Commands
 - `bun dev:backend:setup` - Configure and set up Convex project
 - `bun generate-pwa-assets` - Generate PWA assets for different screen sizes
-- `bun ruler:apply` - Apply linter rules (Intellectronica Ruler)
 
 ## Architecture Overview
 
@@ -34,42 +33,7 @@ This file provides guidance to OpenCode when working with code in this repositor
 - **Backend**: Convex functions in `convex/` with schema in `schema.ts`
 
 ### Database Schema
-- `users` - User profiles with permissions
-- `tiles` - Geographic map tiles (x, y, z coordinates)
-- `inference_predictions` - ML predictions for courts
-- `scans` - Area scans for court detection
-- `feedback_submissions` - User feedback on predictions
-- `upload_batches` - Batch upload management for training data
-
-## Development Patterns
-
-### Frontend Development
-- Use `@/` path alias for imports (e.g., `@/components/ui/button`)
-- Route components should be in the same file as their route definition
-- Use loaders for data fetching, search params for URL state
-- Mobile-first design with responsive breakpoints
-- Use `cn()` utility for conditional classes
-
-### Backend Development
-- Public functions: `query`, `mutation`, `action`
-- Internal functions: `internalQuery`, `internalMutation` (server-side only)
-- Actions must have `'use node';` for external API access
-- Use indexes for efficient database queries
-- Structured logging with complete context
-
-### Authentication
-- Convex Auth for user management
-- Permission-based access control
-- Anonymous user support
-- Get user with `getAuthUserId(ctx)` in functions
-
-### State Management
-| Use Case | Solution |
-|----------|----------|
-| Server data | Convex `useQuery` / `useMutation` |
-| Async mutations | TanStack Query `useMutation` |
-| URL state | TanStack Router search params |
-| Local persistence | `useLocalStorage` hook |
+The Convex database schema is defined in `convex/schema.ts`. Treat that file as the source of truth for table names, fields, validators, and indexes.
 
 ## External Integrations
 
@@ -125,9 +89,3 @@ Every log must include structured context:
 - Components: `PascalCase`
 - Hooks: `useCamelCase`
 - Database tables: `snake_case`
-
-## Recent Development
-Current branch `map-layout-redo` focuses on:
-- Enhanced map components with better organization
-- Improved user location features
-- Refactoring of map sections and shared utilities

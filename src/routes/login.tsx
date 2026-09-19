@@ -1,17 +1,9 @@
-import {
-  createFileRoute,
-  redirect,
-  useNavigate,
-  useSearch,
-} from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { SignIn, useAuth } from '@clerk/react';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/login')({
   validateSearch: (s: { redirect?: string }) => s,
-  beforeLoad: async ({ context }) => {
-    if (context.me) throw redirect({ to: '/' });
-  },
   component: AuthPage,
 });
 
@@ -40,7 +32,7 @@ function AuthPage() {
 
   return (
     <div className='flex min-h-[calc(100dvh-0px)] items-center justify-center p-4'>
-      <SignIn />
+      <SignIn routing='hash' />
     </div>
   );
 }

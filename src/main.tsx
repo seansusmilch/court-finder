@@ -10,10 +10,7 @@ import { env } from '@/env';
 
 const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 const publishableKey = env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!publishableKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY environment variable');
-}
+const queryClient = new QueryClient();
 
 const router = createRouter({
   routeTree,
@@ -21,12 +18,16 @@ const router = createRouter({
   defaultPendingComponent: () => <Loader />,
   context: {
     convex,
-    hasPermission: async (permission: string) => false,
   },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
-    const queryClient = new QueryClient();
     return (
-      <ClerkProvider publishableKey={publishableKey} afterSignOutUrl='/'>
+      <ClerkProvider
+        publishableKey={publishableKey}
+        afterSignOutUrl='/'
+        signInUrl='/login'
+        signInFallbackRedirectUrl='/'
+        signUpFallbackRedirectUrl='/'
+      >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           <QueryClientProvider client={queryClient}>
             {children}

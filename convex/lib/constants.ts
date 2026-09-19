@@ -36,6 +36,14 @@ export const ROBOFLOW_MODEL_VERSION = '11';
 // Map tile coverage configuration
 export const DEFAULT_TILE_RADIUS = 2;
 
+// Scan initiation rate limiting
+export const SCAN_INITIATION_RATE_LIMIT = {
+  LIMIT: 5,
+  WINDOW_MS: 60 * 60 * 1000,
+  EXCEEDED_CODE: 'SCAN_RATE_LIMIT_EXCEEDED',
+  EXCEEDED_MESSAGE: 'Scan limit reached. Please try again in about an hour.',
+} as const;
+
 // Mapbox tile configuration
 export const MAPBOX_TILE_DEFAULTS = {
   username: 'mapbox',

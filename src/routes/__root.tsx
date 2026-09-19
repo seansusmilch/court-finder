@@ -8,36 +8,20 @@ import {
   Outlet,
   createRootRouteWithContext,
   useRouterState,
-  Link,
   useLocation,
 } from '@tanstack/react-router';
-import { api } from '@backend/_generated/api';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { ConvexReactClient, useMutation } from 'convex/react';
+import { ConvexReactClient, useConvexAuth, useMutation } from 'convex/react';
 import { useEffect, useState } from 'react';
-import { useRouter } from '@tanstack/react-router';
-import type { Doc } from '@backend/_generated/dataModel';
-import { useAuth } from '@clerk/react';
+import { api } from '@backend/_generated/api';
 import '../index.css';
 
 export interface RouterAppContext {
   convex: ConvexReactClient;
-  me?: Doc<'users'> | null;
-  hasPermission: (permission: string) => Promise<boolean>;
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
-  beforeLoad: async ({ context }) => {
-    const me = await context.convex.query(api.users.me, {});
-    return {
-      me,
-      hasPermission: (permission: string) => {
-        if (!me) return false;
-        return me.permissions.includes(permission);
-      },
-    };
-  },
   head: () => ({
     meta: [
       {
@@ -61,9 +45,8 @@ function RootComponent() {
   const isFetching = useRouterState({
     select: (s) => s.isLoading,
   });
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const ensureDefaults = useMutation(api.users.ensureDefaultPermissions);
-  const router = useRouter();
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -83,19 +66,20 @@ function RootComponent() {
   const isMapRoute = noScrollRoutes.includes(location.pathname);
 
   useEffect(() => {
-    if (!isLoaded) {
+    if (isLoading || !isAuthenticated) {
       return;
     }
 
-    // When auth status changes (e.g., after login)
-    if (isSignedIn) {
-      ensureDefaults({}).finally(() => {
-        router.invalidate();
+    const startTs = Date.now();
+    void ensureDefaults({}).catch((error) => {
+      console.error('user_sync_failed', {
+        startTs,
+        durationMs: Date.now() - startTs,
+        isAuthenticated,
+        error,
       });
-    } else {
-      router.invalidate();
-    }
-  }, [isLoaded, isSignedIn, router, ensureDefaults]);
+    });
+  }, [isAuthenticated, isLoading, ensureDefaults]);
 
   return (
     <>

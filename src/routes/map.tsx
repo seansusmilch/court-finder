@@ -12,8 +12,12 @@ import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@backend/_generated/api';
 import type { Id } from '@backend/_generated/dataModel';
-import { MAPBOX_TILE_DEFAULTS } from '@backend/lib/constants';
+import {
+  MAPBOX_TILE_DEFAULTS,
+  SCAN_INITIATION_RATE_LIMIT,
+} from '@backend/lib/constants';
 import type { MapMouseEvent } from 'mapbox-gl';
+import { toast } from 'sonner';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
@@ -50,6 +54,37 @@ const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   type: 'FeatureCollection',
   features: [],
 };
+
+function getScanErrorMessage(error: unknown) {
+  const data =
+    typeof error === 'object' && error !== null && 'data' in error
+      ? (error as { data?: unknown }).data
+      : undefined;
+
+  if (
+    typeof data === 'object' &&
+    data !== null &&
+    'code' in data &&
+    data.code === SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE
+  ) {
+    return 'message' in data && typeof data.message === 'string'
+      ? data.message
+      : SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE;
+  }
+
+  if (
+    error instanceof Error &&
+    error.message.includes(SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE)
+  ) {
+    return SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE;
+  }
+
+  if (error instanceof Error && error.message === 'Map center not available') {
+    return error.message;
+  }
+
+  return 'Failed to start scan';
+}
 
 export const Route = createFileRoute('/map')({
   loader: () => ({
@@ -191,8 +226,10 @@ function MapPage() {
       setIsScanningState(true);
       return result;
     },
-    onError: () => {
+    onError: (error) => {
+      setCurrentScanId(null);
       setIsScanningState(false);
+      toast.error(getScanErrorMessage(error));
     },
   });
 

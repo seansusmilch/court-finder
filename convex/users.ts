@@ -1,4 +1,4 @@
-import { internalMutation, mutation, query } from './_generated/server';
+import { internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { DEFAULT_USER_PERMISSIONS } from './lib/constants';
 import {
@@ -20,6 +20,50 @@ export const ROLE_PERMISSIONS = {
 
 const ROLE_VALIDATOR = v.union(v.literal(ROLES.USER), v.literal(ROLES.ADMIN));
 
+export const exportForClerkMigration = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query('users').collect();
+
+    return users
+      .filter((user) => !user.externalId && user.email)
+      .map((user) => {
+        const [firstName, ...lastNameParts] = (user.name || '').trim().split(/\s+/);
+        return {
+          userId: user._id,
+          email: user.email!,
+          firstName: firstName || undefined,
+          lastName: lastNameParts.join(' ') || undefined,
+          role: user.role || ROLES.USER,
+        };
+      });
+  },
+});
+
+export const clerkMigrationStatus = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query('users').collect();
+    const emailCounts = new Map<string, number>();
+
+    for (const user of users) {
+      if (!user.email) continue;
+      const email = user.email.toLowerCase();
+      emailCounts.set(email, (emailCounts.get(email) || 0) + 1);
+    }
+
+    return {
+      totalUsers: users.length,
+      linkedToClerk: users.filter((user) => !!user.externalId).length,
+      awaitingClerkLink: users.filter((user) => !user.externalId && !!user.email).length,
+      missingEmail: users.filter((user) => !user.email).length,
+      duplicateEmails: [...emailCounts.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([email, count]) => ({ email, count })),
+    };
+  },
+});
+
 export const upsertFromClerk = internalMutation({
   args: {
     id: v.string(),
@@ -27,23 +71,33 @@ export const upsertFromClerk = internalMutation({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
+    emailVerified: v.optional(v.boolean()),
     role: v.optional(ROLE_VALIDATOR),
   },
   handler: async (ctx, args) => {
+    const email = args.email?.toLowerCase();
     const now = Date.now();
-    const existing = await ctx.db
+    const byExternalId = await ctx.db
       .query('users')
       .withIndex('by_external_id', (q) => q.eq('externalId', args.id))
       .unique();
+    const existing =
+      byExternalId ||
+      (email
+        ? await ctx.db
+            .query('users')
+            .withIndex('email', (q) => q.eq('email', email))
+            .first()
+        : null);
 
     const name = [args.firstName, args.lastName].filter(Boolean).join(' ') || undefined;
-    const role = args.role || ROLES.USER;
+    const role = args.role || existing?.role || ROLES.USER;
     const updates = {
       externalId: args.id,
-      name,
-      email: args.email,
-      imageUrl: args.imageUrl,
-      emailVerified: !!args.email,
+      ...(name ? { name } : {}),
+      ...(email ? { email } : {}),
+      ...(args.imageUrl ? { imageUrl: args.imageUrl } : {}),
+      emailVerified: args.emailVerified ?? existing?.emailVerified,
       isAnonymous: false,
       permissions: [...ROLE_PERMISSIONS[role]],
       role,
@@ -62,7 +116,7 @@ export const upsertFromClerk = internalMutation({
   },
 });
 
-export const deleteFromClerk = internalMutation({
+export const disconnectFromClerk = internalMutation({
   args: {
     id: v.string(),
   },
@@ -73,7 +127,10 @@ export const deleteFromClerk = internalMutation({
       .unique();
 
     if (user) {
-      await ctx.db.delete(user._id);
+      await ctx.db.patch(user._id, {
+        externalId: undefined,
+        updatedAt: Date.now(),
+      });
     }
   },
 });

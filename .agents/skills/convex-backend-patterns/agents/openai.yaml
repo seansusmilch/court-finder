@@ -1,0 +1,6 @@
+interface:
+  display_name: "Convex Backend Patterns"
+  short_description: "Backend, auth, schema, and migrations"
+  default_prompt: "Use $convex-backend-patterns to implement a Convex backend change."
+policy:
+  allow_implicit_invocation: true
