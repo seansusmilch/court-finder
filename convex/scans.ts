@@ -1,7 +1,7 @@
 import { api, internal } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
 import { ConvexError, v } from 'convex/values';
-import { getCurrentUserId } from './lib/auth';
+import { getCurrentUser, getCurrentUserId } from './lib/auth';
 import {
   DEFAULT_TILE_RADIUS,
   PERMISSIONS,
@@ -285,10 +285,8 @@ export const listAll = query({
       createdAt: number;
     }>
   > => {
-    const canViewScans = await ctx.runQuery(api.users.hasPermission, {
-      permission: PERMISSIONS.SCANS.READ,
-    });
-    if (!canViewScans) {
+    const user = await getCurrentUser(ctx);
+    if (!user?.permissions?.includes(PERMISSIONS.SCANS.READ)) {
       throw new Error('Unauthorized');
     }
     const scans = await ctx.db.query('scans').collect();
