@@ -2,6 +2,8 @@ import { Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getVisualForClass } from '@/lib/constants';
 import type { MapSectionConfig } from '../shared/types';
+import { getSportIconName, SportIcon } from '../sport-icons';
+import { useTheme } from '@/components/theme-provider';
 
 export interface CategoryFilterSectionProps {
   categories: string[];
@@ -16,6 +18,8 @@ export function CategoryFilterSection({
   onCategoriesChange,
   className,
 }: CategoryFilterSectionProps) {
+  const { theme, systemTheme } = useTheme();
+  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const allSelected = enabledCategories.length === categories.length;
 
   const toggleCategory = (cat: string) => {
@@ -59,6 +63,7 @@ export function CategoryFilterSection({
         {categories.map((cat) => {
           const visual = getVisualForClass(cat);
           const isEnabled = enabledCategories.includes(cat);
+          const sportColor = isDark ? visual.colorDark : visual.colorLight;
           return (
             <button
               key={cat}
@@ -69,14 +74,20 @@ export function CategoryFilterSection({
                 'inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-medium transition-colors',
                 'border',
                 isEnabled
-                  ? 'border-primary/30 bg-primary text-primary-foreground shadow-sm'
+                  ? 'text-primary-foreground shadow-sm'
                   : 'border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:border-border'
               )}
+              style={
+                isEnabled
+                  ? { backgroundColor: sportColor, borderColor: sportColor }
+                  : undefined
+              }
             >
-              <span
-                aria-hidden
-                className='size-2.5 rounded-full ring-2 ring-background/60'
-                style={{ backgroundColor: visual.colorLight }}
+              <SportIcon
+                name={getSportIconName(cat)}
+                className='size-5 shrink-0'
+                style={isEnabled ? undefined : { color: sportColor }}
+                aria-hidden='true'
               />
               <span>{visual.displayName}</span>
               {isEnabled && (

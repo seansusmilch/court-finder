@@ -1,19 +1,11 @@
 import { cn } from '@/lib/utils';
 import { COURT_CLASS_VISUALS } from '@/lib/constants';
-import type { LucideIcon } from 'lucide-react';
-import { Activity, Circle, CircleDot, Diamond, Footprints } from 'lucide-react';
-
-const COURT_TYPE_ICONS: Record<string, LucideIcon> = {
-  'basketball-court': CircleDot,
-  'tennis-court': Circle,
-  'soccer-ball-field': CircleDot,
-  'baseball-diamond': Diamond,
-  'ground-track-field': Footprints,
-};
+import { getSportIconName, SportIcon } from './sport-icons';
+import { useTheme } from '@/components/theme-provider';
 
 const COURT_TYPES = Object.entries(COURT_CLASS_VISUALS).map(([key, value]) => ({
   key,
-  icon: COURT_TYPE_ICONS[key] ?? Activity,
+  iconName: getSportIconName(key),
   ...value,
 }));
 
@@ -28,6 +20,9 @@ export function CourtTypePills({
   onTypeChange,
   className,
 }: CourtTypePillsProps) {
+  const { theme, systemTheme } = useTheme();
+  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
+
   return (
     <div
       className={cn(
@@ -58,8 +53,8 @@ export function CourtTypePills({
         {/* Court type pills */}
         {COURT_TYPES.map((type) => {
           const isSelected = selectedType === type.key;
-          const Icon = type.icon;
           const label = type.displayName.toLowerCase();
+          const sportColor = isDark ? type.colorDark : type.colorLight;
           return (
             <button
               type="button"
@@ -69,11 +64,20 @@ export function CourtTypePills({
               className={cn(
                 'inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 isSelected
-                  ? 'border-foreground bg-foreground text-background shadow-sm'
+                  ? 'text-primary-foreground shadow-sm'
                   : 'border-border/70 bg-background/95 text-foreground shadow-sm hover:bg-muted'
               )}
+              style={
+                isSelected
+                  ? { borderColor: sportColor, backgroundColor: sportColor }
+                  : undefined
+              }
             >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <SportIcon
+                name={type.iconName}
+                className={cn('size-5 shrink-0', isSelected ? 'text-primary-foreground' : undefined)}
+                style={isSelected ? undefined : { color: sportColor }}
+              />
               <span>{label}</span>
             </button>
           );

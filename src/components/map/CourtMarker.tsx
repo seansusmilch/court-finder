@@ -4,6 +4,7 @@ import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { CourtFeatureProperties } from '@/lib/types';
 import { useTheme } from '@/components/theme-provider';
+import { getSportIconName, SportIcon } from './sport-icons';
 
 interface CourtMarkerProps {
   longitude: number;
@@ -23,27 +24,13 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { colorLight, colorDark, colorLightMuted, colorDarkMuted } =
-    getVisualForClass(courtClass);
+  const { colorLight, colorDark } = getVisualForClass(courtClass);
   const { theme, systemTheme } = useTheme();
   const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const isVerified = properties.status === 'verified';
 
-  const arrowColor = isDark
-    ? isVerified
-      ? colorDark
-      : colorDarkMuted
-    : isVerified
-      ? colorLight
-      : colorLightMuted;
-
-  const bgColor = isDark
-    ? isVerified
-      ? colorDark
-      : colorDarkMuted
-    : isVerified
-      ? colorLight
-      : colorLightMuted;
+  const markerColor = isDark ? colorDark : colorLight;
+  const sportIconName = getSportIconName(courtClass);
 
   return (
     <Marker
@@ -67,19 +54,24 @@ export function CourtMarker({
       >
         <MapPin
           className={cn(
-            'size-11 drop-shadow-md transition-[filter] duration-200',
-            isVerified ? 'drop-shadow-lg' : ''
+            'size-11 drop-shadow-md transition-[filter,opacity] duration-200',
+            isVerified ? 'drop-shadow-lg' : 'opacity-90'
           )}
-          fill={bgColor}
+          fill={markerColor}
           stroke='white'
           strokeWidth={2.25}
           aria-hidden
         />
         <span
-          className='absolute bottom-[10px] size-2 rounded-full bg-white/90'
-          style={{ backgroundColor: arrowColor }}
-          aria-hidden
-        />
+          className='absolute inset-x-0 top-[7px] flex justify-center'
+          aria-hidden='true'
+        >
+          <SportIcon
+            name={sportIconName}
+            className='size-[1.15rem] text-white drop-shadow-sm'
+            strokeWidth={2.15}
+          />
+        </span>
       </button>
     </Marker>
   );

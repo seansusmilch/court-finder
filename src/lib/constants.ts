@@ -28,8 +28,9 @@ export const NAVIGATION_LINKS = [
   { to: '/admin', label: 'Admin' },
 ] as const;
 
-// Visuals for court classes (emoji + vibrant OKLCH colors)
+// Visuals for court classes and their semantic color ramps.
 export type CourtClassVisual = {
+  /** Legacy training feedback glyph; map surfaces use the authored SportIcon set. */
   emoji: string;
   bgClass: string;
   borderClass: string;
@@ -62,7 +63,7 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
     colorDarkMuted: 'oklch(0.60 0.05 145)',
   },
   'soccer-ball-field': {
-    emoji: '🏈',
+    emoji: '⚽',
     bgClass: 'bg-soccer',
     borderClass: 'border-soccer',
     displayName: 'Soccer/Football Field',
@@ -96,7 +97,7 @@ export const COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
 export function getVisualForClass(predictionClass: string): CourtClassVisual {
   return (
     COURT_CLASS_VISUALS[predictionClass] || {
-      emoji: '❓',
+      emoji: '•',
       bgClass: 'bg-primary',
       borderClass: 'border-primary',
       displayName: `${predictionClass
