@@ -9,7 +9,6 @@ const clerkIdentity = {
   name: 'Casey Court',
   email: 'CASEY@EXAMPLE.COM',
   emailVerified: true,
-  pictureUrl: 'https://example.com/avatar.png',
 };
 
 describe('Clerk auth helpers', () => {
@@ -19,7 +18,6 @@ describe('Clerk auth helpers', () => {
       name: 'Casey Court',
       email: 'casey@example.com',
       emailVerified: true,
-      imageUrl: 'https://example.com/avatar.png',
       isAnonymous: false,
     });
   });

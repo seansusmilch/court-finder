@@ -60,7 +60,6 @@ http.route({
         primary_email_address_id?: string | null;
         first_name?: string | null;
         last_name?: string | null;
-        image_url?: string | null;
         public_metadata?: { role?: 'user' | 'admin' };
       };
 
@@ -74,7 +73,6 @@ http.route({
         emailVerified: selectedEmail?.verification?.status === 'verified',
         firstName: data.first_name ?? undefined,
         lastName: data.last_name ?? undefined,
-        imageUrl: data.image_url ?? undefined,
         role: data.public_metadata?.role === 'admin' || data.public_metadata?.role === 'user'
           ? data.public_metadata.role
           : undefined,

@@ -57,8 +57,12 @@ secret in the matching Convex deployment:
 bunx convex env set CLERK_WEBHOOK_SIGNING_SECRET 'whsec_...'
 ```
 
-The webhook updates names, primary emails, profile images, roles, and permissions. Deleting
-a Clerk user disconnects the Clerk ID but keeps the Convex row and its related app data.
+The webhook updates names, primary emails, roles, and permissions. Profile photos are now
+owned by Clerk and are rendered through Clerk's components; the old Convex storage fields
+remain only during the rollback window. Existing Convex photo blobs cannot be copied by a
+user webhook because they are private Convex storage objects, so users should upload a
+replacement from Clerk when they first sign in. Deleting a Clerk user disconnects the Clerk
+ID but keeps the Convex row and its related app data.
 
 ## Existing users
 
@@ -85,7 +89,7 @@ admin role and permissions to Convex.
 4. Import existing users into the Clerk production instance.
 5. Configure the production issuer, webhook secret, and Vercel publishable key.
 6. Deploy Convex, then deploy the frontend.
-7. Test sign-in, sign-out, a protected route, admin access, profile editing, and a scan.
+7. Test sign-in, sign-out, a protected route, admin access, Clerk profile management, and a scan.
 8. Run `users:clerkMigrationStatus` again and confirm users link as they sign in or as
    webhook events arrive.
 9. After the rollback window, delete the old Convex Auth `accounts`, `sessions`, and related

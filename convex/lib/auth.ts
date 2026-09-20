@@ -31,18 +31,12 @@ export function identityToUserFields(identity: NonNullable<ClerkIdentity>) {
     getIdentityField(identity, 'emailAddress') ||
     getIdentityField(identity, 'primaryEmailAddress') ||
     null;
-  const imageUrl =
-    getIdentityField(identity, 'pictureUrl') ||
-    getIdentityField(identity, 'imageUrl') ||
-    null;
-
   return {
     externalId: identity.subject,
     ...(name ? { name } : {}),
     ...(email && identity.emailVerified === true
       ? { email: email.toLowerCase(), emailVerified: true }
       : {}),
-    ...(imageUrl ? { imageUrl } : {}),
     isAnonymous: false,
     updatedAt: Date.now(),
   };

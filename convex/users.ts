@@ -4,7 +4,6 @@ import { DEFAULT_USER_PERMISSIONS } from './lib/constants';
 import {
   ensureCurrentUserRecord,
   getCurrentUser,
-  getCurrentUserId,
   requireCurrentUser,
 } from './lib/auth';
 
@@ -70,7 +69,6 @@ export const upsertFromClerk = internalMutation({
     email: v.optional(v.string()),
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
     emailVerified: v.optional(v.boolean()),
     role: v.optional(ROLE_VALIDATOR),
   },
@@ -105,7 +103,6 @@ export const upsertFromClerk = internalMutation({
       externalId: args.id,
       ...(name ? { name } : {}),
       ...(email ? { email } : {}),
-      ...(args.imageUrl ? { imageUrl: args.imageUrl } : {}),
       emailVerified: args.emailVerified ?? existing?.emailVerified,
       isAnonymous: false,
       permissions: args.role === undefined
@@ -175,83 +172,6 @@ export const ensureDefaultPermissions = mutation({
       role: user.role || 'user',
       updatedAt: Date.now(),
     });
-    return await ctx.db.get(user._id);
-  },
-});
-
-export const updateProfile = mutation({
-  args: {
-    name: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireCurrentUser(ctx);
-    const updates: { name?: string } = {};
-    if (args.name !== undefined) {
-      updates.name = args.name || undefined;
-    }
-
-    await ctx.db.patch(user._id, {
-      ...updates,
-      updatedAt: Date.now(),
-    });
-    return await ctx.db.get(user._id);
-  },
-});
-
-export const generateUploadUrl = mutation({
-  args: {},
-  handler: async (ctx) => {
-    await requireCurrentUser(ctx);
-    return await ctx.storage.generateUploadUrl();
-  },
-});
-
-export const updateProfileImage = mutation({
-  args: {
-    storageId: v.id('_storage'),
-  },
-  handler: async (ctx, args) => {
-    const user = await requireCurrentUser(ctx);
-
-    // Delete old image if it exists
-    if (user.image) {
-      await ctx.storage.delete(user.image);
-    }
-
-    await ctx.db.patch(user._id, { image: args.storageId, updatedAt: Date.now() });
-    return await ctx.db.get(user._id);
-  },
-});
-
-export const getProfileImageUrl = query({
-  args: {
-    userId: v.optional(v.id('users')),
-  },
-  handler: async (ctx, args) => {
-    const targetUserId = args.userId || (await getCurrentUserId(ctx));
-    if (!targetUserId) {
-      return null;
-    }
-
-    const user = await ctx.db.get(targetUserId);
-    if (!user || !user.image) {
-      return null;
-    }
-
-    return await ctx.storage.getUrl(user.image);
-  },
-});
-
-export const removeProfileImage = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const user = await requireCurrentUser(ctx);
-
-    if (user.image) {
-      await ctx.storage.delete(user.image);
-      await ctx.db.patch(user._id, { image: undefined, updatedAt: Date.now() });
-    }
-
     return await ctx.db.get(user._id);
   },
 });

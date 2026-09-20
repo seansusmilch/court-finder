@@ -5,6 +5,7 @@ export default defineSchema({
   users: defineTable({
     externalId: v.optional(v.string()),
     name: v.optional(v.string()),
+    // Legacy Convex profile fields retained during the rollback window; Clerk now owns photos.
     image: v.optional(v.id('_storage')),
     imageUrl: v.optional(v.string()),
     email: v.optional(v.string()),
