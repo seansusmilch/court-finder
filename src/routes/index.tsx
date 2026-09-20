@@ -370,7 +370,7 @@ function HomeComponent() {
           </div>
           <nav aria-label='Footer' className='flex flex-wrap gap-x-6 gap-y-3'>
             <Link to='/map' className='transition-colors hover:text-foreground'>Map</Link>
-            <Link to='/terms' className='transition-colors hover:text-foreground'>Terms</Link>
+            <Link to='/terms' className='transition-colors hover:text-foreground'>Terms of Service</Link>
             <Link to='/privacy' className='transition-colors hover:text-foreground'>Privacy</Link>
           </nav>
         </div>
