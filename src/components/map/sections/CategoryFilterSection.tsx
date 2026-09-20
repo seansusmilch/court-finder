@@ -2,7 +2,6 @@ import { Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getVisualForClass } from '@/lib/constants';
 import type { MapSectionConfig } from '../shared/types';
-import { getSportIconName, SportIcon } from '../sport-icons';
 import { useTheme } from '@/components/theme-provider';
 
 export interface CategoryFilterSectionProps {
@@ -83,12 +82,13 @@ export function CategoryFilterSection({
                   : undefined
               }
             >
-              <SportIcon
-                name={getSportIconName(cat)}
-                className='size-5 shrink-0'
+              <span
+                className='text-base leading-none'
                 style={isEnabled ? undefined : { color: sportColor }}
                 aria-hidden='true'
-              />
+              >
+                {visual.emoji}
+              </span>
               <span>{visual.displayName}</span>
               {isEnabled && (
                 <X className='h-3.5 w-3.5 opacity-70' />

@@ -24,7 +24,6 @@ import { DistanceDisplay } from '@/components/map/DistanceDisplay';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import { FavoriteButton } from '@/components/map/FavoriteButton';
 import { CourtSatelliteImage } from '@/components/map/CourtSatelliteImage';
-import { getSportIconName, SportIcon } from './sport-icons';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/../convex/_generated/api';
 import { useState } from 'react';
@@ -46,8 +45,7 @@ export function CourtModal({
 }: CourtModalProps) {
   const { location: userLocation, error: locationError, loading: locationLoading } = useUserLocation();
   const courtClass = properties.class ? String(properties.class) : '';
-  const { bgClass, displayName } = getVisualForClass(courtClass);
-  const sportIconName = getSportIconName(courtClass);
+  const { bgClass, displayName, emoji } = getVisualForClass(courtClass);
   const isVerified = properties.status === 'verified';
   const confidence = properties.confidence != null
     ? Math.round(Number(properties.confidence) * 100)
@@ -125,7 +123,7 @@ export function CourtModal({
           </DialogClose>
           <div className="flex items-start gap-3">
             <span className={cn('mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg ring-4 ring-muted', bgClass)} aria-hidden="true">
-              <SportIcon name={sportIconName} className="size-5 text-primary-foreground" />
+              <span className="text-xl leading-none">{emoji}</span>
             </span>
             <div className="min-w-0 flex-1 space-y-2">
               <DialogTitle className="text-xl leading-tight sm:text-2xl">

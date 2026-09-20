@@ -30,7 +30,7 @@ export const NAVIGATION_LINKS = [
 
 // Visuals for court classes and their semantic color ramps.
 export type CourtClassVisual = {
-  /** Legacy training feedback glyph; map surfaces use the authored SportIcon set. */
+  /** Emoji used across compact map and feedback surfaces. */
   emoji: string;
   bgClass: string;
   borderClass: string;
