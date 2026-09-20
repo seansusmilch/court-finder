@@ -60,6 +60,14 @@ function TermsPage() {
                 possible facilities on a map.
               </p>
               <p className='mt-4'>
+                Court Finder is an experimental demonstration project provided for informational
+                and evaluation purposes only. It is not a directory of verified facilities, a
+                guarantee that a facility exists or is available, or permission to enter property.
+                Information may be incomplete, inaccurate, outdated, interrupted, or discontinued.
+                You are responsible for verifying conditions, access, and permission before acting
+                on information from the Service.
+              </p>
+              <p className='mt-4'>
                 The Service is currently offered free of charge. We do not promise that a
                 particular feature will always be available or that we will keep offering the
                 Service.
