@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useClerk } from '@clerk/react';
 import { useMutation, useQuery } from 'convex/react';
 import type { ChangeEvent } from 'react';
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { api } from '@/../convex/_generated/api';
 import {
   Card,
@@ -18,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Camera, Gauge, LogOut, Shield, X } from 'lucide-react';
+import { Camera, Gauge, Shield, X } from 'lucide-react';
 import { ProfileImageCropper } from '@/components/profile/ProfileImageCropper';
 
 export const Route = createFileRoute('/_authed/account')({
@@ -26,8 +25,6 @@ export const Route = createFileRoute('/_authed/account')({
 });
 
 function AccountPage() {
-  const navigate = useNavigate();
-  const { signOut } = useClerk();
   const user = useQuery(api.users.me);
   const stats = useQuery(api.feedback_submissions.getFeedbackStats);
   const scanLimitStatus = useQuery(api.scans.getScanInitiationLimitStatus);
@@ -62,11 +59,6 @@ function AccountPage() {
     } finally {
       setIsSavingName(false);
     }
-  };
-
-  const handleSignOut = async () => {
-    await signOut({ redirectUrl: '/' });
-    navigate({ to: '/' });
   };
 
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
@@ -372,19 +364,6 @@ function AccountPage() {
           ) : (
             <p className='text-sm text-muted-foreground'>Loading stats...</p>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className='flex items-center justify-between pt-6'>
-          <div>
-            <p className='font-medium'>Sign out</p>
-            <p className='text-sm text-muted-foreground'>End your current session</p>
-          </div>
-          <Button variant='outline' onClick={handleSignOut}>
-            <LogOut className='mr-2 h-4 w-4' />
-            Sign out
-          </Button>
         </CardContent>
       </Card>
 
