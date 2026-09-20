@@ -228,7 +228,7 @@ function AccountPage() {
         </CardContent>
       </Card>
 
-      {user.permissions.includes('admin.access') ? (
+      {user.role === 'admin' ? (
         <Card className='border-orange-500/30 bg-orange-500/5 dark:border-orange-500/20 dark:bg-orange-500/10'>
           <CardHeader>
             <CardTitle className='text-orange-700 dark:text-orange-400'>

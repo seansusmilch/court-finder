@@ -8,6 +8,7 @@ import {
   ROBOFLOW_MODEL_VERSION,
   ROBOFLOW_MODEL_NAME,
   SCAN_INITIATION_RATE_LIMIT,
+  roleHasPermission,
 } from './lib/constants';
 import { pointToTile } from './lib/tiles';
 
@@ -286,7 +287,7 @@ export const listAll = query({
     }>
   > => {
     const user = await getCurrentUser(ctx);
-    if (!user?.permissions?.includes(PERMISSIONS.SCANS.READ)) {
+    if (!user || !roleHasPermission(user.role, PERMISSIONS.SCANS.READ)) {
       throw new Error('Unauthorized');
     }
     const scans = await ctx.db.query('scans').collect();

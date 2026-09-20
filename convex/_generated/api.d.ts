@@ -9,6 +9,8 @@
  */
 
 import type * as actions from "../actions.js";
+import type * as clerk from "../clerk.js";
+import type * as clerkMigration from "../clerkMigration.js";
 import type * as courts from "../courts.js";
 import type * as env from "../env.js";
 import type * as feedback_submissions from "../feedback_submissions.js";
@@ -42,6 +44,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
+  clerk: typeof clerk;
+  clerkMigration: typeof clerkMigration;
   courts: typeof courts;
   env: typeof env;
   feedback_submissions: typeof feedback_submissions;

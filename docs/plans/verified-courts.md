@@ -354,7 +354,7 @@ export const updateCourtStatus = mutation({
 
     // Check admin permission (adjust permission check as needed)
     const user = await ctx.db.get(userId);
-    const isAdmin = user?.permissions?.includes('admin.access');
+    const isAdmin = user?.role === 'admin';
 
     if (!isAdmin) {
       throw new Error('Insufficient permissions');
