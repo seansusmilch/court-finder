@@ -10,6 +10,10 @@ import { env } from '@/env';
 
 const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 const publishableKey = env.VITE_CLERK_PUBLISHABLE_KEY;
+const clerkProxyUrl =
+  import.meta.env.PROD && publishableKey.startsWith('pk_live_')
+    ? '/__clerk'
+    : undefined;
 const queryClient = new QueryClient();
 
 const router = createRouter({
@@ -23,6 +27,7 @@ const router = createRouter({
     return (
       <ClerkProvider
         publishableKey={publishableKey}
+        proxyUrl={clerkProxyUrl}
         afterSignOutUrl='/'
         signInUrl='/login'
         signInFallbackRedirectUrl='/'

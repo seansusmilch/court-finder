@@ -1,6 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { Home, Map, MessageSquare, User, type LucideIcon } from 'lucide-react';
-import { Authenticated, Unauthenticated } from 'convex/react';
+import { Show } from '@clerk/react';
 import { cn } from '@/lib/utils';
 
 interface NavItemProps {
@@ -63,7 +63,7 @@ export default function BottomNav() {
           to="/map"
           isActive={pathname.startsWith('/map')}
         />
-        <Authenticated>
+        <Show when='signed-in'>
           <NavItem
             icon={MessageSquare}
             label="Feedback"
@@ -76,15 +76,15 @@ export default function BottomNav() {
             to="/account"
             isActive={pathname.startsWith('/account')}
           />
-        </Authenticated>
-        <Unauthenticated>
+        </Show>
+        <Show when='signed-out'>
           <NavItem
             icon={User}
             label="Login"
             to="/login"
             isActive={pathname === '/login'}
           />
-        </Unauthenticated>
+        </Show>
       </div>
     </nav>
   );
