@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { api } from '@backend/_generated/api';
+import { useConvexAuth, useQuery } from 'convex/react';
 import {
   Card,
   CardContent,
@@ -13,47 +14,33 @@ import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
 
 export const Route = createFileRoute('/_authed/admin/')({
-  loader: async ({ context }) => {
-    const [pending, processed, scans] = await Promise.all([
-      context.convex.query(api.upload_batches.getPendingBatches, {
-        onlyLatestModelVersion: true,
-      }),
-      context.convex.query(api.upload_batches.getProcessedBatches, {
-        onlyLatestModelVersion: true,
-      }),
-      context.convex.query(api.scans.listAll, {}),
-    ]);
-
-    const totalFeedback =
-      pending.reduce(
-        (acc: number, item: any) => acc + (item.feedbackCount ?? 0),
-        0
-      ) +
-      processed.reduce(
-        (acc: number, item: any) => acc + (item.feedbackCount ?? 0),
-        0
-      );
-
-    return {
-      metrics: {
-        pendingTiles: pending.length,
-        processedBatches: processed.length,
-        scansCount: scans.length,
-        totalFeedback,
-      },
-    };
-  },
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { metrics } = Route.useLoaderData() as {
-    metrics: {
-      pendingTiles: number;
-      processedBatches: number;
-      scansCount: number;
-      totalFeedback: number;
-    };
+  const { isAuthenticated } = useConvexAuth();
+  const pending = useQuery(
+    api.upload_batches.getPendingBatches,
+    isAuthenticated ? { onlyLatestModelVersion: true } : 'skip'
+  );
+  const processed = useQuery(
+    api.upload_batches.getProcessedBatches,
+    isAuthenticated ? { onlyLatestModelVersion: true } : 'skip'
+  );
+  const scans = useQuery(api.scans.listAll, isAuthenticated ? {} : 'skip');
+  const metrics = {
+    pendingTiles: pending?.length ?? 0,
+    processedBatches: processed?.length ?? 0,
+    scansCount: scans?.length ?? 0,
+    totalFeedback:
+      (pending ?? []).reduce(
+        (acc: number, item: any) => acc + (item.feedbackCount ?? 0),
+        0
+      ) +
+      (processed ?? []).reduce(
+        (acc: number, item: any) => acc + (item.feedbackCount ?? 0),
+        0
+      ),
   };
 
   return (

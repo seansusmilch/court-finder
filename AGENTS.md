@@ -20,7 +20,7 @@ This file provides guidance to OpenCode when working with code in this repositor
 
 ### Tech Stack
 - **Frontend**: React 19, TypeScript, TanStack Router, TanStack Query, TailwindCSS v4, shadcn/ui
-- **Backend**: Convex (reactive database), Convex Auth
+- **Backend**: Convex (reactive database), Clerk authentication
 - **Maps**: Mapbox GL JS, Mapbox Search API
 - **ML**: Roboflow integration for court detection
 - **Build**: Vite, Bun as package manager

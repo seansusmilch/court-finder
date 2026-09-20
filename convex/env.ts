@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 export const env = createEnv({
   server: {
@@ -7,6 +7,7 @@ export const env = createEnv({
     ROBOFLOW_API_KEY: z.string().min(1),
     ROBOFLOW_BATCH: z.string().default('User Contributed'),
     CONVEX_SITE_URL: z.string().optional(),
+    CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1).optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

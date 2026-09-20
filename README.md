@@ -15,7 +15,7 @@ Court Finder is a React + Convex app for finding and validating sports courts fr
 
 - React 19, TypeScript, Vite, and Bun
 - TanStack Router for file-based routing
-- Convex and Convex Auth for backend data, functions, and authentication
+- Convex for backend data and functions, with Clerk for authentication and account management
 - Tailwind CSS v4 and shadcn/ui
 - Mapbox GL JS, Mapbox Search, and `react-map-gl`
 - Roboflow integration for satellite court detection
@@ -50,6 +50,7 @@ Frontend env, loaded by Vite:
 ```bash
 VITE_CONVEX_URL=
 VITE_MAPBOX_API_KEY=
+VITE_CLERK_PUBLISHABLE_KEY=
 ```
 
 Convex/server env:
@@ -57,6 +58,8 @@ Convex/server env:
 ```bash
 MAPBOX_API_KEY=
 ROBOFLOW_API_KEY=
+CLERK_JWT_ISSUER_DOMAIN=
+CLERK_WEBHOOK_SIGNING_SECRET=
 ROBOFLOW_BATCH=User Contributed
 CONVEX_SITE_URL=
 ```

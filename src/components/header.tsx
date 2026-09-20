@@ -1,14 +1,13 @@
 import { Link } from '@tanstack/react-router';
 import { Authenticated, Unauthenticated } from 'convex/react';
-import { useAuthActions } from '@convex-dev/auth/react';
-import { UserIcon } from 'lucide-react';
+import { UserButton } from '@clerk/react';
+import { Settings, UserIcon } from 'lucide-react';
 
 import { ModeToggle } from './mode-toggle';
 import { NAVIGATION_LINKS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 
 export default function Header() {
-  const { signOut } = useAuthActions();
   return (
     <div className='sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b no-zoom'>
       <div className='grid grid-cols-2 md:grid-cols-3 items-center px-4 py-2'>
@@ -51,29 +50,25 @@ export default function Header() {
 
         {/* Right: Controls */}
         <div className='flex items-center justify-end gap-3'>
-          <div className='hidden md:flex items-center gap-2'>
-            <Authenticated>
-              <Button variant='ghost' size='sm' asChild>
-                <Link to='/account'>
-                  <UserIcon className='mr-2 size-4' /> Account
-                </Link>
-              </Button>
-              <Button variant='ghost' size='sm' onClick={() => signOut()}>
-                Sign out
-              </Button>
-            </Authenticated>
-            <Unauthenticated>
-              <Button asChild size='sm'>
-                <Link to={'/login'}>
-                  <UserIcon className='mr-2 size-4' /> Sign in
-                </Link>
-              </Button>
-            </Unauthenticated>
-            <ModeToggle />
-          </div>
-          <div className='md:hidden'>
-            <ModeToggle />
-          </div>
+          <Authenticated>
+            <UserButton>
+              <UserButton.MenuItems>
+                <UserButton.Link
+                  href='/account'
+                  label='Court Finder account'
+                  labelIcon={<Settings className='size-4' />}
+                />
+              </UserButton.MenuItems>
+            </UserButton>
+          </Authenticated>
+          <Unauthenticated>
+            <Button asChild size='sm'>
+              <Link to={'/login'}>
+                <UserIcon className='mr-2 size-4' /> Sign in
+              </Link>
+            </Button>
+          </Unauthenticated>
+          <ModeToggle />
         </div>
       </div>
     </div>

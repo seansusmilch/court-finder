@@ -1,4 +1,4 @@
-import { api, internal } from './_generated/api';
+import { internal } from './_generated/api';
 import type { Id, Doc } from './_generated/dataModel';
 import { query } from './_generated/server';
 import { v } from 'convex/values';
@@ -8,6 +8,7 @@ import {
   ROBOFLOW_MODEL_VERSION,
 } from './lib/constants';
 import { styleTileUrl } from './lib/tiles';
+import { getCurrentUser } from './lib/auth';
 
 type TileResultItem = {
   z: number;
@@ -28,10 +29,8 @@ type GetByScanIdResponse = {
 export const getByScanId = query({
   args: { scanId: v.id('scans') },
   handler: async (ctx, args): Promise<GetByScanIdResponse> => {
-    const canViewScans = await ctx.runQuery(api.users.hasPermission, {
-      permission: PERMISSIONS.SCANS.READ,
-    });
-    if (!canViewScans) {
+    const user = await getCurrentUser(ctx);
+    if (!user?.permissions?.includes(PERMISSIONS.SCANS.READ)) {
       throw new Error('Unauthorized');
     }
     const scan = await ctx.db.get(args.scanId);
