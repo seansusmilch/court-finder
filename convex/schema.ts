@@ -11,6 +11,7 @@ export default defineSchema({
     emailVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     permissions: v.array(v.string()),
+    planTier: v.optional(v.union(v.literal('free'), v.literal('pro'))),
   }).index('email', ['email']),
   courts: defineTable({
     latitude: v.float64(),
@@ -86,9 +87,12 @@ export default defineSchema({
   }).index('by_center_tile', ['centerTile']),
   scan_rate_limits: defineTable({
     userId: v.id('users'),
+    limitKey: v.optional(v.string()),
     windowStartMs: v.number(),
     count: v.number(),
-  }).index('by_user', ['userId']),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_limit_key', ['userId', 'limitKey']),
   upload_batches: defineTable({
     tileId: v.id('tiles'),
     roboflowName: v.string(),

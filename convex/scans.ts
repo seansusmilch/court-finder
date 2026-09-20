@@ -1,15 +1,56 @@
 import { api, internal } from './_generated/api';
 import { internalQuery, internalMutation, query } from './_generated/server';
+import type { MutationCtx, QueryCtx } from './_generated/server';
+import type { Id } from './_generated/dataModel';
 import { ConvexError, v } from 'convex/values';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import {
   DEFAULT_TILE_RADIUS,
   PERMISSIONS,
+  PLAN_TIERS,
+  PRO_SCAN_FAIR_USE_LIMIT,
   ROBOFLOW_MODEL_VERSION,
   ROBOFLOW_MODEL_NAME,
   SCAN_INITIATION_RATE_LIMIT,
 } from './lib/constants';
 import { pointToTile } from './lib/tiles';
+
+const SCAN_LIMIT_KEYS = {
+  FREE_HOURLY: 'scan_initiation_free_hourly',
+  PRO_DAILY_FAIR_USE: 'scan_initiation_pro_daily_fair_use',
+} as const;
+
+const getPlanTier = async (
+  ctx: Pick<MutationCtx | QueryCtx, 'db'>,
+  userId: Id<'users'>
+) => {
+  const user = await ctx.db.get(userId);
+  return user?.planTier === PLAN_TIERS.PRO ? PLAN_TIERS.PRO : PLAN_TIERS.FREE;
+};
+
+const findScanRateLimit = async (
+  ctx: Pick<MutationCtx | QueryCtx, 'db'>,
+  userId: Id<'users'>,
+  limitKey: string,
+  planTier: (typeof PLAN_TIERS)[keyof typeof PLAN_TIERS]
+) => {
+  const keyed = await ctx.db
+    .query('scan_rate_limits')
+    .withIndex('by_user_limit_key', (q) =>
+      q.eq('userId', userId).eq('limitKey', limitKey)
+    )
+    .first();
+
+  if (keyed || planTier !== PLAN_TIERS.FREE) {
+    return keyed;
+  }
+
+  const legacyRows = await ctx.db
+    .query('scan_rate_limits')
+    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .collect();
+  return legacyRows.find((row) => !row.limitKey) ?? null;
+};
 
 export const findByCenterTile = internalQuery({
   args: {
@@ -46,14 +87,26 @@ export const consumeScanInitiation = internalMutation({
   handler: async (ctx, args) => {
     const startTs = Date.now();
     const now = Date.now();
-    const existing = await ctx.db
-      .query('scan_rate_limits')
-      .withIndex('by_user', (q) => q.eq('userId', args.userId))
-      .first();
+    const planTier = await getPlanTier(ctx, args.userId);
+    const limitConfig =
+      planTier === PLAN_TIERS.PRO
+        ? PRO_SCAN_FAIR_USE_LIMIT
+        : SCAN_INITIATION_RATE_LIMIT;
+    const limitKey =
+      planTier === PLAN_TIERS.PRO
+        ? SCAN_LIMIT_KEYS.PRO_DAILY_FAIR_USE
+        : SCAN_LIMIT_KEYS.FREE_HOURLY;
+    const existing = await findScanRateLimit(
+      ctx,
+      args.userId,
+      limitKey,
+      planTier
+    );
 
     if (!existing) {
       const rateLimitId = await ctx.db.insert('scan_rate_limits', {
         userId: args.userId,
+        limitKey,
         windowStartMs: now,
         count: 1,
       });
@@ -64,22 +117,25 @@ export const consumeScanInitiation = internalMutation({
         userId: args.userId,
         requestedAction: args.requestedAction,
         rateLimitId,
-        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        planTier,
+        limitKey,
+        limit: limitConfig.LIMIT,
+        windowMs: limitConfig.WINDOW_MS,
         count: 1,
       });
 
       return {
         allowed: true,
-        remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT - 1,
-        resetAtMs: now + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        planTier,
+        remaining: limitConfig.LIMIT - 1,
+        resetAtMs: now + limitConfig.WINDOW_MS,
       };
     }
 
-    const resetAtMs =
-      existing.windowStartMs + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS;
+    const resetAtMs = existing.windowStartMs + limitConfig.WINDOW_MS;
     if (now >= resetAtMs) {
       await ctx.db.patch(existing._id, {
+        limitKey,
         windowStartMs: now,
         count: 1,
       });
@@ -90,20 +146,23 @@ export const consumeScanInitiation = internalMutation({
         userId: args.userId,
         requestedAction: args.requestedAction,
         rateLimitId: existing._id,
+        planTier,
+        limitKey,
         previousCount: existing.count,
-        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        limit: limitConfig.LIMIT,
+        windowMs: limitConfig.WINDOW_MS,
         count: 1,
       });
 
       return {
         allowed: true,
-        remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT - 1,
-        resetAtMs: now + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        planTier,
+        remaining: limitConfig.LIMIT - 1,
+        resetAtMs: now + limitConfig.WINDOW_MS,
       };
     }
 
-    if (existing.count >= SCAN_INITIATION_RATE_LIMIT.LIMIT) {
+    if (existing.count >= limitConfig.LIMIT) {
       const retryAfterMs = Math.max(0, resetAtMs - now);
 
       console.warn('scan_rate_limit:exceeded', {
@@ -112,18 +171,21 @@ export const consumeScanInitiation = internalMutation({
         userId: args.userId,
         requestedAction: args.requestedAction,
         rateLimitId: existing._id,
-        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        planTier,
+        limitKey,
+        limit: limitConfig.LIMIT,
+        windowMs: limitConfig.WINDOW_MS,
         count: existing.count,
         resetAtMs,
         retryAfterMs,
       });
 
       throw new ConvexError({
-        code: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE,
-        message: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE,
-        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        code: limitConfig.EXCEEDED_CODE,
+        message: limitConfig.EXCEEDED_MESSAGE,
+        planTier,
+        limit: limitConfig.LIMIT,
+        windowMs: limitConfig.WINDOW_MS,
         resetAtMs,
         retryAfterMs,
       });
@@ -131,6 +193,7 @@ export const consumeScanInitiation = internalMutation({
 
     const nextCount = existing.count + 1;
     await ctx.db.patch(existing._id, {
+      limitKey,
       count: nextCount,
     });
 
@@ -140,14 +203,17 @@ export const consumeScanInitiation = internalMutation({
       userId: args.userId,
       requestedAction: args.requestedAction,
       rateLimitId: existing._id,
-      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-      windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+      planTier,
+      limitKey,
+      limit: limitConfig.LIMIT,
+      windowMs: limitConfig.WINDOW_MS,
       count: nextCount,
     });
 
     return {
       allowed: true,
-      remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT - nextCount,
+      planTier,
+      remaining: limitConfig.LIMIT - nextCount,
       resetAtMs,
     };
   },
@@ -162,33 +228,42 @@ export const getScanInitiationLimitStatus = query({
     }
 
     const now = Date.now();
-    const existing = await ctx.db
-      .query('scan_rate_limits')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
-      .first();
+    const planTier = await getPlanTier(ctx, userId);
+    const limitConfig =
+      planTier === PLAN_TIERS.PRO
+        ? PRO_SCAN_FAIR_USE_LIMIT
+        : SCAN_INITIATION_RATE_LIMIT;
+    const limitKey =
+      planTier === PLAN_TIERS.PRO
+        ? SCAN_LIMIT_KEYS.PRO_DAILY_FAIR_USE
+        : SCAN_LIMIT_KEYS.FREE_HOURLY;
+    const existing = await findScanRateLimit(ctx, userId, limitKey, planTier);
 
     if (!existing) {
       return {
-        limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+        planTier,
+        displayMode: planTier === PLAN_TIERS.PRO ? 'unlimited' : 'limited',
+        limit: limitConfig.LIMIT,
         count: 0,
-        remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-        windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+        remaining: limitConfig.LIMIT,
+        windowMs: limitConfig.WINDOW_MS,
         resetAtMs: null,
         retryAfterMs: 0,
       };
     }
 
-    const resetAtMs =
-      existing.windowStartMs + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS;
+    const resetAtMs = existing.windowStartMs + limitConfig.WINDOW_MS;
     const windowExpired = now >= resetAtMs;
     const count = windowExpired ? 0 : existing.count;
-    const remaining = Math.max(0, SCAN_INITIATION_RATE_LIMIT.LIMIT - count);
+    const remaining = Math.max(0, limitConfig.LIMIT - count);
 
     return {
-      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+      planTier,
+      displayMode: planTier === PLAN_TIERS.PRO ? 'unlimited' : 'limited',
+      limit: limitConfig.LIMIT,
       count,
       remaining,
-      windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+      windowMs: limitConfig.WINDOW_MS,
       resetAtMs: windowExpired ? null : resetAtMs,
       retryAfterMs: windowExpired ? 0 : Math.max(0, resetAtMs - now),
     };

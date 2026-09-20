@@ -13,6 +13,7 @@ import type { ActionCtx } from './_generated/server';
 import type { TileCoordinate } from './lib/tiles';
 import {
   PERMISSIONS,
+  PRO_SCAN_FAIR_USE_LIMIT,
   ROBOFLOW_MODEL_NAME,
   ROBOFLOW_MODEL_VERSION,
   DEFAULT_TILE_RADIUS,
@@ -66,23 +67,31 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const getScanRateLimitErrorData = (
   error: unknown
 ): ScanRateLimitErrorData | null => {
+  const rateLimitConfigs = [
+    SCAN_INITIATION_RATE_LIMIT,
+    PRO_SCAN_FAIR_USE_LIMIT,
+  ] as const;
+
   if (isRecord(error) && isRecord(error.data)) {
     const data = error.data;
-    if (data.code === SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE) {
+    const config = rateLimitConfigs.find(
+      (rateLimitConfig) => data.code === rateLimitConfig.EXCEEDED_CODE
+    );
+    if (config) {
       return {
-        code: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE,
+        code: config.EXCEEDED_CODE,
         message:
           typeof data.message === 'string'
             ? data.message
-            : SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE,
+            : config.EXCEEDED_MESSAGE,
         limit:
           typeof data.limit === 'number'
             ? data.limit
-            : SCAN_INITIATION_RATE_LIMIT.LIMIT,
+            : config.LIMIT,
         windowMs:
           typeof data.windowMs === 'number'
             ? data.windowMs
-            : SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
+            : config.WINDOW_MS,
         ...(typeof data.resetAtMs === 'number'
           ? { resetAtMs: data.resetAtMs }
           : {}),
@@ -93,16 +102,18 @@ const getScanRateLimitErrorData = (
     }
   }
 
-  if (
-    error instanceof Error &&
-    error.message.includes(SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE)
-  ) {
-    return {
-      code: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE,
-      message: SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE,
-      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-      windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
-    };
+  if (error instanceof Error) {
+    const config = rateLimitConfigs.find((rateLimitConfig) =>
+      error.message.includes(rateLimitConfig.EXCEEDED_CODE)
+    );
+    if (config) {
+      return {
+        code: config.EXCEEDED_CODE,
+        message: config.EXCEEDED_MESSAGE,
+        limit: config.LIMIT,
+        windowMs: config.WINDOW_MS,
+      };
+    }
   }
 
   return null;

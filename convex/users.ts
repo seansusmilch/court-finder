@@ -1,7 +1,12 @@
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { mutation, query } from './_generated/server';
+import type { MutationCtx, QueryCtx } from './_generated/server';
 import { v } from 'convex/values';
-import { DEFAULT_USER_PERMISSIONS } from './lib/constants';
+import {
+  DEFAULT_USER_PERMISSIONS,
+  PERMISSIONS,
+  PLAN_TIERS,
+} from './lib/constants';
 
 export const me = query({
   args: {},
@@ -38,6 +43,72 @@ export const ensureDefaultPermissions = mutation({
       ),
     });
     return await ctx.db.get(userId);
+  },
+});
+
+const requireAdminUser = async (ctx: QueryCtx | MutationCtx) => {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+
+  const user = await ctx.db.get(userId);
+  if (!user?.permissions?.includes(PERMISSIONS.ADMIN.ACCESS)) {
+    throw new Error('Insufficient permissions');
+  }
+
+  return { userId, user };
+};
+
+export const listForAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdminUser(ctx);
+
+    const users = await ctx.db.query('users').collect();
+    return users.map((user) => ({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAnonymous: user.isAnonymous,
+      permissions: user.permissions,
+      planTier:
+        user.planTier === PLAN_TIERS.PRO ? PLAN_TIERS.PRO : PLAN_TIERS.FREE,
+    }));
+  },
+});
+
+export const updatePlanTier = mutation({
+  args: {
+    userId: v.id('users'),
+    planTier: v.union(v.literal(PLAN_TIERS.FREE), v.literal(PLAN_TIERS.PRO)),
+  },
+  handler: async (ctx, args) => {
+    const { userId: adminUserId } = await requireAdminUser(ctx);
+    const startTs = Date.now();
+    const targetUser = await ctx.db.get(args.userId);
+    if (!targetUser) {
+      throw new Error('User not found');
+    }
+
+    await ctx.db.patch(args.userId, { planTier: args.planTier });
+
+    console.log('user_plan_tier:updated', {
+      startTs,
+      durationMs: Date.now() - startTs,
+      adminUserId,
+      userId: args.userId,
+      previousPlanTier:
+        targetUser.planTier === PLAN_TIERS.PRO
+          ? PLAN_TIERS.PRO
+          : PLAN_TIERS.FREE,
+      planTier: args.planTier,
+    });
+
+    return {
+      userId: args.userId,
+      planTier: args.planTier,
+    };
   },
 });
 
@@ -174,4 +245,3 @@ export const _updateAccountPassword = mutation({
     return { success: true };
   },
 });
-

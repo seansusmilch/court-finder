@@ -5,6 +5,7 @@ import type { Doc, Id } from './_generated/dataModel';
 import {
   DEFAULT_ANONYMOUS_PERMISSIONS,
   DEFAULT_USER_PERMISSIONS,
+  PLAN_TIERS,
 } from './lib/constants';
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
@@ -45,6 +46,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         userId = await ctx.db.insert('users', {
           email: args.profile.email,
           permissions: DEFAULT_USER_PERMISSIONS,
+          planTier: PLAN_TIERS.FREE,
         });
         console.log('created', {
           table: 'users',
@@ -56,6 +58,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         userId = await ctx.db.insert('users', {
           isAnonymous: true,
           permissions: DEFAULT_ANONYMOUS_PERMISSIONS,
+          planTier: PLAN_TIERS.FREE,
         });
         console.log('created', {
           table: 'users',

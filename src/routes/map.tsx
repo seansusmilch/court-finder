@@ -14,6 +14,7 @@ import { api } from '@backend/_generated/api';
 import type { Id } from '@backend/_generated/dataModel';
 import {
   MAPBOX_TILE_DEFAULTS,
+  PRO_SCAN_FAIR_USE_LIMIT,
   SCAN_INITIATION_RATE_LIMIT,
 } from '@backend/lib/constants';
 import type { MapMouseEvent } from 'mapbox-gl';
@@ -65,11 +66,21 @@ function getScanErrorMessage(error: unknown) {
     typeof data === 'object' &&
     data !== null &&
     'code' in data &&
-    data.code === SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE
+    (data.code === SCAN_INITIATION_RATE_LIMIT.EXCEEDED_CODE ||
+      data.code === PRO_SCAN_FAIR_USE_LIMIT.EXCEEDED_CODE)
   ) {
     return 'message' in data && typeof data.message === 'string'
       ? data.message
-      : SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE;
+      : data.code === PRO_SCAN_FAIR_USE_LIMIT.EXCEEDED_CODE
+        ? PRO_SCAN_FAIR_USE_LIMIT.EXCEEDED_MESSAGE
+        : SCAN_INITIATION_RATE_LIMIT.EXCEEDED_MESSAGE;
+  }
+
+  if (
+    error instanceof Error &&
+    error.message.includes(PRO_SCAN_FAIR_USE_LIMIT.EXCEEDED_CODE)
+  ) {
+    return PRO_SCAN_FAIR_USE_LIMIT.EXCEEDED_MESSAGE;
   }
 
   if (
