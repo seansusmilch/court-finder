@@ -72,12 +72,12 @@ export function TrainingFeedbackPage() {
 
   // Render main feedback interface
   return (
-    <div className='min-h-full w-full bg-muted/20'>
+    <div className='feedback-page min-h-full w-full bg-muted/20'>
       <FeedbackHeader predictionsLeft={predictionsLeft} />
 
-      <div className='mx-auto grid w-full max-w-6xl items-start gap-6 px-4 pb-10 sm:px-6 md:px-8 md:pb-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)] lg:gap-8'>
+      <div className='mx-auto grid w-full max-w-6xl items-start gap-4 px-4 pb-4 sm:px-6 md:gap-6 md:px-8 md:pb-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)] lg:gap-8'>
         <section className='min-w-0' aria-labelledby='feedback-evidence-heading'>
-          <div className='mb-3 flex items-end justify-between gap-4 px-1'>
+          <div className='mb-2 flex items-end justify-between gap-4 px-1 md:mb-3'>
             <div>
               <h2
                 id='feedback-evidence-heading'
@@ -104,7 +104,7 @@ export function TrainingFeedbackPage() {
               width: prediction.width as number,
               height: prediction.height as number,
             }}
-            className='aspect-[4/3] min-h-[16rem] max-h-[62vh] rounded-2xl sm:min-h-0'
+            className='aspect-[5/3] min-h-[13rem] max-h-[62vh] rounded-2xl sm:aspect-[4/3] sm:min-h-0'
             onLoadingChange={handleImageLoadingChange}
           />
           <p className='mt-3 px-1 text-xs leading-5 text-muted-foreground'>

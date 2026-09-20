@@ -49,13 +49,17 @@ function RootComponent() {
   const ensureCurrentUser = useMutation(api.users.ensureCurrentUser);
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
+  const [isTallMobile, setIsTallMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    const handleResize = () => checkMobile();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const checkViewport = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setIsTallMobile(mobile && window.innerHeight >= 780);
+    };
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
   }, []);
 
   // The map owns the viewport on every device. Keep the desktop header in the
@@ -64,6 +68,8 @@ function RootComponent() {
   const shouldHideHeader = isMobile && hideHeaderRoutes.includes(location.pathname);
   const noScrollRoutes = ['/map'];
   const isMapRoute = noScrollRoutes.includes(location.pathname);
+  const isTallMobileFeedback =
+    isTallMobile && location.pathname === '/feedback';
 
   const gridRows = isMapRoute
     ? shouldHideHeader
@@ -104,7 +110,9 @@ function RootComponent() {
           {!shouldHideHeader && <Header />}
           <main
             className={`min-h-0 ${
-              isMapRoute ? 'overflow-hidden pb-0' : 'overflow-auto pb-16 md:pb-0'
+              isMapRoute || isTallMobileFeedback
+                ? 'overflow-hidden pb-0'
+                : 'overflow-auto pb-16 md:pb-0'
             }`}
           >
             {isFetching ? <Loader /> : <Outlet />}

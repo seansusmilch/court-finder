@@ -11,12 +11,12 @@ type FeedbackHeaderProps = {
  */
 export function FeedbackHeader({ predictionsLeft }: FeedbackHeaderProps) {
   return (
-    <header className='mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 pb-5 pt-6 sm:flex-row sm:items-start sm:justify-between sm:gap-6 md:px-8 md:pb-6 md:pt-8'>
+    <header className='mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pb-3 pt-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 md:px-8 md:pb-6 md:pt-8'>
       <div className='max-w-2xl'>
         <h1 className='font-display text-2xl font-semibold leading-tight tracking-tight md:text-3xl'>
           Review a possible facility
         </h1>
-        <p className='mt-2 max-w-xl text-sm leading-6 text-muted-foreground md:text-base'>
+        <p className='mt-1.5 max-w-xl text-sm leading-5 text-muted-foreground md:mt-2 md:leading-6 md:text-base'>
           Check the highlighted area in the satellite image, then tell us what
           the model found.
         </p>
