@@ -4,8 +4,9 @@ import { v } from 'convex/values';
 export default defineSchema({
   users: defineTable({
     externalId: v.optional(v.string()),
+    // Legacy fields remain temporarily so existing documents continue to satisfy
+    // schema validation while Clerk identities are linked by verified email.
     name: v.optional(v.string()),
-    // Legacy Convex profile fields retained during the rollback window; Clerk now owns photos.
     image: v.optional(v.id('_storage')),
     imageUrl: v.optional(v.string()),
     email: v.optional(v.string()),
@@ -13,11 +14,10 @@ export default defineSchema({
     emailVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     role: v.optional(v.union(v.literal('user'), v.literal('admin'))),
-    // Existing deployments retain this billing field during the auth migration.
     planTier: v.optional(v.string()),
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
-    permissions: v.array(v.string()),
+    permissions: v.optional(v.array(v.string())),
   })
     .index('by_external_id', ['externalId'])
     .index('email', ['email']),

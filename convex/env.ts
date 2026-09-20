@@ -8,6 +8,7 @@ export const env = createEnv({
     ROBOFLOW_BATCH: z.string().default('User Contributed'),
     CONVEX_SITE_URL: z.string().optional(),
     CLERK_WEBHOOK_SIGNING_SECRET: z.string().min(1).optional(),
+    CLERK_SECRET_KEY: z.string().min(1).optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
