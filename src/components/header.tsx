@@ -50,30 +50,25 @@ export default function Header() {
 
         {/* Right: Controls */}
         <div className='flex items-center justify-end gap-3'>
-          <div className='hidden md:flex items-center gap-2'>
-            <Authenticated>
-              <UserButton>
-                <UserButton.MenuItems>
-                  <UserButton.Link
-                    href='/account'
-                    label='Court Finder account'
-                    labelIcon={<Settings className='size-4' />}
-                  />
-                </UserButton.MenuItems>
-              </UserButton>
-            </Authenticated>
-            <Unauthenticated>
-              <Button asChild size='sm'>
-                <Link to={'/login'}>
-                  <UserIcon className='mr-2 size-4' /> Sign in
-                </Link>
-              </Button>
-            </Unauthenticated>
-            <ModeToggle />
-          </div>
-          <div className='md:hidden'>
-            <ModeToggle />
-          </div>
+          <Authenticated>
+            <UserButton>
+              <UserButton.MenuItems>
+                <UserButton.Link
+                  href='/account'
+                  label='Court Finder account'
+                  labelIcon={<Settings className='size-4' />}
+                />
+              </UserButton.MenuItems>
+            </UserButton>
+          </Authenticated>
+          <Unauthenticated>
+            <Button asChild size='sm'>
+              <Link to={'/login'}>
+                <UserIcon className='mr-2 size-4' /> Sign in
+              </Link>
+            </Button>
+          </Unauthenticated>
+          <ModeToggle />
         </div>
       </div>
     </div>

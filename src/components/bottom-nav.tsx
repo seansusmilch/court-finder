@@ -1,7 +1,6 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { Home, Map, MessageSquare, User } from 'lucide-react';
-import { Authenticated, Unauthenticated, useQuery } from 'convex/react';
-import { api } from '@/../convex/_generated/api';
+import { Authenticated, Unauthenticated } from 'convex/react';
 import { cn } from '@/lib/utils';
 
 interface NavItemProps {
@@ -44,22 +43,6 @@ function NavItem({ icon: Icon, label, to, isActive, profileImageUrl }: NavItemPr
   );
 }
 
-function AccountNavItem() {
-  const location = useLocation();
-  const pathname = location.pathname;
-  const profileImageUrl = useQuery(api.users.getProfileImageUrl, {});
-
-  return (
-    <NavItem
-      icon={User}
-      label="Account"
-      to="/account"
-      isActive={pathname === '/account'}
-      profileImageUrl={profileImageUrl}
-    />
-  );
-}
-
 export default function BottomNav() {
   const location = useLocation();
   const pathname = location.pathname;
@@ -95,9 +78,6 @@ export default function BottomNav() {
             isActive={pathname === '/login'}
           />
         </Unauthenticated>
-        <Authenticated>
-          <AccountNavItem />
-        </Authenticated>
       </div>
     </nav>
   );
