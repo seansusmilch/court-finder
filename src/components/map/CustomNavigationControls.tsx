@@ -1,7 +1,7 @@
 import { useCallback, type ReactNode } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
 import { Button } from '@/components/ui/button';
-import { LocateFixed, Radar, SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { Compass, LocateFixed, Radar, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type {
@@ -126,7 +126,9 @@ export function createDefaultButtons(
   };
 
   const getScanButtonIcon = () => {
-    if (!isScanning || !scanProgress) return <Radar className="h-6 w-6" />;
+    if (!isScanning || !scanProgress) {
+      return <Radar className='size-5 text-white' aria-hidden='true' />;
+    }
     return null;
   };
 
@@ -171,7 +173,7 @@ export function createDefaultButtons(
     },
     {
       id: 'compass',
-      icon: <RotateCcw className='size-5 text-secondary' aria-hidden='true' />,
+      icon: <Compass className='size-5 text-secondary' aria-hidden='true' />,
       label: 'Reset bearing',
       onClick: handleResetBearing,
       show: true,

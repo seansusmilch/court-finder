@@ -1,8 +1,8 @@
 import { Marker } from 'react-map-gl/mapbox';
-import { MapPin } from 'lucide-react';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { CourtFeatureProperties } from '@/lib/types';
+import { useTheme } from '@/components/theme-provider';
 
 interface CourtMarkerProps {
   longitude: number;
@@ -22,8 +22,27 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { emoji } = getVisualForClass(courtClass);
+  const { emoji, colorLight, colorDark, colorLightMuted, colorDarkMuted } =
+    getVisualForClass(courtClass);
+  const { theme, systemTheme } = useTheme();
+  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const isVerified = properties.status === 'verified';
+
+  const arrowColor = isDark
+    ? isVerified
+      ? colorDark
+      : colorDarkMuted
+    : isVerified
+      ? colorLight
+      : colorLightMuted;
+
+  const bgColor = isDark
+    ? isVerified
+      ? colorDark
+      : colorDarkMuted
+    : isVerified
+      ? colorLight
+      : colorLightMuted;
 
   return (
     <Marker
@@ -43,24 +62,24 @@ export function CourtMarker({
           onClick(longitude, latitude, properties);
         }}
         aria-label={`${isVerified ? 'Verified' : 'Possible'} ${courtClass || 'sports facility'} at ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
-        className='group relative flex size-11 items-center justify-center rounded-full outline-none transition-transform duration-200 hover:scale-110 focus-visible:ring-4 focus-visible:ring-primary/50'
+        className='group relative flex flex-col items-center outline-none transition-transform duration-200 hover:scale-110 focus-visible:ring-4 focus-visible:ring-primary/50'
       >
-        <MapPin
-          className={cn(
-            'size-11 drop-shadow-md transition-[filter,opacity] duration-200',
-            isVerified ? 'drop-shadow-lg' : 'opacity-90'
-          )}
-          fill='white'
-          stroke='#0B0B0B'
-          strokeWidth={1.75}
-          aria-hidden
-        />
         <span
-          className='absolute inset-x-0 top-[6px] flex justify-center text-base leading-none drop-shadow-sm'
-          aria-hidden='true'
+          className={cn(
+            'flex size-10 items-center justify-center rounded-full text-white transition-shadow duration-200',
+            isVerified ? 'shadow-lg group-hover:shadow-xl' : ''
+          )}
+          style={{ backgroundColor: bgColor }}
         >
-          {emoji}
+          <span className='text-[20px]' aria-hidden='true'>
+            {emoji}
+          </span>
         </span>
+        <span
+          className='-mt-1 h-0 w-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent'
+          style={{ borderTopColor: arrowColor }}
+          aria-hidden='true'
+        />
       </button>
     </Marker>
   );
