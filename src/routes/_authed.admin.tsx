@@ -1,7 +1,7 @@
 import Loader from '@/components/loader';
 import { api } from '@backend/_generated/api';
 import { createFileRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
-import { useQuery } from 'convex/react';
+import { useConvexAuth, useQuery } from 'convex/react';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_authed/admin')({
@@ -9,20 +9,24 @@ export const Route = createFileRoute('/_authed/admin')({
 });
 
 function AdminLayout() {
-  const hasAdmin = useQuery(api.users.hasPermission, { permission: 'admin.access' });
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const hasAdmin = useQuery(
+    api.users.hasPermission,
+    isAuthenticated ? { permission: 'admin.access' } : 'skip'
+  );
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (hasAdmin === false) {
+    if (!isLoading && isAuthenticated && hasAdmin === false) {
       void navigate({
         to: '/unauthorized',
         search: { redirect: location.href, reason: 'insufficient_permissions' },
         replace: true,
       });
     }
-  }, [hasAdmin, location.href, navigate]);
+  }, [hasAdmin, isAuthenticated, isLoading, location.href, navigate]);
 
-  if (hasAdmin !== true) return <Loader />;
+  if (isLoading || !isAuthenticated || hasAdmin !== true) return <Loader />;
   return <Outlet />;
 }
