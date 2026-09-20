@@ -14,20 +14,23 @@ function NavItem({ icon: Icon, label, to, isActive }: NavItemProps) {
   return (
     <Link
       to={to}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'relative flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[64px] transition-all duration-200',
+        'relative flex min-h-16 min-w-16 flex-1 flex-col items-center justify-center gap-1 px-2 py-2 outline-none transition-colors duration-200 focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary',
         isActive
-          ? 'text-primary scale-105'
-          : 'text-muted-foreground hover:text-foreground'
+          ? 'text-foreground'
+          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
       )}
-      activeProps={{ className: 'text-primary scale-105' }}
     >
       {Icon ? (
-        <Icon className={cn('h-6 w-6 transition-transform', isActive && 'text-primary scale-110')} />
+        <Icon className={cn('size-5 transition-colors', isActive && 'text-primary')} aria-hidden />
       ) : null}
-      <span className="text-xs font-medium">{label}</span>
+      <span className='text-xs font-medium'>{label}</span>
       {isActive && (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary rounded-t-full shadow-[0_0_8px_currentColor]" />
+        <span
+          className='absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary'
+          aria-hidden
+        />
       )}
     </Link>
   );
@@ -38,8 +41,11 @@ export default function BottomNav() {
   const pathname = location.pathname;
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur-sm border-t md:hidden z-50 safe-area-inset-bottom no-zoom">
-      <div className="flex justify-around items-center h-16">
+    <nav
+      className='fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] md:hidden no-zoom'
+      aria-label='Mobile navigation'
+    >
+      <div className='flex min-h-16 items-center justify-around'>
         <NavItem
           icon={Home}
           label="Home"

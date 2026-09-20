@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react';
+import { Check, Moon, Sun } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,14 +10,20 @@ import {
 import { useTheme } from '@/components/theme-provider';
 
 export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
-  const { setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='outline' size='icon'>
-          <Sun className='h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90' />
-          <Moon className='absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0' />
+        <Button
+          variant='outline'
+          size='icon'
+          className='min-h-12 min-w-12 rounded-md'
+          aria-label='Change color theme'
+          title='Change color theme'
+        >
+          <Sun className='size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90' aria-hidden />
+          <Moon className='absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0' aria-hidden />
           <span className='sr-only'>Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
@@ -28,6 +34,7 @@ export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
             onChanged?.();
           }}
         >
+          {theme === 'light' ? <Check className='size-4' /> : <span className='size-4' />}
           Light
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -36,6 +43,7 @@ export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
             onChanged?.();
           }}
         >
+          {theme === 'dark' ? <Check className='size-4' /> : <span className='size-4' />}
           Dark
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -44,6 +52,7 @@ export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
             onChanged?.();
           }}
         >
+          {theme === 'system' ? <Check className='size-4' /> : <span className='size-4' />}
           System
         </DropdownMenuItem>
       </DropdownMenuContent>

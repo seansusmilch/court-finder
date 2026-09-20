@@ -467,7 +467,7 @@ function MapPage() {
       </Map>
 
       <div
-        className='pointer-events-none absolute bottom-[5.5rem] left-4 z-30 md:bottom-14'
+        className='pointer-events-none absolute bottom-[9rem] left-4 z-30 md:bottom-14'
         aria-live='polite'
       >
         <div className='flex min-h-10 items-center gap-2 rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-sm text-white shadow-lg backdrop-blur-sm'>
