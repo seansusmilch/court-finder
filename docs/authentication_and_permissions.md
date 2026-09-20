@@ -1,74 +1,61 @@
 # Authentication and Permissions
 
-This document outlines the authentication and permissions system for the project, which is built on the Convex backend platform using the `@convex-dev/auth` library.
+Court Finder uses Clerk for authentication and account management, with Convex storing the application user record and enforcing permissions.
 
-## Core Technology
+## Core technology
 
-- **Backend & Auth Library:** [Convex](https://convex.dev/) with `@convex-dev/auth`.
-- **Identity Provider:** The system is configured to use a password-based authentication provider. This is defined in `convex/auth.ts`.
+- **Identity provider:** [Clerk](https://clerk.com/) handles sign-in, sign-up, profile photos, names, email addresses, passwords, and connected accounts.
+- **Backend:** [Convex](https://convex.dev/) validates Clerk JWTs and stores application data.
+- **User linking:** Clerk's user ID is stored as `users.externalId`. During migration, a verified primary email can link a Clerk identity to an existing Convex Auth user while preserving that user's `_id`, permissions, scans, and feedback.
 
-## Authentication Flow
+## Authentication flow
 
-The authentication process is handled by the `@convex-dev/auth` library and Convex's built-in authentication system.
+1. `src/main.tsx` mounts `ClerkProvider` and connects Clerk to Convex with `ConvexProviderWithClerk`.
+2. `src/routes/login.tsx` renders Clerk's `SignIn` component.
+3. Convex functions read the authenticated Clerk identity through `ctx.auth.getUserIdentity()`.
+4. The root route calls `users.ensureDefaultPermissions` after authentication. This links or creates the application user record and preserves existing roles and permissions.
+5. Clerk `user.created` and `user.updated` events are delivered to `/clerk-webhook`, which keeps the Convex user record synchronized. `user.deleted` removes the Clerk link while retaining the application's historical records.
 
-1.  **Frontend Interaction:** The user initiates login/logout through the UI, specifically the component in `src/routes/login.tsx`. This component handles both sign-in and sign-up flows.
-2.  **Provider Sign-In:** The `useAuthActions()` hook from `@convex-dev/auth/react` is used to call the `signIn` action. This action, configured in `convex/auth.ts`, uses the `Password` provider to authenticate the user.
-3.  **User Record Sync:** Upon successful authentication, the `@convex-dev/auth` library automatically handles the creation and updating of user records in the `users` table. The schema for this is defined in `convex/schema.ts` via the `authTables` helper.
+## Account management
 
-The `users` table stores essential information for the user, including email and permissions.
+Clerk's `UserButton` is the single entry point for account management. The account page links to Clerk and does not duplicate profile photo, display name, email, password, or sign-in security controls. The account page remains available at `/account` for the mobile navigation and the custom Clerk menu item.
 
-## Permissions System
+## Permissions
 
-Permissions are managed through a `permissions` attribute on the `users` table.
+Permissions are stored in the `permissions` array on the `users` table. Roles are stored in `users.role` and map to the default permission sets in `convex/users.ts`.
 
--   **Schema:** The `users` table in `convex/schema.ts` has an optional `permissions` field, which is an array of strings.
--   **Permission Constants:** All permission strings are centralized in `convex/lib/constants.ts` under the `PERMISSIONS` export. This ensures consistency and avoids magic strings. All permissions should follow the `feature:permission` convention (e.g., `scans:read`, `training:submit`).
--   **Enforcement (Backend):** Convex functions (queries, mutations, and actions) are responsible for enforcing permissions. Before performing a protected action, a function must use the `requirePermission` helper from `convex/auth.ts`. This helper verifies the user's identity and checks if they have the required permission.
--   **Checking Permissions (Frontend):** For UI purposes (e.g., conditionally rendering a button), the client can use the `hasPermission` query from `convex/users.ts`. This allows the UI to react to a user's permissions without exposing sensitive logic.
+- **Backend enforcement:** Protected Convex functions call `requireCurrentUser` from `convex/lib/auth.ts` and verify the required permission before changing protected data.
+- **Frontend checks:** UI code can call `api.users.hasPermission` for conditional controls. This is a convenience check; backend authorization remains authoritative.
+- **Admin access:** The `admin` role includes `admin.access`. The admin route waits for the Convex user record to synchronize before redirecting users who lack that permission.
 
-**Example (Backend Enforcement):**
+## Clerk configuration
 
-```typescript
-// Inside a Convex mutation
-import { PERMISSIONS } from './lib/constants';
-import { requirePermission } from './auth';
+Frontend environment:
 
-export const someProtectedMutation = mutation({
-  async handler(ctx, args) {
-    await requirePermission(ctx, PERMISSIONS.TRAINING.SUBMIT);
-
-    // ... proceed with protected logic
-  },
-});
+```text
+VITE_CLERK_PUBLISHABLE_KEY=
 ```
 
-**Example (Frontend Check):**
+Convex environment:
 
-```typescript
-// Inside a React component
-import { useQuery } from 'convex/react';
-import { api } from '@backend/api';
-import { PERMISSIONS } from '@backend/lib/constants';
-
-function MyComponent() {
-  const canSubmit = useQuery(api.users.hasPermission, {
-    permission: PERMISSIONS.TRAINING.SUBMIT,
-  });
-
-  return canSubmit ? <Button>Submit</Button> : null;
-}
+```text
+CLERK_JWT_ISSUER_DOMAIN=
+CLERK_WEBHOOK_SIGNING_SECRET=
 ```
 
-## Key Files
+Configure Clerk's webhook endpoint to point to the deployed Convex HTTP action at `/clerk-webhook` and subscribe it to `user.created`, `user.updated`, and `user.deleted`.
 
--   `convex/auth.ts`: Configures authentication providers and contains permission-checking helpers like `requirePermission`.
--   `convex/users.ts`: Contains user-related queries, including `hasPermission` for frontend checks.
--   `convex/lib/constants.ts`: Defines all permission strings used throughout the application.
--   `convex/schema.ts`: Defines the schema for the `users` table, including the critical `permissions` field.
--   `src/routes/login.tsx`: The frontend implementation for authentication.
+## Migration checks
 
-## Future Refactoring and Considerations
+Before switching traffic, inspect the internal `users:clerkMigrationStatus` query. Resolve duplicate normalized emails manually before allowing those accounts to link. The migration intentionally requires a verified primary email and never overwrites a user already linked to a different Clerk identity.
 
-1.  **Adding More Auth Providers:** To add a new provider (e.g., Google, GitHub, Clerk, Auth0), it would need to be added to the `providers` array in `convex/auth.ts` and the `convex/auth.config.ts` would need to be updated.
-2.  **Role-Based Access Control (RBAC):** The current `permissions` array is flexible. For a more structured approach, a `role` field could be added to the user, and roles could be mapped to a predefined set of permissions. This would simplify permission management for common user types (e.g., `admin`, `member`).
-3.  **User Profile Management:** If users need to edit their profile information, new mutations will need to be added to `convex/users.ts` to handle these updates.
+## Key files
+
+- `src/main.tsx`: Clerk and Convex provider setup.
+- `src/routes/login.tsx`: Clerk sign-in UI.
+- `src/components/header.tsx`: Clerk account menu.
+- `src/routes/_authed.account.tsx`: Account page and Clerk management link.
+- `convex/lib/auth.ts`: Identity mapping, migration-safe user linking, and current-user lookup.
+- `convex/users.ts`: User synchronization, roles, permissions, and migration helpers.
+- `convex/http.ts`: Signed Clerk webhook handling.
+- `convex/schema.ts`: User and permission storage schema.

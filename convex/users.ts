@@ -3,7 +3,9 @@ import { v } from 'convex/values';
 import { DEFAULT_USER_PERMISSIONS } from './lib/constants';
 import {
   ensureCurrentUserRecord,
+  findUserByEmail,
   getCurrentUser,
+  normalizeEmail,
   requireCurrentUser,
 } from './lib/auth';
 
@@ -73,7 +75,9 @@ export const upsertFromClerk = internalMutation({
     role: v.optional(ROLE_VALIDATOR),
   },
   handler: async (ctx, args) => {
-    const email = args.emailVerified === true ? args.email?.toLowerCase() : undefined;
+    const email = args.emailVerified === true && args.email
+      ? normalizeEmail(args.email)
+      : undefined;
     const now = Date.now();
     const byExternalId = await ctx.db
       .query('users')
@@ -82,10 +86,7 @@ export const upsertFromClerk = internalMutation({
     const existing =
       byExternalId ||
       (email
-        ? await ctx.db
-            .query('users')
-            .withIndex('email', (q) => q.eq('email', email))
-            .unique()
+        ? await findUserByEmail(ctx, email)
         : null);
 
     if (existing?.externalId && existing.externalId !== args.id) {

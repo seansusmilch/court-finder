@@ -5,11 +5,17 @@ const handler = (upsertFromClerk as unknown as {
   _handler: (ctx: unknown, args: Record<string, unknown>) => Promise<unknown>;
 })._handler;
 
-function context(existing: Record<string, unknown> | null = null) {
+function context(
+  existing: Record<string, unknown> | null = null,
+  legacyUsers: Record<string, unknown>[] = []
+) {
   const unique = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(existing);
   return {
     db: {
-      query: vi.fn().mockReturnValue({ withIndex: vi.fn().mockReturnValue({ unique }) }),
+      query: vi.fn().mockReturnValue({
+        withIndex: vi.fn().mockReturnValue({ unique }),
+        collect: vi.fn().mockResolvedValue(legacyUsers),
+      }),
       patch: vi.fn(),
       insert: vi.fn().mockResolvedValue('new_user'),
     },
@@ -31,6 +37,20 @@ describe('Clerk webhook user synchronization', () => {
       email: 'test@example.com', externalId: 'clerk_user', role: 'admin',
       permissions: expect.arrayContaining(['admin.access', 'custom.permission']),
     }));
+    expect(ctx.db.insert).not.toHaveBeenCalled();
+  });
+
+  it('links a mixed-case legacy email instead of inserting a duplicate', async () => {
+    const legacyUser = { _id: 'legacy_user', email: 'Test@Example.com', permissions: [] };
+    const ctx = context(null, [legacyUser]);
+
+    expect(await handler(ctx, { id: 'clerk_user', email: 'test@example.com', emailVerified: true })).toBe(
+      'legacy_user'
+    );
+    expect(ctx.db.patch).toHaveBeenCalledWith(
+      'legacy_user',
+      expect.objectContaining({ email: 'test@example.com', externalId: 'clerk_user' })
+    );
     expect(ctx.db.insert).not.toHaveBeenCalled();
   });
 

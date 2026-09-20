@@ -8,10 +8,9 @@ interface NavItemProps {
   label: string;
   to: string;
   isActive: boolean;
-  profileImageUrl?: string | null;
 }
 
-function NavItem({ icon: Icon, label, to, isActive, profileImageUrl }: NavItemProps) {
+function NavItem({ icon: Icon, label, to, isActive }: NavItemProps) {
   return (
     <Link
       to={to}
@@ -23,16 +22,7 @@ function NavItem({ icon: Icon, label, to, isActive, profileImageUrl }: NavItemPr
       )}
       activeProps={{ className: 'text-primary scale-105' }}
     >
-      {profileImageUrl ? (
-        <img
-          src={profileImageUrl}
-          alt="Profile"
-          className={cn(
-            'h-6 w-6 rounded-full object-cover border-2 transition-all',
-            isActive ? 'border-primary shadow-lg' : 'border-border'
-          )}
-        />
-      ) : Icon ? (
+      {Icon ? (
         <Icon className={cn('h-6 w-6 transition-transform', isActive && 'text-primary scale-110')} />
       ) : null}
       <span className="text-xs font-medium">{label}</span>
@@ -68,6 +58,12 @@ export default function BottomNav() {
             label="Feedback"
             to="/feedback"
             isActive={pathname.startsWith('/feedback')}
+          />
+          <NavItem
+            icon={User}
+            label="Account"
+            to="/account"
+            isActive={pathname.startsWith('/account')}
           />
         </Authenticated>
         <Unauthenticated>

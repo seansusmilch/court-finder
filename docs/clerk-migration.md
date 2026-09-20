@@ -10,7 +10,8 @@ The first verified Clerk event or signed-in request looks for a Convex user in t
 
 1. Clerk user ID in `users.externalId`
 2. Lowercase primary email in `users.email`
-3. A new Convex user record when neither lookup matches
+3. A case-insensitive scan of legacy `users.email` values
+4. A new Convex user record when neither lookup matches
 
 Existing users must use the same primary email in Clerk. Resolve duplicate or missing
 emails before cutover.

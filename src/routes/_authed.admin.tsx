@@ -10,23 +10,26 @@ export const Route = createFileRoute('/_authed/admin')({
 
 function AdminLayout() {
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const currentUser = useQuery(api.users.me, isAuthenticated ? {} : 'skip');
   const hasAdmin = useQuery(
     api.users.hasPermission,
-    isAuthenticated ? { permission: 'admin.access' } : 'skip'
+    isAuthenticated && currentUser ? { permission: 'admin.access' } : 'skip'
   );
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && hasAdmin === false) {
+    if (!isLoading && isAuthenticated && currentUser && hasAdmin === false) {
       void navigate({
         to: '/unauthorized',
         search: { redirect: location.href, reason: 'insufficient_permissions' },
         replace: true,
       });
     }
-  }, [hasAdmin, isAuthenticated, isLoading, location.href, navigate]);
+  }, [currentUser, hasAdmin, isAuthenticated, isLoading, location.href, navigate]);
 
-  if (isLoading || !isAuthenticated || hasAdmin !== true) return <Loader />;
+  if (isLoading || !isAuthenticated || currentUser === undefined || !currentUser || hasAdmin !== true) {
+    return <Loader />;
+  }
   return <Outlet />;
 }

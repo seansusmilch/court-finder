@@ -11,6 +11,10 @@ function getIdentityField(identity: ClerkIdentity, key: string): string | null {
   return typeof value === 'string' && value.trim() ? value : null;
 }
 
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export function getRolePermissions(role: Doc<'users'>['role'] | undefined): string[] {
   if (role === 'admin') {
     return [...DEFAULT_USER_PERMISSIONS, 'admin.access'];
@@ -35,11 +39,37 @@ export function identityToUserFields(identity: NonNullable<ClerkIdentity>) {
     externalId: identity.subject,
     ...(name ? { name } : {}),
     ...(email && identity.emailVerified === true
-      ? { email: email.toLowerCase(), emailVerified: true }
+      ? { email: normalizeEmail(email), emailVerified: true }
       : {}),
     isAnonymous: false,
     updatedAt: Date.now(),
   };
+}
+
+export async function findUserByEmail(
+  ctx: AuthCtx,
+  email: string
+): Promise<Doc<'users'> | null> {
+  const normalizedEmail = normalizeEmail(email);
+  let match = await ctx.db
+    .query('users')
+    .withIndex('email', (q) => q.eq('email', normalizedEmail))
+    .unique();
+
+  // Convex Auth stored legacy emails exactly as entered. Fall back to a
+  // case-insensitive scan so a Clerk email such as `user@example.com` still
+  // links to a legacy `User@Example.com` record instead of creating a new ID.
+  if (!match) {
+    const normalizedMatches = (await ctx.db.query('users').collect()).filter(
+      (user) => user.email && normalizeEmail(user.email) === normalizedEmail
+    );
+    if (normalizedMatches.length > 1) {
+      throw new Error('Multiple users share this email; migration requires manual resolution');
+    }
+    match = normalizedMatches[0] ?? null;
+  }
+
+  return match;
 }
 
 async function findUserForIdentity(
@@ -56,10 +86,7 @@ async function findUserForIdentity(
   const { email } = identityToUserFields(identity);
   if (!email) return null;
 
-  const match = await ctx.db
-    .query('users')
-    .withIndex('email', (q) => q.eq('email', email))
-    .unique();
+  const match = await findUserByEmail(ctx, email);
   if (match?.externalId && match.externalId !== identity.subject) {
     throw new Error('Email is already linked to another Clerk user');
   }

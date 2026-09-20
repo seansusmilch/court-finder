@@ -63,6 +63,44 @@ describe('Clerk auth helpers', () => {
     expect(result?._id).toBe(legacyUser._id);
   });
 
+  it('links a mixed-case legacy email without creating a duplicate', async () => {
+    const legacyUser = {
+      _id: 'legacy_user_id',
+      _creationTime: 1,
+      email: 'Casey@Example.com',
+      permissions: ['scans.read'],
+      role: 'user' as const,
+    };
+    const unique = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    const patch = vi.fn().mockResolvedValue(undefined);
+    const insert = vi.fn();
+    const get = vi.fn().mockResolvedValue({
+      ...legacyUser,
+      externalId: clerkIdentity.subject,
+      email: 'casey@example.com',
+    });
+    const query = vi.fn().mockReturnValue({
+      withIndex: vi.fn().mockReturnValue({ unique }),
+      collect: vi.fn().mockResolvedValue([legacyUser]),
+    });
+    const ctx = {
+      auth: { getUserIdentity: vi.fn().mockResolvedValue(clerkIdentity) },
+      db: { query, patch, insert, get },
+    };
+
+    const result = await ensureCurrentUserRecord(ctx as never);
+
+    expect(patch).toHaveBeenCalledWith(
+      legacyUser._id,
+      expect.objectContaining({
+        externalId: clerkIdentity.subject,
+        email: 'casey@example.com',
+      })
+    );
+    expect(insert).not.toHaveBeenCalled();
+    expect(result?._id).toBe(legacyUser._id);
+  });
+
   it.each([false, undefined])('does not trust an email with verification %s', (emailVerified) => {
     expect(identityToUserFields({ ...clerkIdentity, emailVerified })).not.toHaveProperty('email');
   });
