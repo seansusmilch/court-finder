@@ -14,7 +14,7 @@ export default function SiteFooter() {
             Map
           </Link>
           <Link to='/terms' className='transition-colors hover:text-foreground'>
-            Terms
+            Terms of Service
           </Link>
           <Link to='/privacy' className='transition-colors hover:text-foreground'>
             Privacy policy
