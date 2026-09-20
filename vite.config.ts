@@ -12,6 +12,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // Clerk and Vercel API requests must reach the network. Without this
+        // denylist, the SPA navigation fallback can serve index.html for an
+        // OAuth callback and hide the proxy response behind the app's 404 UI.
+        navigateFallbackDenylist: [/^\/__clerk(?:\/|$)/, /^\/api(?:\/|$)/],
+      },
       manifest: {
         name: 'court-finder',
         short_name: 'court-finder',
