@@ -144,7 +144,7 @@ function TileDetailsPage() {
                     <thead className='text-muted-foreground'>
                       <tr>
                         <th className='text-left font-medium py-1'>User</th>
-                        <th className='text-left font-medium py-1'>Email</th>
+                        <th className='text-left font-medium py-1'>Clerk user</th>
                         <th className='text-left font-medium py-1'>Response</th>
                       </tr>
                     </thead>
@@ -166,7 +166,7 @@ function TileDetailsPage() {
                             <td className='py-1'>
                               {String(fb.userId).slice(0, 6)}…
                             </td>
-                            <td className='py-1'>{fb.userEmail ?? '—'}</td>
+                            <td className='py-1'>{fb.userClerkId ?? '—'}</td>
                             <td className='py-1 capitalize'>
                               {fb.userResponse}
                             </td>

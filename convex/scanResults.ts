@@ -6,6 +6,7 @@ import {
   PERMISSIONS,
   ROBOFLOW_MODEL_NAME,
   ROBOFLOW_MODEL_VERSION,
+  roleHasPermission,
 } from './lib/constants';
 import { styleTileUrl } from './lib/tiles';
 import { getCurrentUser } from './lib/auth';
@@ -30,7 +31,7 @@ export const getByScanId = query({
   args: { scanId: v.id('scans') },
   handler: async (ctx, args): Promise<GetByScanIdResponse> => {
     const user = await getCurrentUser(ctx);
-    if (!user?.permissions?.includes(PERMISSIONS.SCANS.READ)) {
+    if (!user || !roleHasPermission(user.role, PERMISSIONS.SCANS.READ)) {
       throw new Error('Unauthorized');
     }
     const scan = await ctx.db.get(args.scanId);

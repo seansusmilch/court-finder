@@ -24,6 +24,22 @@ export const DEFAULT_USER_PERMISSIONS = [
   PERMISSIONS.TRAINING.WRITE,
 ];
 
+export const ROLES = {
+  USER: 'user',
+  ADMIN: 'admin',
+} as const;
+
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+
+export const ROLE_PERMISSIONS: Record<UserRole, readonly string[]> = {
+  [ROLES.USER]: DEFAULT_USER_PERMISSIONS,
+  [ROLES.ADMIN]: [...DEFAULT_USER_PERMISSIONS, PERMISSIONS.ADMIN.ACCESS],
+};
+
+export function roleHasPermission(role: UserRole, permission: string): boolean {
+  return ROLE_PERMISSIONS[role].includes(permission);
+}
+
 export const DEFAULT_ANONYMOUS_PERMISSIONS = [
   PERMISSIONS.SCANS.READ,
   PERMISSIONS.TRAINING.READ,

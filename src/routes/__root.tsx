@@ -46,7 +46,7 @@ function RootComponent() {
     select: (s) => s.isLoading,
   });
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const ensureDefaults = useMutation(api.users.ensureDefaultPermissions);
+  const ensureCurrentUser = useMutation(api.users.ensureCurrentUser);
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -71,7 +71,7 @@ function RootComponent() {
     }
 
     const startTs = Date.now();
-    void ensureDefaults({}).catch((error) => {
+    void ensureCurrentUser({}).catch((error) => {
       console.error('user_sync_failed', {
         startTs,
         durationMs: Date.now() - startTs,
@@ -79,7 +79,7 @@ function RootComponent() {
         error,
       });
     });
-  }, [isAuthenticated, isLoading, ensureDefaults]);
+  }, [isAuthenticated, isLoading, ensureCurrentUser]);
 
   return (
     <>
