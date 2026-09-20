@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Authenticated, Unauthenticated } from 'convex/react';
+import { Show } from '@clerk/react';
 import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
@@ -66,7 +66,7 @@ const facilityTypes: Array<{
 function MapCta({ compact = false }: { compact?: boolean }) {
   return (
     <>
-      <Unauthenticated>
+      <Show when='signed-out'>
         <Button
           asChild
           size='lg'
@@ -77,8 +77,8 @@ function MapCta({ compact = false }: { compact?: boolean }) {
             <ArrowRight className='size-4' />
           </Link>
         </Button>
-      </Unauthenticated>
-      <Authenticated>
+      </Show>
+      <Show when='signed-in'>
         <Button
           asChild
           size='lg'
@@ -89,7 +89,7 @@ function MapCta({ compact = false }: { compact?: boolean }) {
             <ArrowRight className='size-4' />
           </Link>
         </Button>
-      </Authenticated>
+      </Show>
     </>
   );
 }

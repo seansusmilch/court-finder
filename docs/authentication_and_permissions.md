@@ -36,12 +36,29 @@ Frontend environment:
 VITE_CLERK_PUBLISHABLE_KEY=
 ```
 
+Production Vercel also needs the Clerk secret key because the app-origin proxy at
+`/__clerk` forwards browser requests to Clerk's Frontend API:
+
+```text
+CLERK_SECRET_KEY=
+```
+
+The production Clerk provider uses `/__clerk` automatically for a `pk_live_` key. The
+Vercel rewrite and `api/clerk-proxy.ts` implementation must remain deployed with the
+frontend so Clerk's proxy verification can reach the endpoint.
+
 Convex environment:
 
 ```text
 CLERK_JWT_ISSUER_DOMAIN=
 CLERK_WEBHOOK_SIGNING_SECRET=
 ```
+
+`CLERK_JWT_ISSUER_DOMAIN` must be the Clerk Frontend API URL copied from the
+production Clerk API keys page. It is not the app-origin proxy URL. For the current
+production publishable key, that means `https://clerk.geocourt.vercel.app` (without
+`/__clerk`); verify the exact value in Clerk before updating the production Convex
+deployment.
 
 Configure Clerk's webhook endpoint to point to the deployed Convex HTTP action at `/clerk-webhook` and subscribe it to `user.created`, `user.updated`, and `user.deleted`.
 

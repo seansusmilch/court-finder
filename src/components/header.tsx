@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Authenticated, Unauthenticated } from 'convex/react';
-import { UserButton } from '@clerk/react';
+import { Show, UserButton } from '@clerk/react';
 import { Settings, UserIcon } from 'lucide-react';
 
 import { ModeToggle } from './mode-toggle';
@@ -50,7 +49,7 @@ export default function Header() {
 
         {/* Right: Controls */}
         <div className='flex items-center justify-end gap-3'>
-          <Authenticated>
+          <Show when='signed-in'>
             <UserButton>
               <UserButton.MenuItems>
                 <UserButton.Link
@@ -60,14 +59,14 @@ export default function Header() {
                 />
               </UserButton.MenuItems>
             </UserButton>
-          </Authenticated>
-          <Unauthenticated>
+          </Show>
+          <Show when='signed-out'>
             <Button asChild size='sm'>
               <Link to={'/login'}>
                 <UserIcon className='mr-2 size-4' /> Sign in
               </Link>
             </Button>
-          </Unauthenticated>
+          </Show>
           <ModeToggle />
         </div>
       </div>
