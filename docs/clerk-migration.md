@@ -20,6 +20,11 @@ emails before cutover.
 Create separate Clerk development and production instances. Configure email as a sign-in
 identifier and choose the sign-in methods Court Finder should support.
 
+If Court Finder should show a personal display name, enable Clerk's first and last name
+attributes in the instance's User & authentication settings. Clerk's `<UserProfile />`
+modal will then expose those fields; Court Finder reads Clerk's `fullName` and falls back
+to the primary email when no name has been set.
+
 Activate the Convex integration in the Clerk Dashboard (or create the `convex` JWT
 template in dashboards that expose templates). Keep the token audience/template name
 `convex`. Include the primary email and its boolean `email_verified` claim so Convex

@@ -2,6 +2,7 @@
 
 - [ ] Clerk development and production instances exist.
 - [ ] Email sign-in and the chosen authentication methods are enabled.
+- [ ] First and last name attributes are enabled if personal display names are desired.
 - [ ] The JWT template is named `convex`.
 - [ ] `CLERK_JWT_ISSUER_DOMAIN` is set in both matching Convex deployments.
 - [ ] `VITE_CLERK_PUBLISHABLE_KEY` is set locally and in Vercel.

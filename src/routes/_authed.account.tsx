@@ -60,6 +60,8 @@ function AccountPage() {
     );
   }
 
+  const primaryEmail = clerkUser?.primaryEmailAddress?.emailAddress;
+  const displayName = clerkUser?.fullName || primaryEmail || 'Court Finder account';
   const scanLimitPercent = scanLimitStatus
     ? Math.min(
         100,
@@ -97,17 +99,17 @@ function AccountPage() {
               />
               <dl className='min-w-0 space-y-1'>
                 <div>
-                  <dt className='sr-only'>Name</dt>
+                  <dt className='sr-only'>{clerkUser?.fullName ? 'Name' : 'Email'}</dt>
                   <dd className='truncate font-medium'>
-                    {clerkUser?.fullName || 'Add your name in Clerk'}
+                    {displayName}
                   </dd>
                 </div>
-                <div>
-                  <dt className='sr-only'>Email</dt>
-                  <dd className='truncate text-sm text-muted-foreground'>
-                    {clerkUser?.primaryEmailAddress?.emailAddress || 'No email address added'}
-                  </dd>
-                </div>
+                {clerkUser?.fullName && primaryEmail ? (
+                  <div>
+                    <dt className='sr-only'>Email</dt>
+                    <dd className='truncate text-sm text-muted-foreground'>{primaryEmail}</dd>
+                  </div>
+                ) : null}
               </dl>
             </div>
             <Button
