@@ -45,13 +45,13 @@ export function CourtTypePills({
               : 'border-border/70 bg-background/95 text-foreground shadow-sm hover:bg-muted'
           )}
         >
-          <span>All courts</span>
+          <span>All Courts</span>
         </button>
 
         {/* Court type pills */}
         {COURT_TYPES.map((type) => {
           const isSelected = selectedType === type.key;
-          const label = type.displayName.toLowerCase();
+          const label = type.displayName;
           const sportColor = isDark ? type.colorDark : type.colorLight;
           return (
             <button

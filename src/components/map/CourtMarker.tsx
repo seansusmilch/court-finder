@@ -3,7 +3,6 @@ import { MapPin } from 'lucide-react';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { CourtFeatureProperties } from '@/lib/types';
-import { useTheme } from '@/components/theme-provider';
 
 interface CourtMarkerProps {
   longitude: number;
@@ -23,12 +22,8 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { colorLight, colorDark, emoji } = getVisualForClass(courtClass);
-  const { theme, systemTheme } = useTheme();
-  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
+  const { emoji } = getVisualForClass(courtClass);
   const isVerified = properties.status === 'verified';
-
-  const markerColor = isDark ? colorDark : colorLight;
 
   return (
     <Marker
@@ -55,9 +50,9 @@ export function CourtMarker({
             'size-11 drop-shadow-md transition-[filter,opacity] duration-200',
             isVerified ? 'drop-shadow-lg' : 'opacity-90'
           )}
-          fill={markerColor}
-          stroke='white'
-          strokeWidth={2.25}
+          fill='white'
+          stroke='#0B0B0B'
+          strokeWidth={1.75}
           aria-hidden
         />
         <span

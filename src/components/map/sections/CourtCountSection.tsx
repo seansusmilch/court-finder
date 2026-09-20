@@ -18,7 +18,7 @@ export function CourtCountSection({
   return (
     <div className={cn('space-y-3', className)}>
       {/* Court count stat - prominent */}
-      <div className='flex items-center justify-between rounded-xl border border-border/70 bg-muted/35 p-3.5'>
+      <div className='flex items-center justify-between'>
         <div>
           <p className='font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
             Courts in view

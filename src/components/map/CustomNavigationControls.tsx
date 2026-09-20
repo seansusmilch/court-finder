@@ -1,7 +1,7 @@
 import { useCallback, type ReactNode } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
 import { Button } from '@/components/ui/button';
-import { Navigation, Compass, Settings2, Radar } from 'lucide-react';
+import { LocateFixed, Radar, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type {
@@ -151,7 +151,7 @@ export function createDefaultButtons(
     },
     {
       id: 'settings',
-      icon: <Settings2 className="h-6 w-6" />,
+      icon: <SlidersHorizontal className='size-5 text-foreground' aria-hidden='true' />,
       label: 'Open map controls',
       onClick: onSettingsClick ?? (() => {}),
       show: false,
@@ -159,7 +159,7 @@ export function createDefaultButtons(
     },
     {
       id: 'locate',
-      icon: <Navigation className="h-6 w-6 fill-current" />,
+      icon: <LocateFixed className='size-5 text-primary' aria-hidden='true' />,
       label: 'Locate me',
       onClick: handleLocate,
       disabled: isLocating,
@@ -171,7 +171,7 @@ export function createDefaultButtons(
     },
     {
       id: 'compass',
-      icon: <Compass className="h-6 w-6" />,
+      icon: <RotateCcw className='size-5 text-secondary' aria-hidden='true' />,
       label: 'Reset bearing',
       onClick: handleResetBearing,
       show: true,
