@@ -4,7 +4,6 @@ import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { CourtFeatureProperties } from '@/lib/types';
 import { useTheme } from '@/components/theme-provider';
-import { getSportIconName, SportIcon } from './sport-icons';
 
 interface CourtMarkerProps {
   longitude: number;
@@ -24,13 +23,12 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { colorLight, colorDark } = getVisualForClass(courtClass);
+  const { colorLight, colorDark, emoji } = getVisualForClass(courtClass);
   const { theme, systemTheme } = useTheme();
   const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const isVerified = properties.status === 'verified';
 
   const markerColor = isDark ? colorDark : colorLight;
-  const sportIconName = getSportIconName(courtClass);
 
   return (
     <Marker
@@ -63,14 +61,10 @@ export function CourtMarker({
           aria-hidden
         />
         <span
-          className='absolute inset-x-0 top-[7px] flex justify-center'
+          className='absolute inset-x-0 top-[6px] flex justify-center text-base leading-none drop-shadow-sm'
           aria-hidden='true'
         >
-          <SportIcon
-            name={sportIconName}
-            className='size-[1.15rem] text-white drop-shadow-sm'
-            strokeWidth={2.15}
-          />
+          {emoji}
         </span>
       </button>
     </Marker>

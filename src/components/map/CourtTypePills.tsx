@@ -1,11 +1,9 @@
 import { cn } from '@/lib/utils';
 import { COURT_CLASS_VISUALS } from '@/lib/constants';
-import { getSportIconName, SportIcon } from './sport-icons';
 import { useTheme } from '@/components/theme-provider';
 
 const COURT_TYPES = Object.entries(COURT_CLASS_VISUALS).map(([key, value]) => ({
   key,
-  iconName: getSportIconName(key),
   ...value,
 }));
 
@@ -73,11 +71,9 @@ export function CourtTypePills({
                   : undefined
               }
             >
-              <SportIcon
-                name={type.iconName}
-                className={cn('size-5 shrink-0', isSelected ? 'text-primary-foreground' : undefined)}
-                style={isSelected ? undefined : { color: sportColor }}
-              />
+              <span className='text-base leading-none' aria-hidden='true'>
+                {type.emoji}
+              </span>
               <span>{label}</span>
             </button>
           );
