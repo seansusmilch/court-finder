@@ -1,643 +1,378 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Authenticated, Unauthenticated } from 'convex/react';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import type { LucideIcon } from 'lucide-react';
 import {
   ArrowRight,
-  CheckCircle,
-  Map,
-  ScanEye,
+  Check,
   ChevronDown,
-  ChevronUp,
-  Globe,
-  Users,
-  Zap,
-  Search,
-  Satellite,
-  Navigation,
-  TrendingUp,
-  Sparkles,
-  Trophy,
-  Pin,
-  Heart,
+  CircleDotDashed,
+  Diamond,
   Eye,
-  Rocket,
-  Target,
-  Check
+  Goal,
+  LocateFixed,
+  MapPin,
+  Route as RouteIcon,
+  ScanSearch,
+  ShieldCheck,
+  Trophy,
+  Volleyball,
 } from 'lucide-react';
 import { useState } from 'react';
+
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/')({
   component: HomeComponent,
 });
 
-function ImageHeroVisual() {
+const facilityTypes: Array<{
+  name: string;
+  detail: string;
+  icon: LucideIcon;
+  color: string;
+}> = [
+  {
+    name: 'Basketball',
+    detail: 'Full and half courts',
+    icon: Volleyball,
+    color: 'bg-basketball',
+  },
+  {
+    name: 'Tennis',
+    detail: 'Single courts and complexes',
+    icon: CircleDotDashed,
+    color: 'bg-tennis',
+  },
+  {
+    name: 'Soccer / football',
+    detail: 'Marked fields and pitches',
+    icon: Goal,
+    color: 'bg-soccer',
+  },
+  {
+    name: 'Baseball',
+    detail: 'Diamonds and ballparks',
+    icon: Diamond,
+    color: 'bg-baseball',
+  },
+  {
+    name: 'Track and field',
+    detail: 'Running tracks and facilities',
+    icon: RouteIcon,
+    color: 'bg-track',
+  },
+];
+
+function MapCta({ compact = false }: { compact?: boolean }) {
   return (
-    <div className='relative order-first h-48 w-full overflow-hidden rounded-2xl border md:order-none md:h-96 shadow-2xl'>
+    <>
+      <Unauthenticated>
+        <Button
+          asChild
+          size='lg'
+          className={compact ? 'h-11 px-5' : 'h-13 px-7 text-base'}
+        >
+          <Link to='/map'>
+            Explore the map
+            <ArrowRight className='size-4' />
+          </Link>
+        </Button>
+      </Unauthenticated>
+      <Authenticated>
+        <Button
+          asChild
+          size='lg'
+          className={compact ? 'h-11 px-5' : 'h-13 px-7 text-base'}
+        >
+          <Link to='/map'>
+            Open the map
+            <ArrowRight className='size-4' />
+          </Link>
+        </Button>
+      </Authenticated>
+    </>
+  );
+}
+
+function SatellitePreview() {
+  return (
+    <div className='marketing-preview relative isolate min-h-[24rem] overflow-hidden rounded-2xl bg-card shadow-2xl md:min-h-[34rem]'>
       <img
         src='/satellite-example.png'
-        alt='Satellite view of sports courts'
-        className='h-full w-full object-cover'
+        alt='Satellite view with possible sports facilities marked on the map'
+        className='absolute inset-0 size-full object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.02]'
       />
-      <div className='absolute inset-0 bg-gradient-to-t from-background/80 via-background/30 to-transparent' />
-      <div className='absolute inset-0 bg-black/10' />
-      {/* Floating badge overlay */}
-      <div className='absolute bottom-4 left-4 right-4 flex items-center gap-2 rounded-lg bg-background/90 px-4 py-2 shadow-lg backdrop-blur-sm md:bottom-6'>
-        <Satellite className='h-5 w-5 text-primary' />
-        <span className='text-sm font-medium'>AI-Powered Detection</span>
+      <div className='absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,oklch(0.12_0.02_45/.88)_100%)]' />
+
+      <div className='absolute left-[53%] top-[11%] h-[31%] w-[33%] rounded-md border border-primary bg-primary/10 shadow-[0_12px_30px_oklch(0_0_0/.3)]'>
+        <span className='absolute -top-7 left-0 rounded-sm bg-primary px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-primary-foreground'>
+          Tennis · possible
+        </span>
+        <span className='absolute -bottom-6 right-0 font-mono text-[10px] text-white/80'>
+          86% model confidence
+        </span>
+      </div>
+
+      <div className='absolute left-[8%] top-[20%] h-[50%] w-[42%] rounded-md border border-white/80 bg-white/5'>
+        <span className='absolute -bottom-6 left-0 font-mono text-[10px] text-white/80'>
+          Field · possible
+        </span>
+      </div>
+
+      <div className='absolute inset-x-5 bottom-5 flex items-end justify-between gap-4 rounded-xl bg-black/75 p-4 text-white backdrop-blur-md md:inset-x-6 md:bottom-6 md:p-5'>
+        <div className='flex min-w-0 items-center gap-3'>
+          <span className='grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground'>
+            <ScanSearch className='size-5' />
+          </span>
+          <div className='min-w-0'>
+            <p className='font-display text-sm font-semibold md:text-base'>
+              Satellite scan in view
+            </p>
+            <p className='truncate text-xs text-white/65 md:text-sm'>
+              Review the image before you make the trip
+            </p>
+          </div>
+        </div>
+        <div className='hidden items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-white/60 sm:flex'>
+          <span className='size-1.5 animate-pulse rounded-full bg-accent' />
+          imagery loaded
+        </div>
       </div>
     </div>
   );
 }
 
-function CollapsibleDisclaimer() {
+function TrustNote() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card className='border-destructive/50 bg-destructive/5 text-destructive-foreground'>
-      <CardHeader>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className='flex items-center justify-between w-full text-left'
-        >
-          <div>
-            <CardTitle className='text-destructive'>Disclaimer</CardTitle>
-            <CardDescription className='text-destructive/70'>
-              Read before visiting any detected location!
-            </CardDescription>
-          </div>
-          {isOpen ? (
-            <ChevronUp className='h-5 w-5 text-destructive' />
-          ) : (
-            <ChevronDown className='h-5 w-5 text-destructive' />
-          )}
-        </button>
-      </CardHeader>
+    <div className='border-y border-border/80'>
+      <button
+        type='button'
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+        className='flex min-h-16 w-full items-center justify-between gap-4 py-4 text-left outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background'
+      >
+        <span className='flex items-center gap-3'>
+          <ShieldCheck className='size-5 shrink-0 text-accent' />
+          <span>
+            <span className='block font-display font-semibold'>A detection is a lead, not a promise.</span>
+            <span className='mt-0.5 block text-sm text-muted-foreground'>
+              Check access, hours, conditions, and permission before visiting.
+            </span>
+          </span>
+        </span>
+        <ChevronDown
+          className={`size-5 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
       {isOpen && (
-        <CardContent className='space-y-3 text-sm text-destructive/80'>
+        <div className='max-w-3xl pb-6 pl-8 text-sm leading-6 text-muted-foreground'>
           <p>
-            Detections shown in this app are generated by automated models
-            and are provided on an "as is" and "as available" basis without
-            any warranty or guarantee of accuracy, completeness, or
-            suitability for any purpose.
+            Computer vision can be wrong, and satellite imagery may not reflect current conditions.
+            A pin does not mean a facility is public, open, safe, or available. Respect posted signs
+            and never enter private property without permission.
           </p>
-          <p>
-            Detected locations may be on private property or subject to
-            access restrictions. You are solely responsible for complying
-            with all laws, posted signage, and obtaining any required
-            permissions. Do not trespass.
+          <p className='mt-3'>
+            Read the <Link to='/terms' className='underline decoration-primary/60 underline-offset-4 hover:text-foreground'>terms</Link>
+            {' '}and <Link to='/privacy' className='underline decoration-primary/60 underline-offset-4 hover:text-foreground'>privacy policy</Link>.
           </p>
-          <p>
-            By using this app, you assume all risk and agree that the
-            project maintainers and contributors shall not be liable for any
-            injury, damage, citation, or loss arising from your use of the
-            information. See our{' '}
-            <Link
-              to={'/terms'}
-              className='underline hover:text-destructive'
-            >
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link
-              to={'/privacy'}
-              className='underline hover:text-destructive'
-            >
-              Privacy Policy
-            </Link>
-            .
-          </p>
-        </CardContent>
+        </div>
       )}
-    </Card>
-  );
-}
-
-function StatCard({ icon: Icon, value, label, delay = 0 }: {
-  icon: any;
-  value: string;
-  label: string;
-  delay?: number;
-}) {
-  return (
-    <div className='flex flex-col items-center text-center p-6 rounded-2xl bg-gradient-to-b from-background to-muted/20 border'>
-      <div className='mb-4 rounded-full bg-primary/10 p-4'>
-        <Icon className='h-8 w-8 text-primary' />
-      </div>
-      <div className='text-3xl font-bold tabular-nums tracking-tight'>{value}</div>
-      <div className='text-sm text-muted-foreground mt-1'>{label}</div>
     </div>
-  );
-}
-
-function CourtTypeCard({ emoji, name, description }: {
-  emoji: string;
-  name: string;
-  description: string;
-}) {
-  return (
-    <div className='group relative overflow-hidden rounded-2xl border bg-gradient-to-b from-background to-muted/20 p-6 transition-all hover:shadow-lg hover:border-primary/50'>
-      <div className='text-5xl mb-4 group-hover:scale-110 transition-transform duration-300'>
-        {emoji}
-      </div>
-      <h3 className='font-semibold text-lg'>{name}</h3>
-      <p className='text-sm text-muted-foreground mt-2'>{description}</p>
-    </div>
-  );
-}
-
-function StepCard({ step, icon: Icon, title, description }: {
-  step: number;
-  icon: any;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className='relative'>
-      <div className='absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-lg'>
-        {step}
-      </div>
-      <Card className='h-full pt-6'>
-        <CardHeader>
-          <div className='mb-4 rounded-full bg-primary/10 p-3 w-fit'>
-            <Icon className='h-6 w-6 text-primary' />
-          </div>
-          <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className='text-muted-foreground'>{description}</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function UseCaseCard({ icon: Icon, title, description, example }: {
-  icon: any;
-  title: string;
-  description: string;
-  example: string;
-}) {
-  return (
-    <Card className='h-full border-muted bg-gradient-to-br from-background to-muted/10'>
-      <CardHeader>
-        <div className='mb-4 rounded-full bg-primary/10 p-3 w-fit'>
-          <Icon className='h-6 w-6 text-primary' />
-        </div>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className='rounded-lg bg-muted/50 p-3 border-l-2 border-primary'>
-          <p className='text-sm italic text-muted-foreground'>"{example}"</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function FeatureCard({ icon: Icon, title, description, highlights }: {
-  icon: any;
-  title: string;
-  description: string;
-  highlights?: string[];
-}) {
-  return (
-    <Card className='h-full border-muted bg-gradient-to-br from-background to-muted/10 transition-all hover:shadow-lg hover:border-primary/30'>
-      <CardHeader>
-        <div className='mb-4 rounded-full bg-primary/10 p-3 w-fit'>
-          <Icon className='h-6 w-6 text-primary' />
-        </div>
-        <CardTitle className='text-xl'>{title}</CardTitle>
-        <CardDescription className='text-base'>{description}</CardDescription>
-      </CardHeader>
-      {highlights && (
-        <CardContent>
-          <ul className='space-y-2'>
-            {highlights.map((highlight, i) => (
-              <li key={i} className='flex items-start gap-2 text-sm text-muted-foreground'>
-                <Check className='h-4 w-4 text-primary mt-0.5 flex-shrink-0' />
-                <span>{highlight}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      )}
-    </Card>
-  );
-}
-
-function GradientText({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <span className={`bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent ${className}`}>
-      {children}
-    </span>
   );
 }
 
 function HomeComponent() {
   return (
-    <div className='w-full'>
-      {/* Hero Section */}
-      <section className='relative overflow-hidden'>
-        {/* Background gradient decoration */}
-        <div className='absolute inset-0 -z-10'>
-          <div className='absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]' />
-          <div className='absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-3xl' />
-        </div>
+    <div className='marketing-page w-full overflow-x-clip'>
+      <section className='relative isolate border-b border-border/70'>
+        <div className='marketing-orbit pointer-events-none absolute -right-56 -top-72 -z-10 size-[42rem] rounded-full border border-primary/15' />
+        <div className='pointer-events-none absolute -right-24 -top-40 -z-10 size-[25rem] rounded-full border border-primary/10' />
 
-        <div className='container mx-auto px-4 py-12 md:py-20'>
-          <div className='mx-auto max-w-6xl'>
-            <div className='grid items-center gap-8 md:grid-cols-2 md:gap-12'>
-              <div className='order-2 md:order-1 space-y-6'>
-                <div className='inline-flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-2 text-sm font-medium text-primary'>
-                  <Sparkles className='h-4 w-4' />
-                  <span>AI-Powered Court Discovery</span>
-                </div>
+        <div className='mx-auto grid min-h-[calc(100svh-57px)] max-w-[90rem] items-center gap-10 px-5 py-10 sm:px-8 md:py-16 lg:grid-cols-[0.88fr_1.12fr] lg:gap-16 lg:px-12 xl:px-16'>
+          <div className='order-1 max-w-2xl'>
+            <h1 className='max-w-[11ch] text-balance font-display text-[clamp(3.2rem,7vw,6rem)] font-bold leading-[0.92] tracking-[-0.04em]'>
+              Find the places <span className='text-primary'>maps miss.</span>
+            </h1>
 
-                <h1 className='text-4xl font-bold tracking-tighter md:text-5xl lg:text-6xl'>
-                  Find Courts Near You.
-                  <br />
-                  <GradientText>Even the Hidden Ones.</GradientText>
-                </h1>
-
-                <p className='text-lg text-muted-foreground md:text-xl'>
-                  Stop driving in circles. Our AI scans satellite imagery to
-                  uncover sports courts that don't appear on any map—from
-                  neighborhood parks to hidden gems in your own backyard.
-                </p>
-
-                {/* Quick value props */}
-                <div className='flex flex-wrap gap-4 text-sm text-muted-foreground'>
-                  <div className='flex items-center gap-2'>
-                    <Check className='h-4 w-4 text-primary' />
-                    <span>100% Free</span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <Check className='h-4 w-4 text-primary' />
-                    <span>Global Coverage</span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <Check className='h-4 w-4 text-primary' />
-                    <span>Community Verified</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className='order-1 md:order-2'>
-                <ImageHeroVisual />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className='border-y bg-muted/30'>
-        <div className='container mx-auto px-4 py-12'>
-          <div className='mx-auto max-w-4xl'>
-            <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
-              <StatCard
-                icon={Globe}
-                value="Global"
-                label="Coverage Area"
-              />
-              <StatCard
-                icon={Users}
-                value="Free"
-                label="For Everyone"
-              />
-              <StatCard
-                icon={Zap}
-                value="Instant"
-                label="AI Scanning"
-              />
-              <StatCard
-                icon={TrendingUp}
-                value="Growing"
-                label="Daily Updates"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Problem Hook Section */}
-      <section className='py-16 md:py-24'>
-        <div className='container mx-auto px-4'>
-          <div className='mx-auto max-w-4xl text-center space-y-6'>
-            <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
-              Ever spent 30 minutes searching for a court?
-            </h2>
-            <p className='text-xl text-muted-foreground max-w-2xl mx-auto'>
-              Google Maps misses hundreds of courts. Public directories are outdated.
-              And asking in local Facebook groups is... well, you know how that goes.
+            <p className='mt-6 max-w-[58ch] text-base leading-7 text-muted-foreground md:mt-7 md:text-xl md:leading-8'>
+              Court Finder scans available satellite imagery for places to play, then puts possible
+              basketball courts, tennis courts, fields, diamonds, and tracks on one map.
             </p>
-            <div className='flex flex-col sm:flex-row gap-4 justify-center pt-4'>
-              <div className='flex items-center gap-3 text-muted-foreground'>
-                <div className='h-px bg-muted flex-1 hidden sm:block' />
-                <span>There's a better way</span>
-                <div className='h-px bg-muted flex-1 hidden sm:block' />
-              </div>
+
+            <div className='mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center'>
+              <MapCta />
+              <a
+                href='#how-it-works'
+                className='hidden min-h-11 items-center gap-2 px-2 text-sm font-semibold underline decoration-border underline-offset-8 transition-colors hover:text-primary hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex'
+              >
+                See how detections work
+              </a>
             </div>
+
+            <div className='mt-9 hidden flex-wrap gap-x-6 gap-y-3 border-t border-border/70 pt-6 text-sm text-muted-foreground md:flex'>
+              <span className='flex items-center gap-2'><Check className='size-4 text-accent' /> Browse without an account</span>
+              <span className='flex items-center gap-2'><Check className='size-4 text-accent' /> Confidence shown on every result</span>
+            </div>
+          </div>
+
+          <div className='group order-2'>
+            <SatellitePreview />
           </div>
         </div>
       </section>
 
-      {/* Court Types Section */}
-      <section className='py-16 bg-gradient-to-b from-muted/20 to-transparent'>
-        <div className='container mx-auto px-4'>
-          <div className='mx-auto max-w-6xl'>
-            <div className='text-center mb-12 space-y-4'>
-              <div className='inline-flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-2 text-sm font-medium text-primary'>
-                <Target className='h-4 w-4' />
-                <span>Comprehensive Detection</span>
-              </div>
-              <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
-                Courts We Detect
-              </h2>
-              <p className='text-lg text-muted-foreground max-w-2xl mx-auto'>
-                From neighborhood basketball hoops to professional stadiums—our AI
-                finds them all.
-              </p>
-            </div>
-
-            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-5'>
-              <CourtTypeCard
-                emoji="🏀"
-                name="Basketball Courts"
-                description="Full courts, half courts, playground hoops—we detect them all."
-              />
-              <CourtTypeCard
-                emoji="🎾"
-                name="Tennis Courts"
-                description="Public parks, private clubs, and hidden residential courts."
-              />
-              <CourtTypeCard
-                emoji="🏈"
-                name="Soccer Fields"
-                description="From mini-pitches to full-sized professional stadiums."
-              />
-              <CourtTypeCard
-                emoji="⚾"
-                name="Baseball Diamonds"
-                description="Little league fields, school diamonds, and baseball complexes."
-              />
-              <CourtTypeCard
-                emoji="🏃"
-                name="Track & Field"
-                description="Running tracks, multi-sport complexes, and athletic facilities."
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className='py-16 md:py-24'>
-        <div className='container mx-auto px-4'>
-          <div className='mx-auto max-w-6xl'>
-            <div className='text-center mb-16 space-y-4'>
-              <div className='inline-flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-2 text-sm font-medium text-primary'>
-                <Rocket className='h-4 w-4' />
-                <span>Simple & Fast</span>
-              </div>
-              <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
-                How It Works
-              </h2>
-              <p className='text-lg text-muted-foreground max-w-2xl mx-auto'>
-                Find your next game spot in three simple steps.
-              </p>
-            </div>
-
-            <div className='grid gap-6 md:grid-cols-3 md:gap-8'>
-              <StepCard
-                step={1}
-                icon={Search}
-                title="Search Your Area"
-                description="Enter your location or pan the map to any area you want to explore."
-              />
-              <StepCard
-                step={2}
-                icon={Satellite}
-                title="AI Scans Satellite"
-                description="Our AI analyzes satellite imagery to detect courts with high precision."
-              />
-              <StepCard
-                step={3}
-                icon={Navigation}
-                title="Find & Go Play"
-                description="Browse results, check confidence scores, and navigate to your court."
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className='py-16 bg-gradient-to-b from-muted/20 to-transparent'>
-        <div className='container mx-auto px-4'>
-          <div className='mx-auto max-w-6xl'>
-            <div className='text-center mb-16 space-y-4'>
-              <div className='inline-flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-2 text-sm font-medium text-primary'>
-                <Zap className='h-4 w-4' />
-                <span>Powerful Features</span>
-              </div>
-              <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
-                Built for Players, by Players
-              </h2>
-              <p className='text-lg text-muted-foreground max-w-2xl mx-auto'>
-                Everything you need to discover and explore sports courts.
-              </p>
-            </div>
-
-            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-              <FeatureCard
-                icon={ScanEye}
-                title="AI-Powered Detections"
-                description="Our machine learning models scan satellite imagery to find courts with remarkable accuracy."
-                highlights={[
-                  "Confidence scores for every detection",
-                  "Zoom-level context for accuracy",
-                  "Continuous model improvements"
-                ]}
-              />
-              <FeatureCard
-                icon={Map}
-                title="Interactive Map"
-                description="Explore results with a beautiful, responsive map built for discovery."
-                highlights={[
-                  "Smart clustering at any zoom level",
-                  "Emoji markers for quick identification",
-                  "Smooth animations and transitions"
-                ]}
-              />
-              <FeatureCard
-                icon={Eye}
-                title="Review & Verify"
-                description="Help improve our AI by confirming detections and providing feedback."
-                highlights={[
-                  "Filter by confidence level",
-                  "Inspect original satellite tiles",
-                  "Contribute to model training"
-                ]}
-              />
-              <FeatureCard
-                icon={Pin}
-                title="Save Favorites"
-                description="Keep track of courts you love and want to visit again."
-                highlights={[
-                  "Quick access to saved locations",
-                  "Personal court collection",
-                  "Sync across devices"
-                ]}
-              />
-              <FeatureCard
-                icon={Users}
-                title="Community Driven"
-                description="Join a growing community of court enthusiasts improving the map together."
-                highlights={[
-                  "Crowdsourced verification",
-                  "Feedback-driven improvements",
-                  "Open collaboration"
-                ]}
-              />
-              <FeatureCard
-                icon={Heart}
-                title="Completely Free"
-                description="No subscriptions, no paywalls, no hidden fees. Just free court discovery."
-                highlights={[
-                  "Unlimited searches",
-                  "Full feature access",
-                  "No account required for browsing"
-                ]}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Use Cases Section */}
-      <section className='py-16 md:py-24'>
-        <div className='container mx-auto px-4'>
-          <div className='mx-auto max-w-6xl'>
-            <div className='text-center mb-16 space-y-4'>
-              <div className='inline-flex items-center gap-2 rounded-full border bg-primary/5 px-4 py-2 text-sm font-medium text-primary'>
-                <Trophy className='h-4 w-4' />
-                <span>Real Results</span>
-              </div>
-              <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
-                Ways Players Use Court Finder
-              </h2>
-              <p className='text-lg text-muted-foreground max-w-2xl mx-auto'>
-                See how our community discovers their perfect courts.
-              </p>
-            </div>
-
-            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-              <UseCaseCard
-                icon={Trophy}
-                title="Pickup Game Organizer"
-                description="Find courts for regular pickup games with friends."
-                example="Found a hidden outdoor court 5 minutes from my house that nobody knew about. Now we have weekly games there!"
-              />
-              <UseCaseCard
-                icon={Navigation}
-                title="Travel Explorer"
-                description="Discover courts when visiting new cities."
-                example="On a business trip and wanted to get some shots up. Found a court 2 blocks from my hotel with great evening lighting."
-              />
-              <UseCaseCard
-                icon={Users}
-                title="League Coordinator"
-                description="Scout locations for new league venues."
-                example="Used this to find 3 new venue options for our summer league. The satellite view helped us check parking and facilities."
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className='py-20 md:py-32'>
-        <div className='container mx-auto px-4'>
-          <div className='mx-auto max-w-4xl'>
-            <Card className='border-primary/20 bg-gradient-to-br from-primary/5 via-background to-muted/20 overflow-hidden relative'>
-              <div className='absolute top-0 right-0 h-48 w-48 -translate-y-1/2 translate-x-1/4 rounded-full bg-primary/10 blur-3xl' />
-              <div className='relative px-6 py-12 md:px-12 md:py-16 text-center space-y-8'>
-                <div className='space-y-4'>
-                  <h2 className='text-3xl font-bold tracking-tight md:text-4xl'>
-                    Ready to Find Your Next Court?
-                  </h2>
-                  <p className='text-lg text-muted-foreground max-w-xl mx-auto'>
-                    Join thousands of players discovering courts every day.
-                    Start exploring—it's completely free.
-                  </p>
+      <section aria-labelledby='facility-heading' className='bg-foreground text-background'>
+        <div className='mx-auto max-w-[90rem] px-5 py-8 sm:px-8 lg:px-12 xl:px-16'>
+          <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
+            <h2 id='facility-heading' className='max-w-sm font-display text-2xl font-semibold tracking-tight'>
+              Five facility types. One search.
+            </h2>
+            <div className='grid flex-1 grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 lg:max-w-4xl lg:grid-cols-5'>
+              {facilityTypes.map(({ name, detail, icon: Icon, color }) => (
+                <div key={name} className='flex min-w-0 items-center gap-3'>
+                  <span className={`grid size-9 shrink-0 place-items-center rounded-full ${color} text-white`}>
+                    <Icon className='size-[18px]' strokeWidth={1.8} />
+                  </span>
+                  <span className='min-w-0'>
+                    <span className='block truncate text-sm font-semibold'>{name}</span>
+                    <span className='mt-0.5 hidden text-xs text-background/55 xl:block'>{detail}</span>
+                  </span>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-                <div className='flex flex-col sm:flex-row gap-4 justify-center'>
-                  <Unauthenticated>
-                    <Button asChild size='lg' className='w-full sm:w-auto text-base h-12 px-8'>
-                      <Link to={'/login'}>
-                        Get Started Free <ArrowRight className='ml-2 h-5 w-5' />
-                      </Link>
-                    </Button>
-                    <Button asChild variant='outline' size='lg' className='w-full sm:w-auto text-base h-12 px-8'>
-                      <Link to={'/map'}>
-                        Explore Map First <Map className='ml-2 h-5 w-5' />
-                      </Link>
-                    </Button>
-                  </Unauthenticated>
-                  <Authenticated>
-                    <Button asChild size='lg' className='w-full sm:w-auto text-base h-12 px-8'>
-                      <Link to={'/map'}>
-                        Open Map <Map className='ml-2 h-5 w-5' />
-                      </Link>
-                    </Button>
-                  </Authenticated>
+      <section id='how-it-works' className='mx-auto max-w-[90rem] px-5 py-20 sm:px-8 md:py-28 lg:px-12 xl:px-16'>
+        <div className='grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20'>
+          <div className='lg:sticky lg:top-28 lg:self-start'>
+            <h2 className='max-w-[10ch] text-balance font-display text-4xl font-bold leading-[1.02] tracking-[-0.035em] md:text-6xl'>
+              From overhead pixels to a place worth checking.
+            </h2>
+            <p className='mt-6 max-w-[48ch] text-lg leading-8 text-muted-foreground'>
+              Normal place listings depend on somebody adding and maintaining them. Court Finder
+              starts with what is visible from above, then keeps the uncertainty attached.
+            </p>
+          </div>
+
+          <ol className='divide-y divide-border border-y border-border'>
+            {[
+              {
+                icon: LocateFixed,
+                title: 'Choose an area',
+                text: 'Search a location or move around the map. Filters narrow the results by facility type and model confidence.',
+              },
+              {
+                icon: ScanSearch,
+                title: 'Inspect possible facilities',
+                text: 'Computer vision looks for visible court and field patterns in the latest imagery available from the provider.',
+              },
+              {
+                icon: Eye,
+                title: 'Check the evidence',
+                text: 'Open a result to review the satellite image, facility type, confidence, and community feedback before deciding to visit.',
+              },
+            ].map(({ icon: Icon, title, text }) => (
+              <li key={title} className='grid gap-4 py-8 sm:grid-cols-[3.5rem_1fr] sm:py-10'>
+                <span className='grid size-12 place-items-center rounded-full bg-primary/12 text-primary'>
+                  <Icon className='size-6' strokeWidth={1.8} />
+                </span>
+                <div>
+                  <h3 className='font-display text-2xl font-semibold tracking-tight'>{title}</h3>
+                  <p className='mt-3 max-w-[58ch] leading-7 text-muted-foreground'>{text}</p>
                 </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
-                <p className='text-sm text-muted-foreground'>
-                  No credit card required • Free forever • Join in 30 seconds
-                </p>
+      <section className='border-y border-border/80 bg-muted/30'>
+        <div className='mx-auto grid max-w-[90rem] gap-10 px-5 py-20 sm:px-8 md:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:px-12 xl:px-16'>
+          <div className='relative overflow-hidden rounded-2xl bg-card shadow-xl'>
+            <img
+              src='/satellite-example.png'
+              alt='Example satellite imagery used to review a possible sports facility'
+              className='aspect-[16/10] size-full object-cover'
+            />
+            <div className='absolute inset-0 bg-black/15' />
+            <div className='absolute left-[61%] top-[13%] h-[32%] w-[26%] rounded-sm border-2 border-primary shadow-[0_10px_30px_oklch(0_0_0/.35)]' />
+            <div className='absolute bottom-4 left-4 right-4 flex items-center justify-between gap-4 rounded-xl bg-black/80 p-4 text-white backdrop-blur-md'>
+              <div>
+                <p className='font-mono text-[10px] uppercase tracking-[0.16em] text-white/55'>Example result</p>
+                <p className='mt-1 font-display font-semibold'>Possible tennis courts</p>
               </div>
-            </Card>
+              <span className='rounded-full bg-white/10 px-3 py-1.5 font-mono text-xs'>86% confidence</span>
+            </div>
+          </div>
+
+          <div className='self-center'>
+            <h2 className='max-w-[12ch] text-balance font-display text-4xl font-bold leading-[1.02] tracking-[-0.035em] md:text-5xl'>
+              See what the model saw.
+            </h2>
+            <p className='mt-6 max-w-[52ch] text-lg leading-8 text-muted-foreground'>
+              Every pin leads back to its satellite context. Confidence helps you sort results. It
+              is not an accuracy guarantee, so the image and local rules still matter.
+            </p>
+            <ul className='mt-8 space-y-4 text-sm'>
+              {[
+                'Original satellite context',
+                'Detected facility type and model confidence',
+                'Community confirmations, rejections, or unclear votes',
+                'Favorites saved on your current device',
+              ].map((item) => (
+                <li key={item} className='flex items-start gap-3'>
+                  <span className='mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent/15 text-accent'>
+                    <Check className='size-3.5' strokeWidth={2.5} />
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* Disclaimer Section */}
-      <section className='py-12 bg-muted/30'>
-        <div className='container mx-auto px-4'>
-          <div className='mx-auto max-w-4xl'>
-            <CollapsibleDisclaimer />
+      <section className='mx-auto max-w-[90rem] px-5 py-20 sm:px-8 md:py-28 lg:px-12 xl:px-16'>
+        <div className='grid items-end gap-10 lg:grid-cols-[1fr_auto]'>
+          <div>
+            <Trophy className='mb-6 size-9 text-primary' strokeWidth={1.6} />
+            <h2 className='max-w-[13ch] text-balance font-display text-4xl font-bold leading-[1.02] tracking-[-0.035em] md:text-6xl'>
+              Your next game may be one pin away.
+            </h2>
+            <p className='mt-6 max-w-[54ch] text-lg leading-8 text-muted-foreground'>
+              Search somewhere familiar or explore a city you have never played in. No account is
+              needed to browse detections.
+            </p>
           </div>
+          <div className='flex flex-col items-start gap-4 lg:items-end'>
+            <MapCta />
+            <span className='flex items-center gap-2 text-xs text-muted-foreground'>
+              <MapPin className='size-3.5' /> Verify access before visiting
+            </span>
+          </div>
+        </div>
+
+        <div className='mt-16'>
+          <TrustNote />
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className='border-t bg-muted/20'>
-        <div className='container mx-auto px-4 py-8'>
-          <div className='flex flex-col items-center gap-4 text-sm text-muted-foreground'>
-            <span>© {new Date().getFullYear()} Court Finder — Built with ❤️ for sports enthusiasts everywhere</span>
-            <nav className='flex gap-6'>
-              <Link to={'/terms'} className='hover:text-foreground transition-colors'>
-                Terms of Service
-              </Link>
-              <Link to={'/privacy'} className='hover:text-foreground transition-colors'>
-                Privacy Policy
-              </Link>
-              <Link to={'/map'} className='hover:text-foreground transition-colors'>
-                Map
-              </Link>
-            </nav>
+      <footer className='border-t border-border/80 bg-muted/20'>
+        <div className='mx-auto flex max-w-[90rem] flex-col gap-6 px-5 py-8 text-sm text-muted-foreground sm:px-8 md:flex-row md:items-center md:justify-between lg:px-12 xl:px-16'>
+          <div className='flex items-center gap-3 text-foreground'>
+            <img src='/logo.webp' alt='' className='size-7 object-contain' />
+            <span className='font-display font-semibold'>Court Finder</span>
+            <span className='text-muted-foreground'>© {new Date().getFullYear()}</span>
           </div>
+          <nav aria-label='Footer' className='flex flex-wrap gap-x-6 gap-y-3'>
+            <Link to='/map' className='transition-colors hover:text-foreground'>Map</Link>
+            <Link to='/terms' className='transition-colors hover:text-foreground'>Terms</Link>
+            <Link to='/privacy' className='transition-colors hover:text-foreground'>Privacy</Link>
+          </nav>
         </div>
       </footer>
     </div>
