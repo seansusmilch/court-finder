@@ -12,6 +12,7 @@ import type {
 } from './shared/types';
 import {
   mapControlButtonClassName,
+  mapControlIconClassName,
   combineClasses,
   sortSections,
 } from './shared/types';
@@ -153,7 +154,7 @@ export function createDefaultButtons(
     },
     {
       id: 'settings',
-      icon: <SlidersHorizontal className='size-5 text-foreground' aria-hidden='true' />,
+      icon: <SlidersHorizontal className={mapControlIconClassName} aria-hidden='true' />,
       label: 'Open map controls',
       onClick: onSettingsClick ?? (() => {}),
       show: false,
@@ -161,7 +162,7 @@ export function createDefaultButtons(
     },
     {
       id: 'locate',
-      icon: <LocateFixed className='size-5 text-primary' aria-hidden='true' />,
+      icon: <LocateFixed className={mapControlIconClassName} aria-hidden='true' />,
       label: 'Locate me',
       onClick: handleLocate,
       disabled: isLocating,
@@ -173,7 +174,7 @@ export function createDefaultButtons(
     },
     {
       id: 'compass',
-      icon: <Compass className='size-5 text-secondary' aria-hidden='true' />,
+      icon: <Compass className={mapControlIconClassName} aria-hidden='true' />,
       label: 'Reset bearing',
       onClick: handleResetBearing,
       show: true,

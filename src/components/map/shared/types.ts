@@ -54,6 +54,8 @@ export interface MapSectionConfig {
 export const mapControlButtonClassName =
   'h-12 w-12 min-h-12 min-w-12 rounded-lg border border-border/70 bg-background text-foreground shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-[background-color,border-color,box-shadow,transform] hover:bg-muted focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:bg-card dark:hover:bg-muted/80';
 
+export const mapControlIconClassName = 'size-5 text-primary';
+
 export const mapSectionHeaderClassName = 'flex items-center gap-2';
 export const mapSectionTitleClassName = 'font-display text-sm font-semibold tracking-tight';
 export const mapSectionIconClassName = 'h-4 w-4 text-muted-foreground';
