@@ -447,6 +447,36 @@
   display: none;
 }
 
+/* Court evidence panels need a visible, quiet scroll affordance on long detail views. */
+.court-detail-scrollbar {
+  overscroll-behavior: contain;
+  scrollbar-color: var(--primary) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.court-detail-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.court-detail-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: 10px;
+}
+
+.court-detail-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--primary) 72%, var(--foreground));
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: var(--radius-full);
+  min-height: 44px;
+}
+
+.court-detail-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  background-clip: padding-box;
+}
+
 /* Prevent zoom on UI elements - use on buttons, controls, and static overlays */
 .no-zoom {
   touch-action: manipulation;

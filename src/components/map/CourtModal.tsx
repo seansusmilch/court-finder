@@ -108,16 +108,16 @@ export function CourtModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-h-[min(90vh,52rem)] max-w-2xl gap-0 overflow-y-auto p-0"
+        className="court-detail-scrollbar max-h-[min(90vh,52rem)] max-w-2xl gap-0 overflow-y-auto rounded-xl border-border/70 bg-card p-0 shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
         showCloseButton={false}
       >
-        <DialogHeader className="relative border-b border-border/60 px-5 pb-5 pt-6 pr-16 text-left sm:px-6">
+        <DialogHeader className="relative sticky top-0 z-10 border-b border-border/70 bg-card px-5 pb-5 pt-6 pr-16 text-left sm:px-6">
           <DialogClose asChild>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-4 min-h-12 min-w-12"
+              className="absolute right-4 top-4 min-h-12 min-w-12 rounded-lg border border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
               aria-label="Close possible facility details"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -164,7 +164,7 @@ export function CourtModal({
 
         <div className="space-y-5 p-5 sm:space-y-6 sm:p-6">
           <section aria-label="Satellite evidence">
-            <div className="overflow-hidden rounded-xl bg-muted shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-border/60 bg-muted">
               <CourtSatelliteImage
                 courtData={courtImageData ?? null}
                 loading={courtImageData === undefined}
@@ -197,7 +197,7 @@ export function CourtModal({
 
           {!isVerified && (
             <section aria-labelledby="modal-feedback-heading">
-              <div className="space-y-4 rounded-xl bg-muted/60 p-4 sm:p-5">
+              <div className="space-y-4 border-t border-border/60 pt-5">
                 <div>
                   <h3 id="modal-feedback-heading" className="text-base font-semibold">
                     Review this possible facility
@@ -258,28 +258,28 @@ export function CourtModal({
             <h3 id="modal-details-heading" className="text-base font-semibold">Detection details</h3>
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Location</h4>
-              <p className="rounded-lg bg-muted/50 p-3 font-mono text-sm text-foreground">
+              <p className="rounded-lg border border-border/60 bg-muted/40 p-3 font-mono text-sm text-foreground">
                 {latitude.toFixed(6)}, {longitude.toFixed(6)}
               </p>
             </div>
 
             {(properties.zoom_level != null || properties.model != null || properties.version != null) && (
-              <dl className="space-y-3 rounded-lg bg-muted/50 p-4 text-sm">
+              <dl className="divide-y divide-border/60 border-y border-border/60 text-sm">
                 {properties.zoom_level != null && (
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start justify-between gap-4 py-3">
                     <dt className="text-muted-foreground">Detected at zoom</dt>
                     <dd className="font-mono font-medium text-foreground">{String(properties.zoom_level)}</dd>
                   </div>
                 )}
                 {(properties.model != null || properties.version != null) && (
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start justify-between gap-4 py-3">
                     <dt className="text-muted-foreground">Model</dt>
                     <dd className="font-mono font-medium text-right text-foreground">
                       {properties.model ?? 'Unknown'}{properties.version != null ? ` v${properties.version}` : ''}
                     </dd>
                   </div>
                 )}
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-4 py-3">
                   <dt className="text-muted-foreground">Detection ID</dt>
                   <dd className="max-w-[65%] break-all text-right font-mono text-xs text-foreground">{properties.detection_id}</dd>
                 </div>
