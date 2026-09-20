@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-20",
+  "title": "Design System: Court Finder",
+  "extensions": {
+    "colorMeta": {
+      "carbon": {
+        "role": "neutral",
+        "displayName": "Carbon",
+        "canonical": "#0B0B0B",
+        "tonalRamp": ["#0B0B0B", "#242424", "#3D3D3D", "#595959", "#757575", "#929292", "#BDBDBD", "#FFFFFF"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#1A1A1A", "#333333", "#4D4D4D", "#666666", "#808080", "#999999", "#CCCCCC", "#FFFFFF"]
+      },
+      "fog": {
+        "role": "neutral",
+        "displayName": "Fog",
+        "canonical": "#F3F3F3",
+        "tonalRamp": ["#1F1F1F", "#3A3A3A", "#555555", "#707070", "#8C8C8C", "#A7A7A7", "#CDCDCD", "#F3F3F3"]
+      },
+      "utility-gray": {
+        "role": "neutral",
+        "displayName": "Utility Gray",
+        "canonical": "#6B6B6B",
+        "tonalRamp": ["#161616", "#2A2A2A", "#414141", "#595959", "#707070", "#858585", "#A6A6A6", "#C9C9C9"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "canonical": "#E0E0E0",
+        "tonalRamp": ["#202020", "#343434", "#4A4A4A", "#606060", "#777777", "#999999", "#BDBDBD", "#E0E0E0"]
+      },
+      "signal-orange": {
+        "role": "primary",
+        "displayName": "Signal Orange",
+        "canonical": "#F26B3A",
+        "tonalRamp": ["#42180A", "#6B2511", "#943418", "#B64320", "#D95528", "#E56B38", "#F26B3A", "#FFC2A9"]
+      },
+      "signal-orange-strong": {
+        "role": "primary",
+        "displayName": "Signal Orange Strong",
+        "canonical": "#D95528",
+        "tonalRamp": ["#351106", "#581C0D", "#7B2813", "#9D351A", "#B94421", "#D95528", "#F08B6C", "#FFD0C1"]
+      },
+      "route-blue": {
+        "role": "secondary",
+        "displayName": "Route Blue",
+        "canonical": "#2F6FED",
+        "tonalRamp": ["#07163E", "#0E2D6D", "#15439A", "#1D58C4", "#2F6FED", "#5D8BEF", "#9AB7F8", "#DCE6FF"]
+      },
+      "verified-green": {
+        "role": "tertiary",
+        "displayName": "Verified Green",
+        "canonical": "#2F8F5B",
+        "tonalRamp": ["#0A2C1A", "#14522E", "#1E7040", "#268653", "#2F8F5B", "#57AC7B", "#91C9A8", "#DDF3E5"]
+      },
+      "caution-yellow": {
+        "role": "tertiary",
+        "displayName": "Caution Yellow",
+        "canonical": "#D6A12C",
+        "tonalRamp": ["#3A2A08", "#664A0D", "#936C12", "#B4881A", "#D6A12C", "#E3BA53", "#F0D78D", "#FAF0D0"]
+      },
+      "alert-red": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "#C63F3F",
+        "tonalRamp": ["#3A0D0D", "#641919", "#8E2525", "#AA3232", "#C63F3F", "#DD6B6B", "#F0A6A6", "#FBDDDD"]
+      },
+      "basketball-orange": {
+        "role": "tertiary",
+        "displayName": "Basketball Orange",
+        "canonical": "#E87A30",
+        "tonalRamp": ["#3D1607", "#67260D", "#913613", "#B94E1D", "#E87A30", "#F19C60", "#F7C39C", "#FDE8D7"]
+      },
+      "tennis-green": {
+        "role": "tertiary",
+        "displayName": "Tennis Green",
+        "canonical": "#58A96A",
+        "tonalRamp": ["#0E2B14", "#1D5427", "#2B773A", "#3E9150", "#58A96A", "#83C08F", "#B4DBB9", "#E3F2E5"]
+      },
+      "soccer-red": {
+        "role": "tertiary",
+        "displayName": "Soccer Red",
+        "canonical": "#D75A4C",
+        "tonalRamp": ["#3F0E0A", "#6B1F18", "#972F26", "#B84036", "#D75A4C", "#E78A80", "#F2B9B2", "#FBE4E1"]
+      },
+      "baseball-yellow": {
+        "role": "tertiary",
+        "displayName": "Baseball Yellow",
+        "canonical": "#D7A63C",
+        "tonalRamp": ["#3B2908", "#67490F", "#936B16", "#B58625", "#D7A63C", "#E4BF70", "#F0D9A5", "#FAF0D6"]
+      },
+      "track-blue": {
+        "role": "tertiary",
+        "displayName": "Track Blue",
+        "canonical": "#5572C7",
+        "tonalRamp": ["#111B42", "#273879", "#3A54A0", "#4765B3", "#5572C7", "#8298DC", "#B2C0EB", "#E5E9F9"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Orientation, landing, and empty-state moments; keep it out of dense map tasks."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Plainspoken task copy and evidence explanations."
+      },
+      "label": {
+        "displayName": "Evidence Label",
+        "purpose": "Coordinates, confidence, model metadata, and compact control labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "control-lift",
+        "value": "0 2px 8px rgba(0, 0, 0, 0.12)",
+        "purpose": "Floating search fields, map controls, and compact interactive surfaces."
+      },
+      {
+        "name": "sheet-lift",
+        "value": "0 4px 16px rgba(0, 0, 0, 0.16)",
+        "purpose": "Bottom sheets and anchored result panels."
+      },
+      {
+        "name": "overlay-lift",
+        "value": "0 10px 30px rgba(0, 0, 0, 0.18)",
+        "purpose": "Dialogs and panels over busy map imagery."
+      }
+    ],
+    "motion": [
+      {
+        "name": "quick",
+        "value": "150ms ease-out",
+        "purpose": "Hover, press, and selected-state feedback."
+      },
+      {
+        "name": "standard",
+        "value": "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Color, shadow, and focus transitions."
+      },
+      {
+        "name": "enter",
+        "value": "280ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Bottom-sheet and result-panel entrance."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one clear action for a region or task.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Review evidence <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h13M13 6l6 6-6 6\" /></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 14px 18px; border: 0; border-radius: 8px; background: #F26B3A; color: #0B0B0B; font: 600 12px/1.2 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .06em; cursor: pointer; transition: background-color 150ms ease-out, box-shadow 200ms ease, transform 150ms ease-out; } .ds-btn-primary svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-btn-primary:hover { background: #D95528; box-shadow: 0 4px 12px rgba(242, 107, 58, .28); } .ds-btn-primary:focus-visible { outline: 3px solid rgba(47, 111, 237, .38); outline-offset: 3px; } .ds-btn-primary:active { transform: scale(.98); } .ds-btn-primary:disabled { cursor: not-allowed; opacity: .45; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "A raised, thumb-reachable field for location search.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"6.5\" /><path d=\"m16 16 4 4\" /></svg><input type=\"search\" placeholder=\"Search an area\" /></label>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 16px; border: 1px solid #E0E0E0; border-radius: 12px; background: #FFFFFF; color: #0B0B0B; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); } .ds-search svg { width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: #6B6B6B; stroke-width: 2; stroke-linecap: round; } .ds-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: #0B0B0B; font: 400 16px/1.5 Inter, ui-sans-serif, system-ui, sans-serif; } .ds-search input::placeholder { color: #6B6B6B; } .ds-search:focus-within { border-color: #2F6FED; box-shadow: 0 0 0 3px rgba(47, 111, 237, .22), 0 2px 8px rgba(0, 0, 0, .12); }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "filter-chip-selected",
+      "description": "A compact filter that can be scanned and toggled quickly.",
+      "html": "<button class=\"ds-chip ds-chip-active\" type=\"button\"><span aria-hidden=\"true\">🏀</span> Basketball</button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 10px 14px; border: 1px solid #E0E0E0; border-radius: 9999px; background: #F3F3F3; color: #6B6B6B; font: 600 12px/1.2 'JetBrains Mono', ui-monospace, monospace; cursor: pointer; transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out; } .ds-chip-active { border-color: #0B0B0B; background: #0B0B0B; color: #FFFFFF; } .ds-chip:hover { border-color: #0B0B0B; color: #0B0B0B; } .ds-chip-active:hover { background: #242424; color: #FFFFFF; } .ds-chip:focus-visible { outline: 3px solid rgba(47, 111, 237, .38); outline-offset: 2px; }"
+    },
+    {
+      "name": "Map Control",
+      "kind": "button",
+      "refersTo": "map-control",
+      "description": "A single-purpose map action with a large touch target.",
+      "html": "<button class=\"ds-map-control\" type=\"button\" aria-label=\"Locate me\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"7\" /><circle cx=\"12\" cy=\"12\" r=\"2\" /><path d=\"M12 2v3M12 19v3M2 12h3M19 12h3\" /></svg></button>",
+      "css": ".ds-map-control { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 8px; background: #FFFFFF; color: #0B0B0B; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); cursor: pointer; transition: background-color 150ms ease-out, box-shadow 200ms ease, transform 150ms ease-out; } .ds-map-control svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; } .ds-map-control:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, .18); } .ds-map-control:focus-visible { outline: 3px solid rgba(47, 111, 237, .38); outline-offset: 3px; } .ds-map-control:active { transform: scale(.96); }"
+    },
+    {
+      "name": "Detection Sheet",
+      "kind": "card",
+      "refersTo": "detection-sheet",
+      "description": "A focused evidence summary for a possible facility.",
+      "html": "<section class=\"ds-detection-sheet\"><div class=\"ds-sheet-kicker\">Possible facility</div><div class=\"ds-sheet-row\"><div><h3>Outdoor tennis courts</h3><p>Model confidence <strong>86%</strong></p></div><span class=\"ds-status\">Unverified</span></div><button class=\"ds-sheet-action\" type=\"button\">Review satellite evidence</button></section>",
+      "css": ".ds-detection-sheet { width: min(100%, 380px); padding: 20px 16px; border-radius: 16px 16px 0 0; background: #FFFFFF; color: #0B0B0B; box-shadow: 0 4px 16px rgba(0, 0, 0, .16); } .ds-sheet-kicker { margin-bottom: 10px; color: #6B6B6B; font: 600 12px/1.2 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; } .ds-sheet-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; } .ds-sheet-row h3 { margin: 0; font: 650 20px/1.2 Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing: -.025em; } .ds-sheet-row p { margin: 6px 0 0; color: #6B6B6B; font: 400 14px/1.45 Inter, ui-sans-serif, system-ui, sans-serif; } .ds-sheet-row strong { color: #0B0B0B; font-weight: 650; } .ds-status { flex: 0 0 auto; padding: 5px 8px; border-radius: 9999px; background: #F3F3F3; color: #6B6B6B; font: 600 11px/1.2 'JetBrains Mono', ui-monospace, monospace; } .ds-sheet-action { width: 100%; min-height: 48px; margin-top: 20px; border: 0; border-radius: 8px; background: #F26B3A; color: #0B0B0B; font: 600 12px/1.2 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .06em; cursor: pointer; } .ds-sheet-action:hover { background: #D95528; } .ds-sheet-action:focus-visible { outline: 3px solid rgba(47, 111, 237, .38); outline-offset: 3px; }"
+    },
+    {
+      "name": "Bottom Navigation",
+      "kind": "nav",
+      "refersTo": "bottom-navigation",
+      "description": "A stable mobile destination bar with one clear active state.",
+      "html": "<nav class=\"ds-bottom-nav\" aria-label=\"Primary\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#map\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 5.5 10 3l4 2 6-2v15.5L14 21l-4-2-6 2V5.5Z\" /><path d=\"M10 3v16M14 5v16\" /></svg><span>Map</span></a><a class=\"ds-nav-item\" href=\"#saved\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m12 20-7-7a4.5 4.5 0 0 1 6.4-6.3L12 8.3l.6-1.6A4.5 4.5 0 0 1 19 13l-7 7Z\" /></svg><span>Saved</span></a></nav>",
+      "css": ".ds-bottom-nav { display: flex; justify-content: space-around; min-height: 64px; padding: 8px 12px; border-top: 1px solid #E0E0E0; background: #FFFFFF; } .ds-nav-item { position: relative; display: flex; min-width: 72px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #6B6B6B; text-decoration: none; font: 600 11px/1.2 Inter, ui-sans-serif, system-ui, sans-serif; } .ds-nav-item svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; } .ds-nav-item-active { color: #0B0B0B; } .ds-nav-item-active::after { position: absolute; bottom: -4px; width: 16px; height: 3px; border-radius: 9999px; background: #F26B3A; content: ''; } .ds-nav-item:focus-visible { outline: 3px solid rgba(47, 111, 237, .38); outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Field Guide",
+    "overview": "Court Finder should feel like a dependable field instrument for someone standing somewhere unfamiliar. The interface is calm at rest, immediate when action is needed, and specific about what the system actually knows. It borrows the directness of mature mobility apps—destination-first search, a map that stays available beneath the task, and focused sheets that keep the next decision close—without copying another company's branding, assets, typography, or iconography.\n\nThe visual world is mostly neutral: carbon, paper, fog, and utility gray give the map and satellite imagery room to speak. Bold accents are reserved for actions, facility types, route-like movement, and explicit state. A possible facility is treated like a field note: useful evidence to inspect, never a promise of access, availability, safety, or accuracy.\n\nThe intended target is a mobile-first operating experience. Controls are direct and tactile, with generous touch targets, short labels, strong contrast, and bottom sheets that bring detail into reach. Depth is hybrid: the map and content stay visually quiet, while search, controls, result sheets, and primary actions lift clearly above the surface.",
+    "keyCharacteristics": [
+      "Neutral carbon-and-paper foundation with deliberate signal color.",
+      "Map-first composition with task-focused overlays.",
+      "Direct, tactile controls sized for thumbs before pointers.",
+      "Confidence and verification treated as evidence, not decoration.",
+      "Light and dark themes share the same hierarchy and semantic roles."
+    ],
+    "rules": [
+      {
+        "name": "The Neutral Canvas Rule",
+        "body": "Keep the majority of every screen carbon, paper, fog, or utility gray. Color earns its place by signaling an action, category, or state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Evidence Color Rule",
+        "body": "A bright marker identifies a facility type or interaction state; it never implies that a detection is accurate, public, open, safe, or available.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Decision Rule",
+        "body": "A heading, sheet, or action group should make its next decision obvious before secondary explanation appears.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lift-on-Task Rule",
+        "body": "Elevation belongs to something the person can act on. Do not add shadow merely to make a passive container look finished.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep most of the screen neutral and let one signal color define the next action.",
+      "Do make primary controls at least 48px tall and easy to operate with a thumb.",
+      "Do keep the map visible or one gesture away while people search, filter, and inspect.",
+      "Do use facility colors consistently across markers, chips, legends, and detail views.",
+      "Do show satellite context, confidence, and verification status as separate pieces of evidence.",
+      "Do use direct language such as “possible facility,” “model confidence,” and “verify access.”"
+    ],
+    "donts": [
+      "Don't introduce borrowed brand assets, proprietary fonts, or branded component patterns; the system should feel native to Court Finder.",
+      "Don't flood a screen with orange, blue, or facility colors; saturation is a signal with a job.",
+      "Don't make every control a pill or every surface a floating card.",
+      "Don't use gradients, glass blur, or decorative shadows when a neutral surface and clear hierarchy are enough.",
+      "Don't describe a detection or confidence score as proof of accuracy, public access, availability, safety, or permission to enter.",
+      "Don't let a marketing treatment obscure the operating task: search, inspect, verify, decide."
+    ]
+  }
+}
