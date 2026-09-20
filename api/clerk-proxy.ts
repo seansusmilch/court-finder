@@ -30,6 +30,23 @@ function getUpstreamUrl(request: Request) {
   return `${CLERK_FRONTEND_API_URL}${upstreamPath}${requestUrl.search}`;
 }
 
+function rewriteRedirectLocation(location: string, upstreamUrl: string) {
+  const upstreamLocation = new URL(location, upstreamUrl);
+  const clerkOrigin = new URL(CLERK_FRONTEND_API_URL).origin;
+
+  if (upstreamLocation.origin !== clerkOrigin) {
+    return location;
+  }
+
+  const proxyBase = new URL(getProxyUrl());
+  const proxyPath = proxyBase.pathname.replace(/\/+$/, '');
+  proxyBase.pathname = `${proxyPath}${upstreamLocation.pathname}`;
+  proxyBase.search = upstreamLocation.search;
+  proxyBase.hash = upstreamLocation.hash;
+
+  return proxyBase.toString();
+}
+
 export default {
   async fetch(request: Request) {
     const startTs = Date.now();
@@ -61,10 +78,11 @@ export default {
     );
 
     try {
+      const upstreamUrl = getUpstreamUrl(request);
       const body = request.method === 'GET' || request.method === 'HEAD'
         ? undefined
         : await request.arrayBuffer();
-      const response = await fetch(getUpstreamUrl(request), {
+      const response = await fetch(upstreamUrl, {
         method: request.method,
         headers,
         body,
@@ -75,6 +93,11 @@ export default {
       // The runtime may transparently decode the upstream response.
       responseHeaders.delete('content-encoding');
       responseHeaders.delete('content-length');
+
+      const location = responseHeaders.get('location');
+      if (location) {
+        responseHeaders.set('location', rewriteRedirectLocation(location, upstreamUrl));
+      }
 
       return new Response(response.body, {
         status: response.status,
