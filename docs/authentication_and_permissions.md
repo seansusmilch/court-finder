@@ -49,8 +49,10 @@ The production Clerk provider uses `/__clerk` automatically for a `pk_live_` key
 proxy URL must exactly match the URL configured in Clerk. Set both variables in the
 Vercel Production environment, then redeploy. The Vercel rewrite and
 `api/clerk-proxy.ts` implementation must remain deployed with the frontend so Clerk's
-proxy verification can reach the endpoint. Do not add these variables to Preview unless
-Preview is intentionally configured with the live Clerk instance.
+proxy verification can reach the endpoint. The proxy must also rewrite Clerk redirects
+back under `/__clerk`; OAuth callbacks otherwise fall through to the Vite app as 404s.
+Do not add these variables to Preview unless Preview is intentionally configured with the
+live Clerk instance.
 
 Convex environment:
 
