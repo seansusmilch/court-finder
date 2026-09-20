@@ -1,4 +1,5 @@
 const CLERK_FRONTEND_API_URL = 'https://frontend-api.clerk.dev';
+const DEFAULT_CLERK_PROXY_URL = 'https://geocourt.vercel.app/__clerk';
 
 const HOP_BY_HOP_HEADERS = [
   'connection',
@@ -13,14 +14,11 @@ const HOP_BY_HOP_HEADERS = [
   'upgrade',
 ];
 
-function getProxyUrl(request: Request) {
-  const protocol = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || 'https';
-  const host =
-    request.headers.get('x-forwarded-host') ||
-    request.headers.get('host') ||
-    new URL(request.url).host;
-
-  return `${protocol}://${host}/__clerk`;
+function getProxyUrl() {
+  // Clerk validates this value against the proxy URL configured in its
+  // dashboard. Do not derive it from Vercel's forwarded host, which may be a
+  // deployment alias instead of the production domain.
+  return process.env.CLERK_PROXY_URL || DEFAULT_CLERK_PROXY_URL;
 }
 
 function getUpstreamUrl(request: Request) {
@@ -55,7 +53,7 @@ export default {
       headers.delete(header);
     }
 
-    headers.set('Clerk-Proxy-Url', getProxyUrl(request));
+    headers.set('Clerk-Proxy-Url', getProxyUrl());
     headers.set('Clerk-Secret-Key', secretKey);
     headers.set(
       'X-Forwarded-For',

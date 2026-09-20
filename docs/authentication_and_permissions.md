@@ -42,11 +42,15 @@ Production Vercel also needs the Clerk secret key because the app-origin proxy a
 
 ```text
 CLERK_SECRET_KEY=
+CLERK_PROXY_URL=https://geocourt.vercel.app/__clerk
 ```
 
 The production Clerk provider uses `/__clerk` automatically for a `pk_live_` key. The
-Vercel rewrite and `api/clerk-proxy.ts` implementation must remain deployed with the
-frontend so Clerk's proxy verification can reach the endpoint.
+proxy URL must exactly match the URL configured in Clerk. Set both variables in the
+Vercel Production environment, then redeploy. The Vercel rewrite and
+`api/clerk-proxy.ts` implementation must remain deployed with the frontend so Clerk's
+proxy verification can reach the endpoint. Do not add these variables to Preview unless
+Preview is intentionally configured with the live Clerk instance.
 
 Convex environment:
 
@@ -57,10 +61,11 @@ CLERK_SECRET_KEY=
 ```
 
 `CLERK_JWT_ISSUER_DOMAIN` must be the Clerk Frontend API URL copied from the
-production Clerk API keys page. It is not the app-origin proxy URL. For the current
-production publishable key, that means `https://clerk.geocourt.vercel.app` (without
-`/__clerk`); verify the exact value in Clerk before updating the production Convex
-deployment.
+production Clerk API keys page. For this proxied production instance, Clerk reports that
+value as `https://geocourt.vercel.app/__clerk`, so set that exact value in the Convex
+production deployment. Its JWKS URL is the same URL with
+`/.well-known/jwks.json` appended. Do not substitute the Backend API URL
+(`https://api.clerk.com`) for the issuer domain.
 
 Configure the Clerk session token with a `role` claim sourced from `user.public_metadata.role`.
 
