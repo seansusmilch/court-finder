@@ -1,4 +1,4 @@
-import { MapPin, Navigation } from 'lucide-react';
+import { LoaderCircle, MapPin, MapPinOff, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { calculateDistance, formatDistance } from '@/lib/utils';
 import type { UserLocation } from '@/hooks/useUserLocation';
@@ -22,17 +22,38 @@ export function DistanceDisplay({
 }: DistanceDisplayProps) {
   if (loading) {
     return (
-      <div className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}>
-        <MapPin className="h-4 w-4 animate-pulse" />
+      <div
+        className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}
+        role="status"
+        aria-live="polite"
+      >
+        <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
         <span>Getting your location...</span>
       </div>
     );
   }
 
-  if (error || !userLocation) {
+  if (error) {
     return (
-      <div className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}>
-        <MapPin className="h-4 w-4" />
+      <div
+        className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}
+        role="status"
+        aria-live="polite"
+      >
+        <MapPinOff className="h-4 w-4 text-warning" aria-hidden="true" />
+        <span>Distance unavailable. Check location access to try again.</span>
+      </div>
+    );
+  }
+
+  if (!userLocation) {
+    return (
+      <div
+        className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}
+        role="status"
+        aria-live="polite"
+      >
+        <MapPin className="h-4 w-4" aria-hidden="true" />
         <span>Enable location to see distance</span>
       </div>
     );
@@ -46,8 +67,13 @@ export function DistanceDisplay({
   );
 
   return (
-    <div className={cn('flex items-center gap-2 text-sm', className)}>
-      <Navigation className="h-4 w-4 text-primary" />
+    <div
+      className={cn('flex items-center gap-2 text-sm', className)}
+      role="status"
+      aria-live="polite"
+      aria-label={`Distance from your location: ${formatDistance(distanceKm)}`}
+    >
+      <Navigation className="h-4 w-4 text-secondary" aria-hidden="true" />
       <span className="font-medium">{formatDistance(distanceKm)}</span>
     </div>
   );

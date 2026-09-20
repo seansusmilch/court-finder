@@ -1,5 +1,5 @@
 import { Popup } from 'react-map-gl/mapbox';
-import { Navigation } from 'lucide-react';
+import { CircleAlert, CircleCheck, Navigation, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -19,17 +19,22 @@ export function CourtPopup({
   onClose,
 }: CourtPopupProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { emoji, displayName } = getVisualForClass(courtClass);
+  const { bgClass, displayName } = getVisualForClass(courtClass);
   const isVerified = properties.status === 'verified';
-  const confidence = !isVerified && properties.confidence != null
+  const confidence = properties.confidence != null
     ? Math.round(Number(properties.confidence) * 100)
     : null;
+  const verificationLabel = isVerified
+    ? 'Community verified'
+    : properties.status === 'rejected'
+      ? 'Community review disagrees'
+      : 'Not yet verified';
 
   const getConfidenceColor = () => {
     if (confidence === null) return '';
-    if (confidence >= 80) return 'text-success font-semibold';
-    if (confidence >= 60) return 'text-warning font-medium';
-    return 'text-destructive font-medium';
+    if (confidence >= 80) return 'border-secondary/20 bg-secondary/10 text-secondary';
+    if (confidence >= 60) return 'border-warning/30 bg-warning/20 text-foreground';
+    return 'border-destructive/20 bg-destructive/10 text-destructive';
   };
 
   return (
@@ -41,65 +46,82 @@ export function CourtPopup({
       closeOnClick={false}
     >
       <div className='flex flex-col items-center justify-center animate-in fade-in zoom-in duration-200'>
-        <div className='max-w-xs rounded-lg border border-border bg-card shadow-lg p-4 space-y-3 flex flex-col'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2'>
-              <span className='text-lg' aria-hidden>
-                {emoji}
-              </span>
-              <div className='text-base font-semibold'>{displayName}</div>
+        <div
+          className='relative flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-3 rounded-lg border border-border bg-card p-4 pr-12 shadow-lg'
+          role='dialog'
+          aria-label={`Possible ${displayName} details`}
+        >
+          <button
+            type='button'
+            onClick={onClose}
+            className='absolute right-1 top-1 inline-flex min-h-12 min-w-12 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring'
+            aria-label='Close possible facility details'
+          >
+            <X className='h-4 w-4' aria-hidden='true' />
+          </button>
+
+          <div className='flex items-start gap-2'>
+            <span className={cn('mt-1 size-3 shrink-0 rounded-full ring-2 ring-background', bgClass)} aria-hidden='true' />
+            <div className='min-w-0'>
+              <h2 className='text-base font-semibold leading-tight'>Possible {displayName}</h2>
+              <p className='mt-1 text-xs leading-relaxed text-muted-foreground'>
+                Satellite detection; confirm access before visiting.
+              </p>
             </div>
-            {isVerified && (
-              <span className='text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded'>
-                Verified
-              </span>
-            )}
           </div>
 
-          <div className='space-y-1'>
-            <div className='text-xs text-muted-foreground'>Location</div>
-            <div className='text-xs font-mono'>
+          <div className='grid gap-2 text-xs'>
+            {confidence !== null && (
+              <div className={cn('flex items-center justify-between gap-3 rounded-md border px-2.5 py-2', getConfidenceColor())}>
+                <span className='font-normal'>Model confidence</span>
+                <span className='font-semibold'>{confidence}%</span>
+              </div>
+            )}
+            <div className={cn(
+              'flex items-center gap-2 rounded-md border px-2.5 py-2 font-medium',
+              isVerified
+                ? 'border-success/25 bg-success/10 text-success'
+                : 'border-border bg-muted text-muted-foreground'
+            )}>
+              {isVerified ? <CircleCheck className='h-3.5 w-3.5' aria-hidden='true' /> : <CircleAlert className='h-3.5 w-3.5' aria-hidden='true' />}
+              <span>{verificationLabel}</span>
+            </div>
+          </div>
+
+          <div className='space-y-1 text-xs'>
+            <div className='text-muted-foreground'>Location</div>
+            <div className='font-mono text-foreground'>
               {latitude.toFixed(6)}, {longitude.toFixed(6)}
             </div>
           </div>
 
-          {!isVerified && confidence !== null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Confidence:</span>
-              <span className={cn('ml-1', getConfidenceColor())}>
-                {confidence}%
-              </span>
-            </div>
-          )}
-          {properties.class != null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Type:</span>
-              <span className='ml-1'>{displayName}</span>
-            </div>
-          )}
           {isVerified && properties.totalFeedbackCount != null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Verified by</span>
-              <span className='ml-1 font-medium'>
-                {properties.positiveFeedbackCount}/{properties.totalFeedbackCount} users
+            <div className='text-xs text-muted-foreground'>
+              Community signal:{' '}
+              <span className='font-medium text-foreground'>
+                {properties.positiveFeedbackCount ?? 0}/{properties.totalFeedbackCount} matching reviews
               </span>
             </div>
           )}
-          {properties.zoom_level != null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Detected at zoom:</span>
-              <span className='ml-1'>{String(properties.zoom_level)}</span>
+          {(properties.zoom_level != null || properties.model != null) && (
+            <div className='grid gap-1 text-xs text-muted-foreground'>
+              {properties.zoom_level != null && (
+                <div className='flex justify-between gap-3'>
+                  <span>Detected at zoom</span>
+                  <span className='font-mono text-foreground'>{String(properties.zoom_level)}</span>
+                </div>
+              )}
+              {properties.model != null && (
+                <div className='flex justify-between gap-3'>
+                  <span>Model</span>
+                  <span className='font-mono text-foreground'>
+                    {properties.model}{properties.version != null ? ` v${properties.version}` : ''}
+                  </span>
+                </div>
+              )}
             </div>
           )}
-          {properties.model != null && (
-            <div className='text-xs'>
-              <span className='text-muted-foreground'>Model:</span>
-              <span className='text-muted-foreground'>
-                {` v${properties.version}`}
-              </span>
-            </div>
-          )}
-          <Button asChild size='sm' variant='default' className='mt-2 w-full'>
+          <Button asChild size='lg' variant='default' className='mt-1 min-h-12 w-full'>
             <a
               href={`https://maps.google.com/maps?q=${latitude},${longitude}`}
               target='_blank'
@@ -124,9 +146,10 @@ export function CourtPopup({
                 }
               }}
               title='Open in default map application'
+              aria-label='Open possible facility in maps'
             >
-              <Navigation className='size-3.5' />
-              Open in Maps
+              <Navigation className='h-4 w-4' aria-hidden='true' />
+              <span>Open in Maps</span>
             </a>
           </Button>
         </div>

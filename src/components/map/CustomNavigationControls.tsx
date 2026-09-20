@@ -1,7 +1,7 @@
 import { useCallback, type ReactNode } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
 import { Button } from '@/components/ui/button';
-import { Navigation, Compass, Settings2, Radar } from 'lucide-react';
+import { Compass, LocateFixed, Radar, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type {
@@ -12,6 +12,7 @@ import type {
 } from './shared/types';
 import {
   mapControlButtonClassName,
+  mapControlIconClassName,
   combineClasses,
   sortSections,
 } from './shared/types';
@@ -49,6 +50,8 @@ export function MapControlButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel ?? label}
+      title={ariaLabel ?? label}
+      type="button"
     >
       {renderIcon ? renderIcon(icon) : icon}
     </Button>
@@ -102,8 +105,7 @@ export function createDefaultButtons(
         });
         onLocateEnd?.();
       },
-      (error) => {
-        console.error('Error getting location:', error);
+      () => {
         toast.error('Could not get your location');
         onLocateEnd?.();
       }
@@ -121,11 +123,13 @@ export function createDefaultButtons(
   const getScanButtonLabel = () => {
     if (!isScanning || !scanProgress) return 'Scan this area';
     const { totalTiles, tilesProcessed } = scanProgress;
-    return `${tilesProcessed}/${totalTiles}`;
+    return `Scanning area: ${tilesProcessed} of ${totalTiles} tiles`;
   };
 
   const getScanButtonIcon = () => {
-    if (!isScanning || !scanProgress) return <Radar className="h-6 w-6" />;
+    if (!isScanning || !scanProgress) {
+      return <Radar className='size-5 text-white' aria-hidden='true' />;
+    }
     return null;
   };
 
@@ -139,18 +143,23 @@ export function createDefaultButtons(
       disabled: isScanning,
       show: false,
       order: 1,
-      className: 'bg-orange-500 border-orange-500 hover:bg-orange-600 text-white',
+      className:
+        'border-primary !bg-primary !text-primary-foreground hover:!bg-primary/90 dark:!bg-primary dark:!text-primary-foreground disabled:!bg-primary disabled:!text-primary-foreground disabled:!opacity-100 disabled:cursor-wait',
       renderIcon: (icon) => {
         if (!isScanning || !scanProgress || scanProgress.totalTiles === 0) {
           return <span className={isScanning ? 'animate-scan-spin' : ''}>{icon}</span>;
         }
         const progress = (scanProgress.tilesProcessed / scanProgress.totalTiles) * 100;
-        return <span className="text-sm font-semibold">{Math.round(progress)}%</span>;
+        return (
+          <span className="font-mono text-base font-bold leading-none tracking-tight text-primary-foreground tabular-nums">
+            {Math.round(progress)}%
+          </span>
+        );
       },
     },
     {
       id: 'settings',
-      icon: <Settings2 className="h-6 w-6" />,
+      icon: <SlidersHorizontal className={mapControlIconClassName} aria-hidden='true' />,
       label: 'Open map controls',
       onClick: onSettingsClick ?? (() => {}),
       show: false,
@@ -158,7 +167,7 @@ export function createDefaultButtons(
     },
     {
       id: 'locate',
-      icon: <Navigation className="h-6 w-6 fill-current" />,
+      icon: <LocateFixed className={mapControlIconClassName} aria-hidden='true' />,
       label: 'Locate me',
       onClick: handleLocate,
       disabled: isLocating,
@@ -170,7 +179,7 @@ export function createDefaultButtons(
     },
     {
       id: 'compass',
-      icon: <Compass className="h-6 w-6" />,
+      icon: <Compass className={mapControlIconClassName} aria-hidden='true' />,
       label: 'Reset bearing',
       onClick: handleResetBearing,
       show: true,
@@ -271,6 +280,8 @@ export function CustomNavigationControls({
   return (
     <div
       className={cn(layoutStyles[layout], 'no-zoom', className)}
+      role="group"
+      aria-label="Map controls"
       style={Object.keys(positionStyle).length > 0 ? positionStyle : undefined}
     >
       {buttons.map((button) => (

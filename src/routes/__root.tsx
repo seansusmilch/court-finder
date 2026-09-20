@@ -49,21 +49,35 @@ function RootComponent() {
   const ensureCurrentUser = useMutation(api.users.ensureCurrentUser);
   const location = useLocation();
   const [isMobile, setIsMobile] = useState(false);
+  const [isTallMobile, setIsTallMobile] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    const handleResize = () => checkMobile();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const checkViewport = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setIsTallMobile(mobile && window.innerHeight >= 780);
+    };
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
   }, []);
 
-  // Routes where we don't want to show the header (only on mobile)
-  const hideHeaderRoutes = ['/map', '/training-feedback'];
+  // The map owns the viewport on every device. Keep the desktop header in the
+  // layout, but let the map itself occupy the remaining height.
+  const hideHeaderRoutes = ['/map', '/feedback', '/training-feedback'];
   const shouldHideHeader = isMobile && hideHeaderRoutes.includes(location.pathname);
-  // Routes where we don't want scrolling on desktop
   const noScrollRoutes = ['/map'];
   const isMapRoute = noScrollRoutes.includes(location.pathname);
+  const isTallMobileFeedback =
+    isTallMobile && location.pathname === '/feedback';
+
+  const gridRows = isMapRoute
+    ? shouldHideHeader
+      ? 'grid-rows-[1fr]'
+      : 'grid-rows-[auto_1fr]'
+    : shouldHideHeader
+      ? 'grid-rows-[1fr]'
+      : 'grid-rows-[auto_1fr_auto]';
 
   useEffect(() => {
     if (isLoading || !isAuthenticated) {
@@ -91,23 +105,23 @@ function RootComponent() {
         storageKey='vite-ui-theme'
       >
         <div
-          className={`grid ${
-            isMapRoute
-              ? 'grid-rows-[auto_1fr_auto] md:grid-rows-[1fr_auto]'
-              : shouldHideHeader
-              ? 'grid-rows-[1fr_auto]'
-              : 'grid-rows-[auto_1fr_auto]'
-          } h-dvh`}
+          className={`grid ${gridRows} h-dvh`}
         >
           {!shouldHideHeader && <Header />}
-          <main className={`pb-16 md:pb-0 ${isMapRoute ? 'overflow-hidden' : 'overflow-auto'}`}>
+          <main
+            className={`min-h-0 ${
+              isMapRoute || isTallMobileFeedback
+                ? 'overflow-hidden pb-0'
+                : 'overflow-auto pb-16 md:pb-0'
+            }`}
+          >
             {isFetching ? <Loader /> : <Outlet />}
           </main>
           <BottomNav />
         </div>
         <Toaster richColors />
       </ThemeProvider>
-      <TanStackRouterDevtools position='bottom-left' />
+      {import.meta.env.DEV && <TanStackRouterDevtools position='bottom-left' />}
     </>
   );
 }
