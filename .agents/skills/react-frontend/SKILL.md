@@ -17,6 +17,9 @@ Use this skill for user-facing frontend work in `src/`.
 
 ## Project Conventions
 
+- Use `@clerk/react` with `ClerkProvider` wrapping `ConvexProviderWithClerk`. Gate protected Convex requests on `useConvexAuth()` readiness, not Clerk's sign-in state alone. Preserve the existing loading and user-record synchronization flow.
+- `VITE_CLERK_PUBLISHABLE_KEY` is public frontend configuration. Match Preview/local to development Clerk and Production to production Clerk; keep signing secrets out of `VITE_` variables.
+
 - Use `@/` imports for `src` and `@backend` for Convex when needed.
 - Use `cn()` from `@/lib/utils` for conditional classes.
 - Follow nearby filename style. Existing feature components often use `PascalCase.tsx`, while shared/root components often use `kebab-case.tsx`. Components use `PascalCase`; hooks use `useCamelCase`.

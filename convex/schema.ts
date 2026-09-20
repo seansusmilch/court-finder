@@ -12,6 +12,8 @@ export default defineSchema({
     emailVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     role: v.optional(v.union(v.literal('user'), v.literal('admin'))),
+    // Existing deployments retain this billing field during the auth migration.
+    planTier: v.optional(v.string()),
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
     permissions: v.array(v.string()),

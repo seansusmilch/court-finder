@@ -67,7 +67,7 @@ http.route({
       const primaryEmail = data.email_addresses?.find(
         (emailAddress) => emailAddress.id === data.primary_email_address_id
       );
-      const selectedEmail = primaryEmail || data.email_addresses?.[0];
+      const selectedEmail = primaryEmail;
       const userId = await ctx.runMutation(internal.users.upsertFromClerk, {
         id: data.id,
         email: selectedEmail?.email_address,
@@ -75,7 +75,9 @@ http.route({
         firstName: data.first_name ?? undefined,
         lastName: data.last_name ?? undefined,
         imageUrl: data.image_url ?? undefined,
-        role: data.public_metadata?.role === 'admin' ? 'admin' : 'user',
+        role: data.public_metadata?.role === 'admin' || data.public_metadata?.role === 'user'
+          ? data.public_metadata.role
+          : undefined,
       });
 
       console.log('clerk_webhook_user_upserted', {

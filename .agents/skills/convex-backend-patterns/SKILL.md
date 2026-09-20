@@ -18,7 +18,9 @@ Use this skill for backend work in `convex/`.
 
 ## Auth And Permissions
 
-- Get the current user with `getAuthUserId(ctx)` from `@convex-dev/auth/server`.
+- Use Clerk authentication. Get the Convex user through `getCurrentUser`, `getCurrentUserId`, or `requireCurrentUser` from `convex/lib/auth.ts`; Clerk subjects are not Convex document IDs. Do not reintroduce `@convex-dev/auth`.
+- Preserve existing user IDs during migration. Email-based linking requires a verified primary email and must not overwrite another Clerk user's link. Keep admin roles and existing permissions when metadata omits a role.
+- Verify webhook signatures before applying `user.created`, `user.updated`, or `user.deleted`; deletion disconnects the Clerk identity while retaining application data.
 - Check permissions with `api.users.hasPermission` before protected operations.
 - Use `PERMISSIONS` from `convex/lib/constants.ts`; current groups include `SCANS`, `TRAINING`, and `ADMIN`.
 - Preserve anonymous-user behavior where existing functions allow it.
@@ -33,7 +35,8 @@ Use this skill for backend work in `convex/`.
 ## Environment And Integrations
 
 - Use typed env helpers from `convex/env.ts`; do not read raw `process.env` throughout business logic.
-- Server env includes `MAPBOX_API_KEY`, `ROBOFLOW_API_KEY`, `ROBOFLOW_BATCH`, and optional `CONVEX_SITE_URL`.
+- Server env includes `MAPBOX_API_KEY`, `ROBOFLOW_API_KEY`, `ROBOFLOW_BATCH`, optional `CONVEX_SITE_URL`, and the matching instance's `CLERK_WEBHOOK_SIGNING_SECRET`. `convex/auth.config.ts` reads `CLERK_JWT_ISSUER_DOMAIN` with application ID `convex`.
+- Follow `docs/clerk-migration.md` for rollout and audit steps. Keep development and production Clerk/Convex instances paired; report migration counts without emails. Check the current [Convex Clerk integration guide](https://docs.convex.dev/auth/clerk) when dashboard configuration changes.
 - Pass `ROBOFLOW_MODEL_NAME` and `ROBOFLOW_MODEL_VERSION` from `convex/lib/constants.ts` when calling Roboflow helpers; helper defaults may not match the active project model.
 - Mapbox, Roboflow, geocoding, and tile utilities live under `convex/lib/`.
 

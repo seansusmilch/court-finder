@@ -20,8 +20,11 @@ emails before cutover.
 Create separate Clerk development and production instances. Configure email as a sign-in
 identifier and choose the sign-in methods Court Finder should support.
 
-Create Clerk's `convex` JWT template without renaming it. Put its issuer URL in each
-matching Convex deployment:
+Activate the Convex integration in the Clerk Dashboard (or create the `convex` JWT
+template in dashboards that expose templates). Keep the token audience/template name
+`convex`. Include the primary email and its boolean `email_verified` claim so Convex
+can link legacy users only after verification. Put the issuer URL in each matching
+Convex deployment. See the [current integration guide](https://docs.convex.dev/auth/clerk).
 
 ```sh
 bunx convex env set CLERK_JWT_ISSUER_DOMAIN 'https://your-instance.clerk.accounts.dev'
@@ -33,8 +36,11 @@ Set the matching Clerk publishable key in the frontend environment:
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_or_live_value
 ```
 
-The development frontend key belongs in the local environment. The production key belongs
-in Vercel. Do not put secret keys in `VITE_` variables.
+Use the development frontend key locally and in Vercel Preview, paired with a development
+Convex deployment. Use the production key in Vercel Production, paired with production
+Convex. Verify the scope of `CONVEX_DEPLOY_KEY` before a preview build: a production
+deploy key would deploy the PR backend to production. Do not put secret keys in `VITE_`
+variables.
 
 ## Webhook
 

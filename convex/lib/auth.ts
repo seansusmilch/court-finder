@@ -39,7 +39,9 @@ export function identityToUserFields(identity: NonNullable<ClerkIdentity>) {
   return {
     externalId: identity.subject,
     ...(name ? { name } : {}),
-    ...(email ? { email: email.toLowerCase(), emailVerified: true } : {}),
+    ...(email && identity.emailVerified === true
+      ? { email: email.toLowerCase(), emailVerified: true }
+      : {}),
     ...(imageUrl ? { imageUrl } : {}),
     isAnonymous: false,
     updatedAt: Date.now(),
@@ -60,10 +62,14 @@ async function findUserForIdentity(
   const { email } = identityToUserFields(identity);
   if (!email) return null;
 
-  return await ctx.db
+  const match = await ctx.db
     .query('users')
     .withIndex('email', (q) => q.eq('email', email))
-    .first();
+    .unique();
+  if (match?.externalId && match.externalId !== identity.subject) {
+    throw new Error('Email is already linked to another Clerk user');
+  }
+  return match;
 }
 
 export async function getCurrentUser(ctx: AuthCtx): Promise<Doc<'users'> | null> {
@@ -86,18 +92,22 @@ export async function ensureCurrentUserRecord(ctx: MutationCtx): Promise<Doc<'us
 
   if (existing) {
     const fields = identityToUserFields(identity);
-    const role = existing.role || 'user';
+    const role = existing.role || (existing.permissions?.includes('admin.access') ? 'admin' : 'user');
     await ctx.db.patch(existing._id, {
       ...fields,
       createdAt: existing.createdAt ?? Date.now(),
       role,
-      permissions: getRolePermissions(role),
+      permissions: Array.from(new Set([...(existing.permissions || []), ...getRolePermissions(role)])),
     });
     return await ctx.db.get(existing._id);
   }
 
+  const fields = identityToUserFields(identity);
+  if (!fields.email) {
+    throw new Error('A verified primary email is required to link your account');
+  }
   const userId = await ctx.db.insert('users', {
-    ...identityToUserFields(identity),
+    ...fields,
     createdAt: Date.now(),
     permissions: [...DEFAULT_USER_PERMISSIONS],
     role: 'user' as const,

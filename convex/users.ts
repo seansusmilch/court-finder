@@ -75,7 +75,7 @@ export const upsertFromClerk = internalMutation({
     role: v.optional(ROLE_VALIDATOR),
   },
   handler: async (ctx, args) => {
-    const email = args.email?.toLowerCase();
+    const email = args.emailVerified === true ? args.email?.toLowerCase() : undefined;
     const now = Date.now();
     const byExternalId = await ctx.db
       .query('users')
@@ -87,11 +87,20 @@ export const upsertFromClerk = internalMutation({
         ? await ctx.db
             .query('users')
             .withIndex('email', (q) => q.eq('email', email))
-            .first()
+            .unique()
         : null);
 
+    if (existing?.externalId && existing.externalId !== args.id) {
+      throw new Error('Email is already linked to another Clerk user');
+    }
+
     const name = [args.firstName, args.lastName].filter(Boolean).join(' ') || undefined;
-    const role = args.role || existing?.role || ROLES.USER;
+    // Do not create an unlinked row before verification: it would prevent the
+    // later verified event from linking the original legacy account.
+    if (!existing && !email) return null;
+
+    const role = args.role || existing?.role ||
+      (existing?.permissions?.includes('admin.access') ? ROLES.ADMIN : ROLES.USER);
     const updates = {
       externalId: args.id,
       ...(name ? { name } : {}),
@@ -99,7 +108,9 @@ export const upsertFromClerk = internalMutation({
       ...(args.imageUrl ? { imageUrl: args.imageUrl } : {}),
       emailVerified: args.emailVerified ?? existing?.emailVerified,
       isAnonymous: false,
-      permissions: [...ROLE_PERMISSIONS[role]],
+      permissions: args.role === undefined
+        ? Array.from(new Set([...(existing?.permissions || []), ...ROLE_PERMISSIONS[role]]))
+        : [...ROLE_PERMISSIONS[role]],
       role,
       updatedAt: now,
     };
