@@ -144,14 +144,14 @@ export function createDefaultButtons(
       show: false,
       order: 1,
       className:
-        'border-primary bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-100 disabled:cursor-wait',
+        'border-primary !bg-primary !text-primary-foreground hover:!bg-primary/90 dark:!bg-primary dark:!text-primary-foreground disabled:!bg-primary disabled:!text-primary-foreground disabled:!opacity-100 disabled:cursor-wait',
       renderIcon: (icon) => {
         if (!isScanning || !scanProgress || scanProgress.totalTiles === 0) {
           return <span className={isScanning ? 'animate-scan-spin' : ''}>{icon}</span>;
         }
         const progress = (scanProgress.tilesProcessed / scanProgress.totalTiles) * 100;
         return (
-          <span className="font-mono text-sm font-bold leading-none tracking-tight text-primary-foreground tabular-nums">
+          <span className="font-mono text-base font-bold leading-none tracking-tight text-primary-foreground tabular-nums">
             {Math.round(progress)}%
           </span>
         );
