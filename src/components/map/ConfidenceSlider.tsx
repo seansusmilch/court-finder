@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { CONFIDENCE_SLIDER_STEP } from '@/lib/constants';
 interface ConfidenceSliderProps {
   confidenceThreshold: number;
@@ -9,17 +10,21 @@ export function ConfidenceSlider({
   onConfidenceChange,
 }: ConfidenceSliderProps) {
   return (
-    <div className='mt-2'>
-      <div className='text-xs text-muted-foreground mb-1'>
-        Confidence: {Math.round(confidenceThreshold * 100)}%
+    <div className='mt-2 space-y-2'>
+      <div className='flex items-center justify-between text-xs text-muted-foreground'>
+        <span>Show detections at or above</span>
+        <span className='font-mono text-foreground'>Confidence: {Math.round(confidenceThreshold * 100)}%</span>
       </div>
       <input
+        aria-label='Minimum model confidence'
+        aria-valuetext={`${Math.round(confidenceThreshold * 100)} percent`}
         type='range'
         min='0'
         max='1'
         step={CONFIDENCE_SLIDER_STEP}
         value={confidenceThreshold}
         onChange={(e) => onConfidenceChange(Number(e.target.value))}
+        style={{ '--value': `${confidenceThreshold * 100}%` } as CSSProperties}
         className='w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider'
       />
     </div>

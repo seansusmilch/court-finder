@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 
 type ErrorCardProps = {
   message: string;
@@ -10,18 +9,25 @@ type ErrorCardProps = {
  */
 export function ErrorCard({ message }: ErrorCardProps) {
   return (
-    <div className='container mx-auto px-4 py-4'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Error</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='text-center py-8'>
-            <AlertCircle className='h-12 w-12 text-destructive mx-auto mb-4' />
-            <p className='text-muted-foreground mb-4'>{message}</p>
-          </div>
-        </CardContent>
-      </Card>
+    <div className='grid min-h-full place-items-center px-4 py-12 pb-24 md:px-8 md:py-16 md:pb-16'>
+      <section
+        className='w-full max-w-xl rounded-2xl border border-destructive/30 bg-card px-6 py-10 text-center shadow-sm sm:px-10'
+        role='alert'
+        aria-labelledby='feedback-error-heading'
+      >
+        <div className='mx-auto flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive'>
+          <TriangleAlert aria-hidden='true' className='size-7' />
+        </div>
+        <h1
+          id='feedback-error-heading'
+          className='mt-6 font-display text-2xl font-semibold tracking-tight'
+        >
+          We couldn’t load this review
+        </h1>
+        <p className='mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground'>
+          {message}
+        </p>
+      </section>
     </div>
   );
 }

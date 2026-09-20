@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import type { CourtImageData } from '@/lib/types';
+import { CircleAlert } from 'lucide-react';
 
 const TILE_SIZE = 1024; // 512@2x
 const EDGE_THRESHOLD = 100; // Pixels from edge to trigger adjacent tile fetch
@@ -10,6 +11,8 @@ const CROP_PADDING = 2.5; // Multiplier for padding around court bbox
 interface CourtSatelliteImageProps {
   courtData: CourtImageData | null;
   className?: string;
+  loading?: boolean;
+  alt?: string;
 }
 
 interface BboxStyle {
@@ -51,9 +54,6 @@ function getRequiredTiles(courtData: CourtImageData): Array<{
   // Determine grid size and offsets
   const cols = needWest && needEast ? 3 : needWest || needEast ? 2 : 1;
   const rows = needNorth && needSouth ? 3 : needNorth || needSouth ? 2 : 1;
-
-  // Base URL pattern - we'll construct URLs for each tile
-  const baseUrl = courtData.tileUrl.replace(/\/\d+\/\d+\/\d+@2x/, '');
 
   // Generate tile URLs for all positions in the grid
   for (let row = 0; row < rows; row++) {
@@ -211,23 +211,37 @@ function calculateCropBounds(
   };
 }
 
-export function CourtSatelliteImage({ courtData, className }: CourtSatelliteImageProps) {
+export function CourtSatelliteImage({
+  courtData,
+  className,
+  loading = false,
+  alt = 'Satellite evidence for a possible facility',
+}: CourtSatelliteImageProps) {
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
   const [bboxStyle, setBboxStyle] = useState<BboxStyle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const processingRef = useRef(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    if (!courtData || processingRef.current) return;
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
 
-    processingRef.current = true;
+    if (!courtData) {
+      setImageDataUrl(null);
+      setBboxStyle(null);
+      setIsLoading(loading);
+      setError(null);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setImageDataUrl(null);
     setBboxStyle(null);
 
     const processImage = async () => {
+      const startTs = Date.now();
       try {
         // Get required tiles (including adjacent if needed)
         const tiles = getRequiredTiles(courtData);
@@ -254,55 +268,85 @@ export function CourtSatelliteImage({ courtData, className }: CourtSatelliteImag
 
         // Convert to data URL
         const dataUrl = croppedCanvas.toDataURL('image/jpeg', 0.9);
-        setImageDataUrl(dataUrl);
-        setBboxStyle(bboxInCrop);
+        if (requestId === requestIdRef.current) {
+          setImageDataUrl(dataUrl);
+          setBboxStyle(bboxInCrop);
+        }
       } catch (err) {
-        console.error('Error processing court satellite image:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load image');
+        console.error('Failed to prepare court satellite evidence', {
+          startTs,
+          durationMs: Date.now() - startTs,
+          tile: {
+            z: courtData.tileZ,
+            x: courtData.tileX,
+            y: courtData.tileY,
+          },
+          error: err,
+        });
+        if (requestId === requestIdRef.current) {
+          setError(err instanceof Error ? err.message : 'Failed to load image');
+        }
       } finally {
-        setIsLoading(false);
-        processingRef.current = false;
+        if (requestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
       }
     };
 
     processImage();
-  }, [courtData]);
+  }, [courtData, loading]);
 
-  // Reset when court data changes to null
-  useEffect(() => {
-    if (!courtData) {
-      setImageDataUrl(null);
-      setBboxStyle(null);
-      setIsLoading(true);
-      setError(null);
-      processingRef.current = false;
-    }
-  }, [courtData]);
-
-  if (!courtData) return null;
+  if (!courtData) {
+    return (
+      <div
+        className={cn(
+          'relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-muted px-6 text-center',
+          className
+        )}
+        role={loading ? 'status' : 'img'}
+        aria-live={loading ? 'polite' : undefined}
+        aria-label={loading ? undefined : alt}
+      >
+        <div className="flex max-w-xs flex-col items-center gap-3 text-sm text-muted-foreground">
+          {loading ? (
+            <>
+              <Skeleton className="h-16 w-16 rounded-lg" aria-hidden="true" />
+              <span>Loading satellite evidence…</span>
+            </>
+          ) : (
+            <>
+              <CircleAlert className="h-6 w-6 text-warning" aria-hidden="true" />
+              <span className="font-medium text-foreground">Satellite evidence unavailable</span>
+              <span>This detection can still be reviewed using its model and location details.</span>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn('relative w-full aspect-square bg-muted rounded-lg overflow-hidden', className)}>
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/80">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/90" role="status" aria-live="polite">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <Skeleton className="w-20 h-20 rounded-lg" />
               <div className="absolute inset-0 overflow-hidden rounded-lg">
-                <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent animate-scan" />
+                <div className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-secondary/60 animate-pulse" />
               </div>
             </div>
-            <span className="text-sm text-muted-foreground animate-pulse">
-              Loading satellite image...
-            </span>
+            <span className="text-sm text-muted-foreground">Preparing satellite evidence…</span>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/90">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>Unable to load satellite image</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/95 px-6" role="alert">
+          <div className="flex max-w-xs flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+            <CircleAlert className="h-6 w-6 text-destructive" aria-hidden="true" />
+            <p className="font-medium text-foreground">Satellite evidence could not be prepared</p>
+            <p>Details below remain available for review.</p>
           </div>
         </div>
       )}
@@ -310,7 +354,7 @@ export function CourtSatelliteImage({ courtData, className }: CourtSatelliteImag
       {imageDataUrl && (
         <img
           src={imageDataUrl}
-          alt="Satellite view of court"
+          alt={alt}
           className={cn(
             'w-full h-full object-cover transition-opacity duration-300',
             isLoading ? 'opacity-0' : 'opacity-100'
@@ -321,8 +365,9 @@ export function CourtSatelliteImage({ courtData, className }: CourtSatelliteImag
       {/* Court bbox overlay */}
       {imageDataUrl && bboxStyle && (
         <div
-          className="absolute border-2 border-primary/70 rounded-sm shadow-lg pointer-events-none box-border"
+          className="pointer-events-none absolute box-border rounded-sm border-2 border-secondary/80 shadow-lg"
           style={bboxStyle}
+          aria-hidden="true"
         />
       )}
     </div>

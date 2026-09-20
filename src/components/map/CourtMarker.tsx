@@ -22,7 +22,7 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { emoji, bgClass, colorLight, colorDark, colorLightMuted, colorDarkMuted } =
+  const { emoji, colorLight, colorDark, colorLightMuted, colorDarkMuted } =
     getVisualForClass(courtClass);
   const { theme, systemTheme } = useTheme();
   const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
@@ -55,25 +55,32 @@ export function CourtMarker({
       }}
       style={{ cursor: 'pointer' }}
     >
-      <div className='flex flex-col items-center transition-transform duration-200 hover:scale-110'>
-        <div
+      <button
+        type='button'
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick(longitude, latitude, properties);
+        }}
+        aria-label={`${isVerified ? 'Verified' : 'Possible'} ${courtClass || 'sports facility'} at ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
+        className='group relative flex flex-col items-center outline-none transition-transform duration-200 hover:scale-110 focus-visible:ring-4 focus-visible:ring-primary/50'
+      >
+        <span
           className={cn(
-            'w-10 h-10 flex items-center justify-center rounded-full text-white transition-shadow duration-200',
-            isVerified ? 'shadow-lg hover:shadow-xl' : ''
+            'flex size-10 items-center justify-center rounded-full text-white transition-shadow duration-200',
+            isVerified ? 'shadow-lg group-hover:shadow-xl' : ''
           )}
           style={{ backgroundColor: bgColor }}
         >
-          <span className='text-[20px]' aria-hidden>
+          <span className='text-[20px]' aria-hidden='true'>
             {emoji}
           </span>
-        </div>
-        {/* Arrow pointing down */}
-        <div
-          className='w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-1'
+        </span>
+        <span
+          className='-mt-1 h-0 w-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent'
           style={{ borderTopColor: arrowColor }}
-          aria-hidden
+          aria-hidden='true'
         />
-      </div>
+      </button>
     </Marker>
   );
 }
