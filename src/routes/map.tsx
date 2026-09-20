@@ -3,7 +3,7 @@ import { CustomNavigationControls } from '@/components/map/CustomNavigationContr
 import Map, {
   ScaleControl,
 } from 'react-map-gl/mapbox';
-import type { MapRef } from 'react-map-gl/mapbox';
+import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
@@ -16,7 +16,6 @@ import {
   MAPBOX_TILE_DEFAULTS,
   SCAN_INITIATION_RATE_LIMIT,
 } from '@backend/lib/constants';
-import type { MapMouseEvent } from 'mapbox-gl';
 import { toast } from 'sonner';
 import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
@@ -49,6 +48,17 @@ interface MapSettings {
   mapStyle: string;
   enabledCategories: string[] | null;
 }
+
+// Mapbox GL 3.31 tightened the feature type exposed on map events. Keep the
+// runtime shape explicit here because rendered features can come from either
+// the clustered source or an individual court feature.
+type InteractiveMapFeature = {
+  geometry?: {
+    type: string;
+    coordinates?: unknown;
+  };
+  properties?: Record<string, unknown> | null;
+};
 
 const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   type: 'FeatureCollection',
@@ -157,7 +167,8 @@ function MapPage() {
     const features = event.features;
     if (!features || features.length === 0) return;
 
-    const clusterId = features[0].properties?.cluster_id as number | undefined;
+    const feature = features[0] as unknown as InteractiveMapFeature;
+    const clusterId = feature.properties?.cluster_id as number | undefined;
     const mapboxSource = event.target.getSource('courts') as {
       getClusterExpansionZoom: (
         id: number,
@@ -185,11 +196,18 @@ function MapPage() {
     const features = event.features;
     if (!features || features.length === 0) return;
 
-    const feature = features[0];
-    const geometry = feature.geometry as {
-      type: 'Point';
-      coordinates: [number, number];
-    };
+    const feature = features[0] as unknown as InteractiveMapFeature;
+    const geometry = feature.geometry;
+    if (
+      !geometry ||
+      geometry.type !== 'Point' ||
+      !Array.isArray(geometry.coordinates) ||
+      geometry.coordinates.length !== 2 ||
+      typeof geometry.coordinates[0] !== 'number' ||
+      typeof geometry.coordinates[1] !== 'number'
+    ) {
+      return;
+    }
     const [longitude, latitude] = geometry.coordinates;
 
     // Type assertion for properties - convex query ensures this structure

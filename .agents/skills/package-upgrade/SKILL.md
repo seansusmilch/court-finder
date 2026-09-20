@@ -59,3 +59,10 @@ For UI-affecting upgrades, run the app and smoke-test changed flows:
 ```bash
 bun dev
 ```
+
+## PR Evidence
+
+For UI-affecting upgrades, capture screenshots or a short video from the dev
+server or preview and put the evidence in the pull request description. Do not
+commit generated screenshots, videos, or an evidence README to the repository
+unless the user explicitly requests tracked artifacts.
