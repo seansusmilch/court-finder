@@ -1,69 +1,94 @@
 import { describe, expect, it, vi } from 'vitest';
-import { upsertFromClerk } from './users';
+import { applyClerkMigrationLinks, upsertFromClerk } from './users';
 
 const handler = (upsertFromClerk as unknown as {
   _handler: (ctx: unknown, args: Record<string, unknown>) => Promise<unknown>;
 })._handler;
 
+const migrationHandler = (applyClerkMigrationLinks as unknown as {
+  _handler: (ctx: unknown, args: Record<string, unknown>) => Promise<unknown>;
+})._handler;
+
 function context(
   existing: Record<string, unknown> | null = null,
-  legacyUsers: Record<string, unknown>[] = []
+  users: Array<Record<string, unknown>> = []
 ) {
-  const unique = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(existing);
   return {
     db: {
       query: vi.fn().mockReturnValue({
-        withIndex: vi.fn().mockReturnValue({ unique }),
-        collect: vi.fn().mockResolvedValue(legacyUsers),
+        withIndex: vi.fn().mockReturnValue({ unique: vi.fn().mockResolvedValue(existing) }),
+        collect: vi.fn().mockResolvedValue(users),
       }),
-      patch: vi.fn(),
       insert: vi.fn().mockResolvedValue('new_user'),
+      patch: vi.fn(),
+      replace: vi.fn(),
     },
   };
 }
 
-describe('Clerk webhook user synchronization', () => {
-  it('does not link or create a user before their primary email is verified', async () => {
-    const ctx = context({ _id: 'legacy_admin', role: 'admin' });
-    expect(await handler(ctx, { id: 'clerk_user', email: 'test@example.com', emailVerified: false })).toBeNull();
-    expect(ctx.db.patch).not.toHaveBeenCalled();
+describe('Clerk user synchronization', () => {
+  it('reuses an existing local identity bridge', async () => {
+    const ctx = context({ _id: 'local_user', externalId: 'clerk_user' });
+
+    expect(await handler(ctx, { id: 'clerk_user' })).toBe('local_user');
     expect(ctx.db.insert).not.toHaveBeenCalled();
   });
 
-  it('links a verified email and preserves a legacy admin without role metadata', async () => {
-    const ctx = context({ _id: 'legacy_admin', permissions: ['admin.access', 'custom.permission'] });
-    expect(await handler(ctx, { id: 'clerk_user', email: 'TEST@example.com', emailVerified: true })).toBe('legacy_admin');
-    expect(ctx.db.patch).toHaveBeenCalledWith('legacy_admin', expect.objectContaining({
-      email: 'test@example.com', externalId: 'clerk_user', role: 'admin',
-      permissions: expect.arrayContaining(['admin.access', 'custom.permission']),
-    }));
-    expect(ctx.db.insert).not.toHaveBeenCalled();
+  it('creates an identity bridge from the Clerk user ID', async () => {
+    const ctx = context();
+
+    expect(await handler(ctx, { id: 'clerk_user' })).toBe('new_user');
+    expect(ctx.db.insert).toHaveBeenCalledWith('users', { externalId: 'clerk_user' });
   });
 
-  it('links a mixed-case legacy email instead of inserting a duplicate', async () => {
-    const legacyUser = { _id: 'legacy_user', email: 'Test@Example.com', permissions: [] };
+  it('links legacy users without deleting their application data', async () => {
+    const legacyUser = { _id: 'legacy_user', email: 'casey@example.com' };
     const ctx = context(null, [legacyUser]);
 
-    expect(await handler(ctx, { id: 'clerk_user', email: 'test@example.com', emailVerified: true })).toBe(
-      'legacy_user'
-    );
-    expect(ctx.db.patch).toHaveBeenCalledWith(
-      'legacy_user',
-      expect.objectContaining({ email: 'test@example.com', externalId: 'clerk_user' })
-    );
-    expect(ctx.db.insert).not.toHaveBeenCalled();
+    const result = await migrationHandler(ctx, {
+      links: [{ userId: legacyUser._id, clerkUserId: 'clerk_user' }],
+      cleanupLegacyFields: false,
+    });
+
+    expect(ctx.db.patch).toHaveBeenCalledWith(legacyUser._id, {
+      externalId: 'clerk_user',
+    });
+    expect(ctx.db.replace).not.toHaveBeenCalled();
+    expect(result).toEqual({ linkedCount: 1, cleanedCount: 0 });
   });
 
-  it('rejects overwriting another Clerk identity by email', async () => {
-    const ctx = context({ _id: 'legacy_user', externalId: 'other_clerk_user' });
-    await expect(handler(ctx, { id: 'clerk_user', email: 'test@example.com', emailVerified: true })).rejects.toThrow('already linked');
+  it('leaves unresolved legacy users for a later migration pass', async () => {
+    const legacyUser = { _id: 'legacy_user', email: 'missing@example.com' };
+    const ctx = context(null, [legacyUser]);
+
+    const result = await migrationHandler(ctx, {
+      links: [],
+      cleanupLegacyFields: false,
+    });
+
     expect(ctx.db.patch).not.toHaveBeenCalled();
+    expect(ctx.db.replace).not.toHaveBeenCalled();
+    expect(result).toEqual({ linkedCount: 0, cleanedCount: 0 });
   });
 
-  it('honors an explicit admin demotion', async () => {
-    const ctx = context({ _id: 'legacy_admin', role: 'admin', permissions: ['admin.access'] });
-    await handler(ctx, { id: 'clerk_user', email: 'test@example.com', emailVerified: true, role: 'user' });
-    expect(ctx.db.patch.mock.calls[0][1].permissions).not.toContain('admin.access');
-    expect(ctx.db.patch.mock.calls[0][1].role).toBe('user');
+  it('removes legacy profile fields only during explicit cleanup', async () => {
+    const users = [
+      { _id: 'user_one', externalId: 'clerk_one', email: 'one@example.com' },
+      { _id: 'user_two', externalId: 'clerk_two', email: 'two@example.com' },
+    ];
+    const ctx = context(null, users);
+
+    const result = await migrationHandler(ctx, {
+      links: [],
+      cleanupLegacyFields: true,
+    });
+
+    expect(ctx.db.replace).toHaveBeenNthCalledWith(1, 'user_one', {
+      externalId: 'clerk_one',
+    });
+    expect(ctx.db.replace).toHaveBeenNthCalledWith(2, 'user_two', {
+      externalId: 'clerk_two',
+    });
+    expect(result).toEqual({ linkedCount: 0, cleanedCount: 2 });
   });
 });

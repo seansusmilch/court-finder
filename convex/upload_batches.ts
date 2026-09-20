@@ -248,17 +248,17 @@ export const getTileBatchDetails = query({
       .withIndex('by_tile', (q) => q.eq('tileId', tile._id))
       .collect();
 
-    // Enrich feedback with user emails
+    // Enrich feedback with Clerk user IDs without duplicating Clerk profile data.
     const uniqueUserIds = Array.from(
       new Set(feedbacks.map((f) => f.userId as Id<'users'>))
     );
     const userDocs = await Promise.all(
       uniqueUserIds.map((id) => ctx.db.get(id))
     );
-    const userIdToEmail = new Map(
+    const userIdToClerkId = new Map(
       userDocs
         .filter((u): u is NonNullable<typeof u> => Boolean(u))
-        .map((u) => [u._id, u.email])
+        .map((u) => [u._id, u.externalId])
     );
 
     const imageUrl: string = await ctx.runQuery(
@@ -273,7 +273,7 @@ export const getTileBatchDetails = query({
         .filter((f) => f.predictionId === prediction._id)
         .map((f) => ({
           ...f,
-          userEmail: userIdToEmail.get(f.userId as Id<'users'>) ?? null,
+          userClerkId: userIdToClerkId.get(f.userId as Id<'users'>) ?? null,
         }));
       return {
         prediction,

@@ -52,30 +52,9 @@ http.route({
     if (evt.type === 'user.created' || evt.type === 'user.updated') {
       const data = evt.data as {
         id: string;
-        email_addresses?: Array<{
-          id?: string;
-          email_address: string;
-          verification?: { status?: string };
-        }>;
-        primary_email_address_id?: string | null;
-        first_name?: string | null;
-        last_name?: string | null;
-        public_metadata?: { role?: 'user' | 'admin' };
       };
-
-      const primaryEmail = data.email_addresses?.find(
-        (emailAddress) => emailAddress.id === data.primary_email_address_id
-      );
-      const selectedEmail = primaryEmail;
       const userId = await ctx.runMutation(internal.users.upsertFromClerk, {
         id: data.id,
-        email: selectedEmail?.email_address,
-        emailVerified: selectedEmail?.verification?.status === 'verified',
-        firstName: data.first_name ?? undefined,
-        lastName: data.last_name ?? undefined,
-        role: data.public_metadata?.role === 'admin' || data.public_metadata?.role === 'user'
-          ? data.public_metadata.role
-          : undefined,
       });
 
       console.log('clerk_webhook_user_upserted', {

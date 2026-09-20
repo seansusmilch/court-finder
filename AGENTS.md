@@ -1,7 +1,3 @@
-# AGENTS.md
-
-This file provides guidance to OpenCode when working with code in this repository.
-
 ## Development Commands
 
 ### Essential Commands
@@ -33,7 +29,7 @@ This file provides guidance to OpenCode when working with code in this repositor
 - **Backend**: Convex functions in `convex/` with schema in `schema.ts`
 
 ### Database Schema
-The Convex database schema is defined in `convex/schema.ts`. Treat that file as the source of truth for table names, fields, validators, and indexes.
+The Convex database schema is defined in `convex/schema.ts`. Treat that file as the source of truth for table names, fields, validators, and indexes. This project is very greenfield, so migrations or data loss are acceptable when explicitly requested; otherwise preserve deployed data.
 
 ## External Integrations
 
@@ -46,10 +42,6 @@ The Convex database schema is defined in `convex/schema.ts`. Treat that file as 
 - ML inference for court detection
 - Training data upload
 - Model version management
-
-### Environment Variables
-- `MAPBOX_API_KEY` - Mapbox API access
-- `ROBOFLOW_API_KEY` - Roboflow API access
 
 ## Build Configuration
 
@@ -69,12 +61,11 @@ The Convex database schema is defined in `convex/schema.ts`. Treat that file as 
 ### Bun Usage
 - Always use `bun` instead of npm/yarn/pnpm
 - Bun automatically loads `.env` files
-- Use `bun test` for testing (when tests are added)
+- Use `bun run test` for testing
 
 ### Logging Requirements
 Every log must include structured context:
 - Timing information (startTs, durationMs)
-- Authentication context (userId, permissions)
 - IDs for all entities (tileId, scanId, etc.)
 - Progress and completion metrics
 
@@ -85,7 +76,6 @@ Every log must include structured context:
 
 ### Code Style
 - React 19 doesn't need `import React`
-- Component files: `kebab-case.tsx`
 - Components: `PascalCase`
 - Hooks: `useCamelCase`
 - Database tables: `snake_case`

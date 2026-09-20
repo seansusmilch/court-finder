@@ -8,7 +8,12 @@ import {
   type GeoJSONPointFeature,
 } from './lib/tiles';
 import { bboxOverlapMeetsThreshold, bboxIntersectionArea, type BBox } from './lib/bbox';
-import { COURT_VERIFICATION, BBOX_OVERLAP_THRESHOLD } from './lib/constants';
+import {
+  COURT_VERIFICATION,
+  BBOX_OVERLAP_THRESHOLD,
+  PERMISSIONS,
+  roleHasPermission,
+} from './lib/constants';
 import type { CourtStatus } from './lib/types';
 import { requireCurrentUser } from './lib/auth';
 
@@ -374,7 +379,7 @@ export const updateCourtStatus = mutation({
   },
   handler: async (ctx, args): Promise<Id<'courts'>> => {
     const user = await requireCurrentUser(ctx);
-    const isAdmin = user?.permissions?.includes('admin.access');
+    const isAdmin = roleHasPermission(user.role, PERMISSIONS.ADMIN.ACCESS);
 
     if (!isAdmin) {
       throw new Error('Insufficient permissions');
