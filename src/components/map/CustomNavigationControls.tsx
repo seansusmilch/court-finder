@@ -49,6 +49,8 @@ export function MapControlButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel ?? label}
+      title={ariaLabel ?? label}
+      type="button"
     >
       {renderIcon ? renderIcon(icon) : icon}
     </Button>
@@ -102,8 +104,7 @@ export function createDefaultButtons(
         });
         onLocateEnd?.();
       },
-      (error) => {
-        console.error('Error getting location:', error);
+      () => {
         toast.error('Could not get your location');
         onLocateEnd?.();
       }
@@ -121,7 +122,7 @@ export function createDefaultButtons(
   const getScanButtonLabel = () => {
     if (!isScanning || !scanProgress) return 'Scan this area';
     const { totalTiles, tilesProcessed } = scanProgress;
-    return `${tilesProcessed}/${totalTiles}`;
+    return `Scanning area: ${tilesProcessed} of ${totalTiles} tiles`;
   };
 
   const getScanButtonIcon = () => {
@@ -139,7 +140,7 @@ export function createDefaultButtons(
       disabled: isScanning,
       show: false,
       order: 1,
-      className: 'bg-orange-500 border-orange-500 hover:bg-orange-600 text-white',
+      className: 'border-primary bg-primary text-primary-foreground hover:bg-primary/90',
       renderIcon: (icon) => {
         if (!isScanning || !scanProgress || scanProgress.totalTiles === 0) {
           return <span className={isScanning ? 'animate-scan-spin' : ''}>{icon}</span>;
@@ -271,6 +272,8 @@ export function CustomNavigationControls({
   return (
     <div
       className={cn(layoutStyles[layout], 'no-zoom', className)}
+      role="group"
+      aria-label="Map controls"
       style={Object.keys(positionStyle).length > 0 ? positionStyle : undefined}
     >
       {buttons.map((button) => (

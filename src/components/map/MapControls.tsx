@@ -106,7 +106,7 @@ function ControlsBody({ sections }: { sections: MapSectionConfig[] }) {
   const orderedSections = sortSections(visibleSections);
 
   return (
-    <div className='flex flex-col gap-6 pb-4'>
+    <div className='flex flex-col gap-5 pb-1'>
       {orderedSections.map((section) => (
         <section key={section.id} className={section.className}>
           {section.renderContent()}
@@ -127,11 +127,9 @@ export function MapControls({
   // Use custom sections or fall back to defaults
   const sections = customSections ?? createDefaultSections(settings);
 
-  const { scan } = settings;
-
   const controlsCard = (
-    <Card className='bg-background/90 backdrop-blur shadow-sm w-80 max-w-[92vw] no-zoom'>
-      <CardContent>
+    <Card className='w-80 max-w-[92vw] overflow-hidden rounded-xl border-border/70 bg-card/95 shadow-lg backdrop-blur no-zoom transition-none hover:translate-y-0 hover:shadow-lg'>
+      <CardContent className='max-h-[calc(100dvh-7rem)] overflow-y-auto px-4 py-4'>
         <ControlsBody sections={sections} />
       </CardContent>
     </Card>
@@ -140,7 +138,7 @@ export function MapControls({
   return (
     <div className={cn(className)}>
       {/* Desktop/tablet: show fixed card above zoom controls */}
-      <div className='hidden md:block absolute bottom-[22rem] right-4 z-50 pointer-events-auto no-zoom'>
+      <div className='pointer-events-auto absolute right-4 top-4 z-50 hidden no-zoom md:block'>
         {controlsCard}
       </div>
 
@@ -157,7 +155,7 @@ export function MapControls({
           isLocating={settings.locate?.isLocating}
           onLocateStart={settings.locate?.onLocateStart}
           onLocateEnd={settings.locate?.onLocateEnd}
-          className='fixed bottom-24 right-4 pointer-events-auto'
+          className='pointer-events-auto fixed bottom-4 right-4'
         />
       </div>
 
@@ -166,7 +164,7 @@ export function MapControls({
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <CustomNavigationControls
             mapRef={mapRef}
-            showSettings={!!settings.scan}
+            showSettings
             showScan={!!settings.scan}
             showLocate
             showCompass
@@ -177,18 +175,18 @@ export function MapControls({
             onLocateStart={settings.locate?.onLocateStart}
             onLocateEnd={settings.locate?.onLocateEnd}
             onSettingsClick={() => setDrawerOpen(true)}
-            className='fixed bottom-24 right-4 pointer-events-auto'
+            className='pointer-events-auto fixed bottom-[5.5rem] right-4'
           />
-          <DrawerContent className='h-[75vh] no-zoom'>
-            <DrawerHeader className='px-6 pt-6 pb-4 border-b text-left'>
-              <DrawerTitle className='font-display text-xl font-bold tracking-tight'>
+          <DrawerContent className='h-[min(75vh,42rem)] rounded-t-2xl no-zoom'>
+            <DrawerHeader className='border-b border-border/70 px-5 pb-4 pt-5 text-left'>
+              <DrawerTitle className='font-display text-xl font-semibold tracking-tight'>
                 Map Settings
               </DrawerTitle>
               <DrawerDescription>
-                Customize your view
+                Adjust filters and map context
               </DrawerDescription>
             </DrawerHeader>
-            <div className='px-6 pt-6 overflow-y-auto'>
+            <div className='overflow-y-auto px-5 pb-8 pt-5'>
               <ControlsBody sections={sections} />
             </div>
           </DrawerContent>

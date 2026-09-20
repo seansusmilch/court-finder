@@ -1,8 +1,19 @@
 import { cn } from '@/lib/utils';
 import { COURT_CLASS_VISUALS } from '@/lib/constants';
+import type { LucideIcon } from 'lucide-react';
+import { Activity, Circle, CircleDot, Diamond, Footprints } from 'lucide-react';
+
+const COURT_TYPE_ICONS: Record<string, LucideIcon> = {
+  'basketball-court': CircleDot,
+  'tennis-court': Circle,
+  'soccer-ball-field': CircleDot,
+  'baseball-diamond': Diamond,
+  'ground-track-field': Footprints,
+};
 
 const COURT_TYPES = Object.entries(COURT_CLASS_VISUALS).map(([key, value]) => ({
   key,
+  icon: COURT_TYPE_ICONS[key] ?? Activity,
   ...value,
 }));
 
@@ -20,40 +31,50 @@ export function CourtTypePills({
   return (
     <div
       className={cn(
-        'fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-30 w-full max-w-md no-zoom md:top-[8rem]',
+        'fixed top-[4.5rem] left-1/2 z-30 w-full max-w-md -translate-x-1/2 no-zoom md:top-[8rem]',
         className
       )}
     >
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide pl-[5%] pr-[5%] md:pl-0 md:pr-0">
+      <div
+        className="flex items-center gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide md:px-0"
+        role="group"
+        aria-label="Filter map by facility type"
+      >
         {/* All Courts option */}
         <button
+          type="button"
           onClick={() => onTypeChange(null)}
+          aria-pressed={selectedType === null}
           className={cn(
-            'flex-shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold transition-all border',
+            'inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             selectedType === null
-              ? 'border-primary/30 bg-primary text-primary-foreground shadow-sm'
-              : 'border-border bg-muted text-muted-foreground hover:bg-muted/80'
+              ? 'border-foreground bg-foreground text-background shadow-sm'
+              : 'border-border/70 bg-background/95 text-foreground shadow-sm hover:bg-muted'
           )}
         >
-          <span>All Courts</span>
+          <span>All courts</span>
         </button>
 
         {/* Court type pills */}
         {COURT_TYPES.map((type) => {
           const isSelected = selectedType === type.key;
+          const Icon = type.icon;
+          const label = type.displayName.toLowerCase();
           return (
             <button
+              type="button"
               key={type.key}
               onClick={() => onTypeChange(isSelected ? null : type.key)}
+              aria-pressed={isSelected}
               className={cn(
-                'flex-shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold transition-all border',
+                'inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 isSelected
-                  ? `${type.borderClass} ${type.bgClass} text-white shadow-sm`
-                  : 'border-border bg-muted text-muted-foreground hover:bg-muted/80'
+                  ? 'border-foreground bg-foreground text-background shadow-sm'
+                  : 'border-border/70 bg-background/95 text-foreground shadow-sm hover:bg-muted'
               )}
             >
-              <span className="text-base">{type.emoji}</span>
-              <span>{type.displayName}</span>
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{label}</span>
             </button>
           );
         })}

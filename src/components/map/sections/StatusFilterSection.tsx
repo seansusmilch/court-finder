@@ -19,8 +19,8 @@ export function StatusFilterSection({
     <div className={cn('flex items-center justify-between', className)}>
       <div className='flex items-center gap-2'>
         <ShieldCheck className='h-4 w-4 text-muted-foreground' />
-        <Label htmlFor='verified-only' className='text-sm font-medium cursor-pointer'>
-          Verified Only
+        <Label htmlFor='verified-only' className='cursor-pointer text-sm font-medium'>
+          Verified only
         </Label>
       </div>
       <Switch

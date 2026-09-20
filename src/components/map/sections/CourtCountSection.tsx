@@ -1,4 +1,4 @@
-import { MapPin, SlidersHorizontal } from 'lucide-react';
+import { AlertCircle, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MapSectionConfig } from '../shared/types';
 
@@ -18,20 +18,20 @@ export function CourtCountSection({
   return (
     <div className={cn('space-y-3', className)}>
       {/* Court count stat - prominent */}
-      <div className='flex items-center justify-between rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 p-4 border border-primary/20'>
+      <div className='flex items-center justify-between rounded-xl border border-border/70 bg-muted/35 p-3.5'>
         <div>
-          <p className='text-xs font-medium text-muted-foreground uppercase tracking-wide'>
+          <p className='font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
             Courts in view
           </p>
           <p className={cn(
-            'font-display text-2xl font-bold tracking-tight mt-0.5',
+            'mt-1 font-display text-3xl font-semibold tracking-tight',
             isZoomSufficient ? 'text-foreground' : 'text-muted-foreground/50'
           )}>
             {courtCount.toLocaleString()}
           </p>
         </div>
         <div className={cn(
-          'flex size-12 items-center justify-center rounded-full transition-colors',
+          'flex size-10 items-center justify-center rounded-lg transition-colors',
           isZoomSufficient
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted text-muted-foreground'
@@ -42,8 +42,8 @@ export function CourtCountSection({
 
       {showZoomWarning && !isZoomSufficient && (
         <div className='rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 flex items-start gap-2'>
-          <SlidersHorizontal className='h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0' />
-          <p className='text-xs text-amber-700 dark:text-amber-400'>
+          <AlertCircle className='mt-0.5 size-4 flex-shrink-0 text-amber-600 dark:text-amber-400' />
+          <p className='text-xs leading-5 text-amber-700 dark:text-amber-300'>
             Zoom in to reveal court pins
           </p>
         </div>

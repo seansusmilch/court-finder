@@ -1,6 +1,39 @@
-/* Hide default Mapbox controls */
+/* Keep Mapbox attribution visible while keeping it out of the control rail. */
 .mapboxgl-ctrl-bottom-right {
-  display: none !important;
+  bottom: 0.75rem;
+  right: 5rem;
+}
+
+.mapboxgl-ctrl-attrib {
+  background: rgba(11, 11, 11, 0.78) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.mapboxgl-ctrl-attrib a {
+  color: #fff;
+}
+
+@media (max-width: 767px) {
+  .mapboxgl-ctrl-bottom-right {
+    bottom: 4.25rem;
+    right: 0.5rem;
+  }
+}
+
+.mapboxgl-ctrl-scale {
+  background: rgba(11, 11, 11, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-top: 0 !important;
+  color: #fff !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 2px 6px 3px;
 }
 
 /* Fix popup styles */
@@ -8,6 +41,10 @@
   padding: 0;
   background-color: transparent;
   box-shadow: none;
+}
+
+.mapboxgl-popup {
+  max-width: min(22rem, calc(100vw - 2rem)) !important;
 }
 
 .mapboxgl-popup-tip {

@@ -7,6 +7,7 @@ import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import { Loader2, MapPin, SearchX, ZoomIn } from 'lucide-react';
 import { useLocalStorage, useIsMobile } from '@/hooks';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
@@ -17,7 +18,6 @@ import {
   SCAN_INITIATION_RATE_LIMIT,
 } from '@backend/lib/constants';
 import { toast } from 'sonner';
-import { CourtPopup } from '@/components/map/CourtPopup';
 import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
 import MapControls from '@/components/map/MapControls';
@@ -403,7 +403,11 @@ function MapPage() {
   ]);
 
   return (
-    <div className='h-[100vh] w-full relative'>
+    <div
+      className='map-surface relative h-full min-h-0 w-full overflow-hidden'
+      role='region'
+      aria-label='Map of possible sports facilities'
+    >
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_API_KEY}
@@ -430,11 +434,13 @@ function MapPage() {
         }}
       >
         <ScaleControl />
-        {mapLoaded && viewState.zoom >= PINS_VISIBLE_FROM_ZOOM && viewState.zoom <= CLUSTER_MAX_ZOOM && (
+        {mapLoaded &&
+          viewState.zoom >= PINS_VISIBLE_FROM_ZOOM &&
+          viewState.zoom <= CLUSTER_MAX_ZOOM && (
             <CourtClusters data={geojson} mapLoaded={mapLoaded} />
           )}
 
-        {/* Render individual emoji markers when sufficiently zoomed-in to avoid clutter */}
+        {/* Render individual facility markers when sufficiently zoomed-in to avoid clutter */}
         {viewState.zoom > CLUSTER_MAX_ZOOM &&
           geojson.features.map((f, idx) => {
             const geometry = f.geometry as {
@@ -459,6 +465,38 @@ function MapPage() {
             );
           })}
       </Map>
+
+      <div
+        className='pointer-events-none absolute bottom-[5.5rem] left-4 z-30 md:bottom-14'
+        aria-live='polite'
+      >
+        <div className='flex min-h-10 items-center gap-2 rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-sm text-white shadow-lg backdrop-blur-sm'>
+          {viewState.zoom < PINS_VISIBLE_FROM_ZOOM ? (
+            <>
+              <ZoomIn className='size-4 text-primary' aria-hidden />
+              <span>Zoom in to see possible facilities</span>
+            </>
+          ) : featureCollection === undefined ? (
+            <>
+              <Loader2 className='size-4 animate-spin text-primary' aria-hidden />
+              <span>Searching this area…</span>
+            </>
+          ) : geojson.features.length > 0 ? (
+            <>
+              <MapPin className='size-4 text-primary' aria-hidden />
+              <span>
+                {geojson.features.length.toLocaleString()} possible{' '}
+                {geojson.features.length === 1 ? 'facility' : 'facilities'} in view
+              </span>
+            </>
+          ) : (
+            <>
+              <SearchX className='size-4 text-white/70' aria-hidden />
+              <span>No possible facilities in this view</span>
+            </>
+          )}
+        </div>
+      </div>
 
       {isMobile && selectedPin && (
         <CourtDetailDrawer

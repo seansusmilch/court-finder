@@ -456,3 +456,41 @@
 .no-touch-actions {
   touch-action: none;
 }
+
+/* Map surface tokens. Keep the map legible over imagery and aligned with the
+   Field Guide language without changing the typography of neighboring routes. */
+.map-surface {
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
+.map-surface .font-display {
+  font-family: var(--font-display);
+}
+
+.map-surface ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.map-surface ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.map-surface ::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--foreground) 24%, transparent);
+  border-radius: var(--radius-full);
+}
+
+.map-surface ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--foreground) 40%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scan,
+  .animate-scan-spin,
+  .animate-locating {
+    animation: none;
+  }
+}

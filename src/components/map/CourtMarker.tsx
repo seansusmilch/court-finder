@@ -1,4 +1,5 @@
 import { Marker } from 'react-map-gl/mapbox';
+import { MapPin } from 'lucide-react';
 import { getVisualForClass } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { CourtFeatureProperties } from '@/lib/types';
@@ -22,7 +23,7 @@ export function CourtMarker({
   onClick,
 }: CourtMarkerProps) {
   const courtClass = properties.class ? String(properties.class) : '';
-  const { emoji, bgClass, colorLight, colorDark, colorLightMuted, colorDarkMuted } =
+  const { colorLight, colorDark, colorLightMuted, colorDarkMuted } =
     getVisualForClass(courtClass);
   const { theme, systemTheme } = useTheme();
   const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
@@ -55,25 +56,31 @@ export function CourtMarker({
       }}
       style={{ cursor: 'pointer' }}
     >
-      <div className='flex flex-col items-center transition-transform duration-200 hover:scale-110'>
-        <div
+      <button
+        type='button'
+        onClick={(event) => {
+          event.stopPropagation();
+          onClick(longitude, latitude, properties);
+        }}
+        aria-label={`${isVerified ? 'Verified' : 'Possible'} ${courtClass || 'sports facility'} at ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`}
+        className='group relative flex size-11 items-center justify-center rounded-full outline-none transition-transform duration-200 hover:scale-110 focus-visible:ring-4 focus-visible:ring-primary/50'
+      >
+        <MapPin
           className={cn(
-            'w-10 h-10 flex items-center justify-center rounded-full text-white transition-shadow duration-200',
-            isVerified ? 'shadow-lg hover:shadow-xl' : ''
+            'size-11 drop-shadow-md transition-[filter] duration-200',
+            isVerified ? 'drop-shadow-lg' : ''
           )}
-          style={{ backgroundColor: bgColor }}
-        >
-          <span className='text-[20px]' aria-hidden>
-            {emoji}
-          </span>
-        </div>
-        {/* Arrow pointing down */}
-        <div
-          className='w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent -mt-1'
-          style={{ borderTopColor: arrowColor }}
+          fill={bgColor}
+          stroke='white'
+          strokeWidth={2.25}
           aria-hidden
         />
-      </div>
+        <span
+          className='absolute bottom-[10px] size-2 rounded-full bg-white/90'
+          style={{ backgroundColor: arrowColor }}
+          aria-hidden
+        />
+      </button>
     </Marker>
   );
 }

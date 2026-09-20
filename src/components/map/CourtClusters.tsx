@@ -38,12 +38,14 @@ export function CourtClusters({ id = 'courts', data, mapLoaded = false }: CourtC
           'circle-color': [
             'step',
             ['get', 'point_count'],
-            '#51bbd6',
+            '#2F6FED',
             100,
-            '#f1f075',
+            '#F26B3A',
             750,
-            '#f28cb1',
+            '#D95528',
           ],
+          'circle-stroke-color': '#FFFFFF',
+          'circle-stroke-width': 2,
           'circle-radius': [
             'step',
             ['get', 'point_count'],

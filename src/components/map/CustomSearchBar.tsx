@@ -21,6 +21,7 @@ export function CustomSearchBar({
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchBoxSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const searchBoxCore = useSearchBoxCore({ accessToken });
@@ -34,9 +35,9 @@ export function CustomSearchBar({
   // Handle search input
   const handleSearch = useCallback(
     async (value: string) => {
-      console.log('handleSearch called with:', value);
       setQuery(value);
       setSelectedIndex(0);
+      setSearchError(null);
 
       if (value.length < 2) {
         setSuggestions([]);
@@ -50,12 +51,11 @@ export function CustomSearchBar({
           sessionToken,
           limit: 8,
         });
-        console.log('Search response:', response);
         setSuggestions(response.suggestions);
         setOpen(true);
-      } catch (error) {
-        console.error('Search error:', error);
+      } catch {
         setSuggestions([]);
+        setSearchError('Search is unavailable right now. Try again.');
       } finally {
         setIsLoading(false);
       }
@@ -66,12 +66,10 @@ export function CustomSearchBar({
   // Handle selection - retrieve coordinates and pan map
   const handleSelect = useCallback(
     async (suggestion: SearchBoxSuggestion) => {
-      console.log('handleSelect called with:', suggestion);
       try {
         const response = await searchBoxCore.retrieve(suggestion, {
           sessionToken,
         });
-        console.log('Retrieve response:', response);
         const feature = response.features[0];
         const coordinates = feature.properties.coordinates;
 
@@ -87,8 +85,8 @@ export function CustomSearchBar({
         setQuery('');
         setSuggestions([]);
         setOpen(false);
-      } catch (error) {
-        console.error('Retrieve error:', error);
+      } catch {
+        setSearchError('We couldn’t open that location. Try another result.');
       }
     },
     [searchBoxCore, sessionToken, mapRef]
@@ -153,23 +151,33 @@ export function CustomSearchBar({
 
   return (
     <div ref={commandRef} className={cn('relative w-full', className)}>
-      <Command className="rounded-full border border-border bg-background/95 backdrop-blur-md shadow-md hover:shadow-lg transition-shadow">
-        <div className="flex h-12 items-center px-4">
-          <Search className="h-5 w-5 shrink-0 opacity-50 mr-3" />
+      <Command className="rounded-xl border border-border/70 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-[border-color,box-shadow] focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/30 dark:bg-card">
+        <div className="flex min-h-[52px] items-center px-4">
+          <Search className="mr-3 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
           <Command.Input
             ref={inputRef}
             value={query}
             onValueChange={handleSearch}
             onKeyDown={handleKeyDown}
-            onFocus={() => {
-              console.log('Input focused');
-              setOpen(true);
-            }}
-            placeholder="Search locations..."
-            className="flex h-11 w-full rounded-md bg-transparent py-3 text-base outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            onFocus={() => setOpen(true)}
+            aria-label="Search locations"
+            aria-controls="map-search-suggestions"
+            aria-expanded={open && suggestions.length > 0}
+            aria-activedescendant={
+              open && suggestions.length > 0
+                ? `map-search-suggestion-${selectedIndex}`
+                : undefined
+            }
+            aria-autocomplete="list"
+            aria-busy={isLoading}
+            placeholder="Search locations"
+            className="flex h-12 w-full rounded-md bg-transparent py-3 text-base outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
           />
           {isLoading && (
-            <Loader2 className="h-5 w-5 shrink-0 opacity-50 animate-spin ml-3" />
+            <Loader2
+              className="ml-3 h-5 w-5 shrink-0 animate-spin text-secondary"
+              aria-hidden="true"
+            />
           )}
         </div>
       </Command>
@@ -177,35 +185,47 @@ export function CustomSearchBar({
       {/* Suggestions dropdown - using plain divs instead of cmdk components */}
       {(open || isLoading) && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 z-[9999] bg-popover text-popover-foreground rounded-md shadow-lg overflow-hidden no-zoom"
+          className="absolute left-0 right-0 top-full z-[9999] mt-2 overflow-hidden rounded-xl border border-border/70 bg-popover text-popover-foreground shadow-[0_4px_16px_rgba(0,0,0,0.16)] no-zoom"
         >
           {isLoading && (
-            <div className="py-6 text-center text-sm text-muted-foreground">
-              Loading...
+            <div className="py-6 text-center text-sm text-muted-foreground" role="status">
+              Searching...
             </div>
           )}
-          {!isLoading && suggestions.length === 0 && query.length >= 2 && (
+          {!isLoading && searchError && (
+            <div className="px-4 py-4 text-sm text-destructive" role="alert">
+              {searchError}
+            </div>
+          )}
+          {!isLoading && !searchError && suggestions.length === 0 && query.length >= 2 && (
             <div className="py-6 text-center text-base text-muted-foreground">
               No locations found
             </div>
           )}
           {!isLoading && suggestions.length > 0 && (
             <>
-              <div className="px-4 py-2.5 text-sm font-medium text-muted-foreground">
-                Suggestions
+              <div className="px-4 pb-2 pt-3 text-sm font-medium text-muted-foreground">
+                Search suggestions
               </div>
               <div
+                id="map-search-suggestions"
                 ref={listRef}
-                className="max-h-[300px] overflow-y-auto"
+                role="listbox"
+                aria-label="Location suggestions"
+                className="max-h-[300px] overflow-y-auto px-1 pb-1"
               >
                 {suggestions.map((suggestion, index) => (
-                  <div
+                  <button
+                    type="button"
                     key={suggestion.mapbox_id}
+                    id={`map-search-suggestion-${index}`}
                     onClick={() => handleSelect(suggestion)}
+                    role="option"
+                    aria-selected={index === selectedIndex}
                     className={cn(
-                      'relative flex cursor-pointer items-center gap-3 px-4 py-3 text-base outline-hidden select-none',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      index === selectedIndex && 'bg-accent text-accent-foreground'
+                      'relative flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-base outline-hidden select-none transition-colors',
+                      'hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary',
+                      index === selectedIndex && 'bg-secondary/10 text-foreground'
                     )}
                   >
                     {getSuggestionIcon(suggestion)}
@@ -219,7 +239,7 @@ export function CustomSearchBar({
                         </span>
                       )}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </>

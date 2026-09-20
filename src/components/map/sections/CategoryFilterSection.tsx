@@ -37,17 +37,19 @@ export function CategoryFilterSection({
         </div>
         <div className='flex gap-1.5'>
           <button
+            type='button'
             onClick={() => onCategoriesChange(categories)}
             disabled={categories.length === 0 || allSelected}
-            className='text-xs font-medium text-primary hover:text-primary/80 disabled:text-muted-foreground disabled:opacity-50 transition-colors px-2 py-1'
+            className='min-h-11 px-2 text-xs font-medium text-primary transition-colors hover:text-primary/80 disabled:text-muted-foreground disabled:opacity-50'
           >
             All
           </button>
           <span className='text-muted-foreground/40'>•</span>
           <button
+            type='button'
             onClick={() => onCategoriesChange([])}
             disabled={enabledCategories.length === 0}
-            className='text-xs font-medium text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors px-2 py-1'
+            className='min-h-11 px-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50'
           >
             Clear
           </button>
@@ -60,16 +62,22 @@ export function CategoryFilterSection({
           return (
             <button
               key={cat}
+              type='button'
               onClick={() => toggleCategory(cat)}
+              aria-pressed={isEnabled}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-all',
+                'inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-medium transition-colors',
                 'border',
                 isEnabled
                   ? 'border-primary/30 bg-primary text-primary-foreground shadow-sm'
                   : 'border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:border-border'
               )}
             >
-              <span className='text-base'>{visual.emoji}</span>
+              <span
+                aria-hidden
+                className='size-2.5 rounded-full ring-2 ring-background/60'
+                style={{ backgroundColor: visual.colorLight }}
+              />
               <span>{visual.displayName}</span>
               {isEnabled && (
                 <X className='h-3.5 w-3.5 opacity-70' />
