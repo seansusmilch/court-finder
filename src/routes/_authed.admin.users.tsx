@@ -1,6 +1,6 @@
-import { Component, useMemo, useState } from 'react';
+import { Component, useEffect, useMemo, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useConvexAuth, useMutation, useQuery } from 'convex/react';
+import { useAction, useConvexAuth, useMutation, useQuery } from 'convex/react';
 import {
   ArrowLeft,
   ArrowDown,
@@ -60,6 +60,20 @@ type UserScanLimit = {
   remaining: number;
   resetAtMs: number | null;
 };
+
+type ResolvedUserIdentity = {
+  userId: Id<'users'>;
+  name: string | null;
+  email: string | null;
+  resolved: boolean;
+};
+
+type IdentityResolutionStatus =
+  | 'idle'
+  | 'loading'
+  | 'success'
+  | 'partial'
+  | 'error';
 
 const resetTimeFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
@@ -513,6 +527,70 @@ function UsersPageContent() {
     type: 'success' | 'error';
     text: string;
   } | null>(null);
+  const resolveUserIdentities = useAction(api.clerk.resolveUserIdentities);
+  const [identityDetails, setIdentityDetails] = useState<
+    Record<string, ResolvedUserIdentity>
+  >({});
+  const [identityStatus, setIdentityStatus] =
+    useState<IdentityResolutionStatus>('idle');
+  const [identityRefreshKey, setIdentityRefreshKey] = useState(0);
+  const userCount = users?.length ?? 0;
+  const identityLookupKey =
+    users?.map((user) => `${user.userId}:${user.externalId ?? ''}`).join('|') ?? '';
+
+  useEffect(() => {
+    if (users === undefined) return;
+    if (userCount === 0) {
+      setIdentityStatus('success');
+      return;
+    }
+
+    let cancelled = false;
+    const startTs = Date.now();
+    setIdentityStatus('loading');
+
+    void resolveUserIdentities({})
+      .then(({ identities }) => {
+        if (cancelled) return;
+
+        setIdentityDetails(
+          Object.fromEntries(
+            identities.map((identity) => [String(identity.userId), identity])
+          )
+        );
+        setIdentityStatus(
+          identities.some((identity) => !identity.resolved)
+            ? 'partial'
+            : 'success'
+        );
+      })
+      .catch((error) => {
+        if (cancelled) return;
+
+        console.error('admin_clerk_identity_resolution_failed', {
+          startTs,
+          durationMs: Date.now() - startTs,
+          userCount,
+          error,
+        });
+        setIdentityStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [identityLookupKey, identityRefreshKey, resolveUserIdentities, userCount]);
+
+  const displayUsers = useMemo(
+    () =>
+      (users ?? []).map((user) => {
+        const identity = identityDetails[String(user.userId)];
+        return identity
+          ? { ...user, name: identity.name, email: identity.email }
+          : user;
+      }),
+    [identityDetails, users]
+  );
 
   const handleReset = async (user: UserScanLimit) => {
     const startTs = Date.now();
@@ -624,13 +702,54 @@ function UsersPageContent() {
       <Card>
         <CardHeader className='border-b'>
           <CardTitle>Accounts</CardTitle>
-          <CardDescription>
-            Resetting a limit gives the user a fresh five-scan window immediately.
-          </CardDescription>
+          <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <CardDescription>
+              Resetting a limit gives the user a fresh five-scan window immediately.
+            </CardDescription>
+            {identityStatus === 'loading' ? (
+              <span className='text-xs text-muted-foreground' role='status'>
+                Resolving Clerk email addresses…
+              </span>
+            ) : null}
+            {identityStatus === 'partial' ? (
+              <div
+                className='flex flex-wrap items-center gap-2 text-xs text-muted-foreground'
+                role='status'
+              >
+                <span>Some Clerk accounts could not be resolved.</span>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  className='min-h-11'
+                  onClick={() => setIdentityRefreshKey((key) => key + 1)}
+                >
+                  Retry lookup
+                </Button>
+              </div>
+            ) : null}
+            {identityStatus === 'error' ? (
+              <div
+                className='flex flex-wrap items-center gap-2 text-xs text-destructive'
+                role='alert'
+              >
+                <span>Clerk emails are unavailable; showing account IDs.</span>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  className='min-h-11'
+                  onClick={() => setIdentityRefreshKey((key) => key + 1)}
+                >
+                  Retry lookup
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className='pt-6'>
           <UserScanLimitsTable
-            data={users}
+            data={displayUsers}
             onReset={setPendingResetUser}
             resettingUserId={resettingUserId}
           />
