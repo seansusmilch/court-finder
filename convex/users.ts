@@ -33,6 +33,19 @@ export const listForClerkMigration = internalQuery({
   },
 });
 
+export const listForClerkIdentityResolution = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const users = await ctx.db.query('users').collect();
+    return users.map((user) => ({
+      userId: user._id,
+      externalId: user.externalId ?? null,
+      name: user.name ?? null,
+      email: user.email ?? null,
+    }));
+  },
+});
+
 export const applyClerkMigrationLinks = internalMutation({
   args: {
     links: v.array(

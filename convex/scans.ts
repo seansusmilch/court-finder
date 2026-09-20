@@ -1,5 +1,10 @@
 import { api, internal } from './_generated/api';
-import { internalQuery, internalMutation, query } from './_generated/server';
+import {
+  internalQuery,
+  internalMutation,
+  mutation,
+  query,
+} from './_generated/server';
 import { ConvexError, v } from 'convex/values';
 import { getCurrentUser, getCurrentUserId } from './lib/auth';
 import {
@@ -192,6 +197,116 @@ export const getScanInitiationLimitStatus = query({
       windowMs: SCAN_INITIATION_RATE_LIMIT.WINDOW_MS,
       resetAtMs: windowExpired ? null : resetAtMs,
       retryAfterMs: windowExpired ? 0 : Math.max(0, resetAtMs - now),
+    };
+  },
+});
+
+export const listUserScanLimits = query({
+  args: {},
+  handler: async (ctx) => {
+    const startTs = Date.now();
+    const admin = await getCurrentUser(ctx);
+    if (!admin || !roleHasPermission(admin.role, PERMISSIONS.ADMIN.ACCESS)) {
+      throw new Error('Unauthorized');
+    }
+
+    const [users, rateLimits] = await Promise.all([
+      ctx.db.query('users').collect(),
+      ctx.db.query('scan_rate_limits').collect(),
+    ]);
+    const rateLimitsByUserId = new Map(
+      rateLimits.map((rateLimit) => [rateLimit.userId, rateLimit])
+    );
+    const now = Date.now();
+
+    const result = users
+      .map((user) => {
+        const rateLimit = rateLimitsByUserId.get(user._id);
+        const resetAtMs = rateLimit
+          ? rateLimit.windowStartMs + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS
+          : null;
+        const windowExpired = resetAtMs !== null && now >= resetAtMs;
+        const count = windowExpired ? 0 : (rateLimit?.count ?? 0);
+
+        return {
+          userId: user._id,
+          externalId: user.externalId ?? null,
+          name: user.name ?? null,
+          email: user.email ?? null,
+          role: user.role ?? 'user',
+          createdAt: user.createdAt ?? user._creationTime,
+          limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+          count,
+          remaining: Math.max(0, SCAN_INITIATION_RATE_LIMIT.LIMIT - count),
+          resetAtMs: windowExpired ? null : resetAtMs,
+        };
+      })
+      .sort((a, b) => {
+        const aLabel = a.name ?? a.email ?? a.externalId ?? String(a.userId);
+        const bLabel = b.name ?? b.email ?? b.externalId ?? String(b.userId);
+        return aLabel.localeCompare(bLabel);
+      });
+
+    console.log('scan_rate_limits:list_complete', {
+      startTs,
+      durationMs: Date.now() - startTs,
+      adminUserId: admin._id,
+      userCount: result.length,
+      rateLimitCount: rateLimits.length,
+    });
+
+    return result;
+  },
+});
+
+export const resetUserScanLimit = mutation({
+  args: {
+    userId: v.id('users'),
+  },
+  handler: async (ctx, args) => {
+    const startTs = Date.now();
+    const admin = await getCurrentUser(ctx);
+    if (!admin || !roleHasPermission(admin.role, PERMISSIONS.ADMIN.ACCESS)) {
+      throw new Error('Unauthorized');
+    }
+
+    const targetUser = await ctx.db.get(args.userId);
+    if (!targetUser) {
+      throw new Error('User not found');
+    }
+
+    const existing = await ctx.db
+      .query('scan_rate_limits')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .first();
+    const now = Date.now();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        windowStartMs: now,
+        count: 0,
+      });
+    }
+
+    console.log('scan_rate_limit:admin_reset', {
+      startTs,
+      durationMs: Date.now() - startTs,
+      adminUserId: admin._id,
+      userId: args.userId,
+      rateLimitId: existing?._id ?? null,
+      previousCount: existing?.count ?? 0,
+      count: 0,
+      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+    });
+
+    return {
+      userId: args.userId,
+      count: 0,
+      limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+      remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT,
+      resetAtMs: existing
+        ? now + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS
+        : null,
     };
   },
 });
