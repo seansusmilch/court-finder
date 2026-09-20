@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 
+import SiteFooter from '@/components/site-footer';
+
 const LAST_UPDATED = 'September 20, 2026';
 
 export const Route = createFileRoute('/terms')({
@@ -284,6 +286,7 @@ function TermsPage() {
           </article>
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }
