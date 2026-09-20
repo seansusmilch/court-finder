@@ -66,36 +66,59 @@ export function TrainingFeedbackPage() {
   // Render error state if image metadata is missing
   if (!imageWidth || !imageHeight) {
     return (
-      <ErrorCard message='Image metadata (width/height) is missing for this inference. Cannot display.' />
+      <ErrorCard message='The satellite image metadata is incomplete, so this review cannot be displayed.' />
     );
   }
 
   // Render main feedback interface
   return (
-    <div className='h-full w-full flex flex-col'>
+    <div className='min-h-full w-full bg-muted/20'>
       <FeedbackHeader predictionsLeft={predictionsLeft} />
 
-      <div className='flex flex-col items-center justify-center p-4 flex-1 min-h-0'>
-        <ImageViewer
-          imageUrl={imageUrl}
-          imageWidth={imageWidth}
-          imageHeight={imageHeight}
-          bbox={{
-            x: prediction.x as number,
-            y: prediction.y as number,
-            width: prediction.width as number,
-            height: prediction.height as number,
-          }}
-          onLoadingChange={handleImageLoadingChange}
+      <div className='mx-auto grid w-full max-w-6xl items-start gap-6 px-4 pb-10 sm:px-6 md:px-8 md:pb-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)] lg:gap-8'>
+        <section className='min-w-0' aria-labelledby='feedback-evidence-heading'>
+          <div className='mb-3 flex items-end justify-between gap-4 px-1'>
+            <div>
+              <h2
+                id='feedback-evidence-heading'
+                className='text-sm font-semibold tracking-tight sm:text-base'
+              >
+                Satellite evidence
+              </h2>
+              <p className='mt-1 text-xs text-muted-foreground sm:text-sm'>
+                The outline marks the area the model classified.
+              </p>
+            </div>
+            <span className='hidden shrink-0 rounded-full border border-border/70 bg-card px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground sm:inline-flex'>
+              Drag · pinch · scroll
+            </span>
+          </div>
+
+          <ImageViewer
+            imageUrl={imageUrl}
+            imageWidth={imageWidth}
+            imageHeight={imageHeight}
+            bbox={{
+              x: prediction.x as number,
+              y: prediction.y as number,
+              width: prediction.width as number,
+              height: prediction.height as number,
+            }}
+            className='aspect-[4/3] min-h-[16rem] max-h-[62vh] rounded-2xl sm:min-h-0'
+            onLoadingChange={handleImageLoadingChange}
+          />
+          <p className='mt-3 px-1 text-xs leading-5 text-muted-foreground'>
+            Review the surrounding context before choosing an answer.
+          </p>
+        </section>
+
+        <FeedbackActions
+          displayName={displayName}
+          emoji={emoji}
+          onSubmit={handleFeedback}
+          disabled={isSubmitting || isActuallyLoading}
         />
       </div>
-
-      <FeedbackActions
-        displayName={displayName}
-        emoji={emoji}
-        onSubmit={handleFeedback}
-        disabled={isSubmitting || isActuallyLoading}
-      />
     </div>
   );
 }

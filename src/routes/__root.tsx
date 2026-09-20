@@ -60,7 +60,7 @@ function RootComponent() {
 
   // The map owns the viewport on every device. Keep the desktop header in the
   // layout, but let the map itself occupy the remaining height.
-  const hideHeaderRoutes = ['/map', '/training-feedback'];
+  const hideHeaderRoutes = ['/map', '/feedback', '/training-feedback'];
   const shouldHideHeader = isMobile && hideHeaderRoutes.includes(location.pathname);
   const noScrollRoutes = ['/map'];
   const isMapRoute = noScrollRoutes.includes(location.pathname);
