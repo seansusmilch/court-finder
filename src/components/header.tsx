@@ -17,7 +17,6 @@ export default function Header() {
   );
   const isLoginRoute = location.pathname === '/login';
   const visibleNavigationLinks = NAVIGATION_LINKS.filter(({ to }) => {
-    if (to === '/feedback') return isAuthenticated;
     if (to === '/admin') return hasAdminAccess === true;
     return true;
   });
