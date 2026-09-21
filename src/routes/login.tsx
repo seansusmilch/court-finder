@@ -7,32 +7,35 @@ export const Route = createFileRoute('/login')({
   component: AuthPage,
 });
 
+function getSafeRedirect(redirectTo?: string) {
+  if (!redirectTo) return '/';
+
+  try {
+    const url = new URL(redirectTo, window.location.origin);
+    if (url.origin !== window.location.origin) return '/';
+    return url.pathname + url.search + url.hash;
+  } catch (_) {
+    return '/';
+  }
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn } = useAuth();
   const { redirect: redirectTo } = Route.useSearch();
+  const safeRedirectTo = getSafeRedirect(redirectTo);
 
   useEffect(() => {
     if (!isLoaded) return;
 
     if (isSignedIn) {
-      let to: string = '/';
-      if (redirectTo && typeof redirectTo === 'string') {
-        try {
-          const url = new URL(redirectTo, window.location.origin);
-          if (url.origin === window.location.origin)
-            to = url.pathname + url.search + url.hash;
-        } catch (_) {
-          // ignore malformed redirect
-        }
-      }
-      navigate({ to });
+      navigate({ to: safeRedirectTo });
     }
-  }, [isLoaded, isSignedIn, navigate, redirectTo]);
+  }, [isLoaded, isSignedIn, navigate, safeRedirectTo]);
 
   return (
     <div className='flex min-h-[calc(100dvh-0px)] items-center justify-center p-4'>
-      <SignIn routing='hash' />
+      <SignIn routing='hash' forceRedirectUrl={safeRedirectTo} />
     </div>
   );
 }
