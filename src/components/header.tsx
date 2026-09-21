@@ -1,12 +1,27 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import { Show, UserButton } from '@clerk/react';
+import { useConvexAuth, useQuery } from 'convex/react';
 import { Settings, UserIcon } from 'lucide-react';
 
 import { ModeToggle } from './mode-toggle';
+import { api } from '@backend/_generated/api';
 import { NAVIGATION_LINKS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 
 export default function Header() {
+  const location = useLocation();
+  const { isAuthenticated } = useConvexAuth();
+  const hasAdminAccess = useQuery(
+    api.users.hasPermission,
+    isAuthenticated ? { permission: 'admin.access' } : 'skip'
+  );
+  const isLoginRoute = location.pathname === '/login';
+  const visibleNavigationLinks = NAVIGATION_LINKS.filter(({ to }) => {
+    if (to === '/feedback') return isAuthenticated;
+    if (to === '/admin') return hasAdminAccess === true;
+    return true;
+  });
+
   return (
     <header className='sticky top-0 z-50 border-b border-border/70 bg-background/95 no-zoom'>
       <div className='mx-auto grid min-h-16 w-full max-w-screen-2xl grid-cols-[1fr_auto] items-center gap-4 px-4 md:grid-cols-[1fr_auto_1fr] md:px-6 lg:px-8'>
@@ -33,14 +48,24 @@ export default function Header() {
           className='hidden items-center justify-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-1 md:flex'
           aria-label='Primary navigation'
         >
-          {NAVIGATION_LINKS.map(({ to, label }) => (
+          {visibleNavigationLinks.map(({ to, label }) => (
             <Link
               key={to}
               to={to}
-              activeProps={{ className: 'bg-background text-foreground shadow-sm after:opacity-100' }}
+              aria-label={
+                to === '/map'
+                  ? 'Find a facility'
+                  : to === '/feedback'
+                    ? 'Review possible facilities'
+                    : label
+              }
+              activeProps={{
+                'aria-current': 'page',
+                className: 'bg-background text-foreground shadow-sm after:opacity-100',
+              }}
               className='relative inline-flex min-h-12 items-center rounded-md px-4 text-sm font-medium text-muted-foreground outline-none transition-[background-color,color,box-shadow] after:absolute after:bottom-1.5 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:bg-background/70 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-secondary/60 focus-visible:ring-offset-0 motion-reduce:transition-none'
             >
-              {label}
+              {to === '/map' ? 'Explore' : to === '/feedback' ? 'Review' : label}
             </Link>
           ))}
         </nav>
@@ -60,16 +85,18 @@ export default function Header() {
               </UserButton>
             </div>
           </Show>
-          <Show when='signed-out'>
-            <Button
-              asChild
-              className='h-12 rounded-lg px-4 shadow-sm hover:scale-100 hover:shadow-sm active:scale-100 motion-reduce:transition-none'
-            >
-              <Link to='/login'>
-                <UserIcon className='mr-2 size-4' /> Sign in
-              </Link>
-            </Button>
-          </Show>
+          {!isLoginRoute && (
+            <Show when='signed-out'>
+              <Button
+                asChild
+                className='h-12 rounded-lg px-4 shadow-sm hover:scale-100 hover:shadow-sm active:scale-100 motion-reduce:transition-none'
+              >
+                <Link to='/login'>
+                  <UserIcon className='mr-2 size-4' /> Sign in
+                </Link>
+              </Button>
+            </Show>
+          )}
           <ModeToggle />
         </div>
       </div>
