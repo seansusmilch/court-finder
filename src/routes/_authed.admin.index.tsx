@@ -1,21 +1,15 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { api } from '@backend/_generated/api';
 import { useConvexAuth, useQuery } from 'convex/react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardAction,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ChevronRight, Gauge } from 'lucide-react';
+import { ArrowUpRight, ChevronRight } from 'lucide-react';
 
 export const Route = createFileRoute('/_authed/admin/')({
   component: RouteComponent,
 });
+
+function formatMetric(value: number | undefined) {
+  return value === undefined ? '—' : value.toLocaleString();
+}
 
 function RouteComponent() {
   const { isAuthenticated } = useConvexAuth();
@@ -29,177 +23,172 @@ function RouteComponent() {
   );
   const scans = useQuery(api.scans.listAll, isAuthenticated ? {} : 'skip');
   const metrics = {
-    pendingTiles: pending?.length ?? 0,
-    processedBatches: processed?.length ?? 0,
-    scansCount: scans?.length ?? 0,
+    pendingTiles: pending?.length,
+    processedBatches: processed?.length,
+    scansCount: scans?.length,
     totalFeedback:
-      (pending ?? []).reduce(
-        (acc: number, item: any) => acc + (item.feedbackCount ?? 0),
-        0
-      ) +
-      (processed ?? []).reduce(
-        (acc: number, item: any) => acc + (item.feedbackCount ?? 0),
-        0
-      ),
+      pending && processed
+        ? pending.reduce(
+            (acc: number, item: { feedbackCount?: number }) =>
+              acc + (item.feedbackCount ?? 0),
+            0
+          ) +
+          processed.reduce(
+            (acc: number, item: { feedbackCount?: number }) =>
+              acc + (item.feedbackCount ?? 0),
+            0
+          )
+        : undefined,
   };
 
   return (
-    <div className='p-4'>
-      <h1 className='text-2xl font-bold'>Admin Dashboard</h1>
-      <p className='text-muted-foreground'>
-        Overview of model training and scans
-      </p>
-
-      <div className='mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4'>
-        <Card className='hover:shadow'>
+    <main className='min-h-[calc(100svh-4rem)] bg-muted/20'>
+      <div className='mx-auto max-w-5xl px-4 py-8 md:px-8 md:py-12'>
+        <header className='flex flex-col gap-6 border-b border-border/70 pb-8 sm:flex-row sm:items-end sm:justify-between'>
+          <div className='max-w-xl'>
+            <h1 className='font-display text-3xl font-semibold tracking-tight md:text-4xl'>
+              Admin
+            </h1>
+            <p className='mt-2 text-base text-muted-foreground'>
+              Keep model training and scan operations moving.
+            </p>
+          </div>
           <Link
-            to={'/admin/review'}
-            className='block focus:outline-none focus:ring-2 focus:ring-ring'
+            to='/admin/review'
+            className='inline-flex min-h-12 items-center justify-center gap-2 self-start rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-[background-color,box-shadow] hover:bg-primary/90 hover:shadow-md focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:self-auto'
           >
-            <CardHeader>
-              <CardTitle>Training Data Review</CardTitle>
-              <CardDescription>
-                Pending tiles needing processing
-              </CardDescription>
-              <CardAction>
-                <ChevronRight className='size-5 text-muted-foreground' />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <div className='flex items-baseline gap-2'>
-                <span className='text-3xl font-semibold'>
-                  {metrics.pendingTiles}
-                </span>
-                <Badge variant='secondary'>pending</Badge>
-              </div>
-            </CardContent>
+            Review training data
+            <ArrowUpRight className='size-4' aria-hidden='true' />
           </Link>
-        </Card>
+        </header>
 
-        <Card className='hover:shadow'>
-          <Link
-            to={'/admin/review'}
-            className='block focus:outline-none focus:ring-2 focus:ring-ring'
-          >
-            <CardHeader>
-              <CardTitle>Processed Batches</CardTitle>
-              <CardDescription>Batches already created</CardDescription>
-              <CardAction>
-                <ChevronRight className='size-5 text-muted-foreground' />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <div className='text-3xl font-semibold'>
-                {metrics.processedBatches}
-              </div>
-            </CardContent>
-          </Link>
-        </Card>
+        <section className='pt-8' aria-labelledby='overview-heading'>
+          <div className='flex items-baseline justify-between gap-4'>
+            <h2
+              id='overview-heading'
+              className='font-display text-lg font-semibold tracking-tight'
+            >
+              Overview
+            </h2>
+            <span className='font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
+              Live totals
+            </span>
+          </div>
 
-        <Card className='hover:shadow'>
-          <Link
-            to={'/admin/scans'}
-            className='block focus:outline-none focus:ring-2 focus:ring-ring'
-          >
-            <CardHeader>
-              <CardTitle>Scans</CardTitle>
-              <CardDescription>Total recorded scans</CardDescription>
-              <CardAction>
-                <ChevronRight className='size-5 text-muted-foreground' />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <div className='text-3xl font-semibold'>{metrics.scansCount}</div>
-            </CardContent>
-          </Link>
-        </Card>
+          <dl className='mt-4 grid grid-cols-2 overflow-hidden rounded-xl border border-border/70 bg-card sm:grid-cols-4'>
+            <Metric label='Pending review' value={metrics.pendingTiles} />
+            <Metric label='Processed batches' value={metrics.processedBatches} />
+            <Metric label='Recorded scans' value={metrics.scansCount} />
+            <Metric label='Feedback' value={metrics.totalFeedback} />
+          </dl>
+        </section>
 
-        <Card className='hover:shadow'>
-          <Link
-            to={'/admin/review'}
-            className='block focus:outline-none focus:ring-2 focus:ring-ring'
+        <section className='mt-12' aria-labelledby='workflows-heading'>
+          <h2
+            id='workflows-heading'
+            className='font-display text-lg font-semibold tracking-tight'
           >
-            <CardHeader>
-              <CardTitle>Feedback</CardTitle>
-              <CardDescription>All user training responses</CardDescription>
-              <CardAction>
-                <ChevronRight className='size-5 text-muted-foreground' />
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <div className='text-3xl font-semibold'>
-                {metrics.totalFeedback}
-              </div>
-            </CardContent>
+            Workflows
+          </h2>
+          <nav
+            className='mt-4 overflow-hidden rounded-xl border border-border/70 bg-card'
+            aria-label='Admin workflows'
+          >
+            <WorkflowLink
+              to='/admin/review'
+              title='Review training data'
+              description='Inspect pending tiles and process feedback.'
+              detail={
+                metrics.pendingTiles === undefined
+                  ? 'Loading'
+                  : `${metrics.pendingTiles.toLocaleString()} pending`
+              }
+              emphasized
+            />
+            <WorkflowLink
+              to='/admin/scans'
+              title='Browse scans'
+              description='Inspect recorded scan areas and results.'
+              detail={
+                metrics.scansCount === undefined
+                  ? 'Loading'
+                  : `${metrics.scansCount.toLocaleString()} recorded`
+              }
+            />
+            <WorkflowLink
+              to='/admin/users'
+              title='Manage user scan limits'
+              description='Review account limits and reset access when needed.'
+              detail='Admin only'
+            />
+          </nav>
+        </section>
+
+        <footer className='mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm'>
+          <Link
+            to='/feedback/help'
+            className='font-medium text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50'
+          >
+            How feedback works
           </Link>
-        </Card>
+          <Link
+            to='/admin/review'
+            className='font-medium text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50'
+          >
+            View processed batches
+          </Link>
+        </footer>
       </div>
+    </main>
+  );
+}
 
-      <div className='mt-6'>
-        <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>
-          <Card className='hover:shadow'>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common admin workflows</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='flex flex-wrap gap-2'>
-                <Button asChild size='sm'>
-                  <Link to={'/admin/review'}>
-                    <span className='inline-flex items-center gap-1'>
-                      Review Training Data
-                      <ChevronRight className='size-4' />
-                    </span>
-                  </Link>
-                </Button>
-                <Button asChild variant='secondary' size='sm'>
-                  <Link to={'/admin/scans'}>
-                    <span className='inline-flex items-center gap-1'>
-                      Browse Scans
-                      <ChevronRight className='size-4' />
-                    </span>
-                  </Link>
-                </Button>
-                <Button asChild variant='outline' size='sm'>
-                  <Link to={'/admin/users'}>
-                    <span className='inline-flex items-center gap-1'>
-                      User scan limits
-                      <Gauge className='size-4' />
-                    </span>
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className='hover:shadow'>
-            <CardHeader>
-              <CardTitle>Resources</CardTitle>
-              <CardDescription>Documentation and help</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className='list-inside list-disc text-sm text-muted-foreground'>
-                <li>
-                  <Link to={'/feedback/help'}>
-                    <span className='inline-flex items-center gap-1'>
-                      How feedback works
-                      <ChevronRight className='size-4 opacity-70' />
-                    </span>
-                  </Link>
-                </li>
-                <li>
-                  <Link to={'/admin/review'}>
-                    <span className='inline-flex items-center gap-1'>
-                      Processed batches
-                      <ChevronRight className='size-4 opacity-70' />
-                    </span>
-                  </Link>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+function Metric({ label, value }: { label: string; value: number | undefined }) {
+  return (
+    <div className='min-w-0 border-b border-border/70 px-4 py-5 even:border-l sm:border-b-0 sm:px-5 sm:even:border-l'>
+      <dt className='truncate text-sm text-muted-foreground'>{label}</dt>
+      <dd className='mt-2 font-display text-2xl font-semibold tracking-tight'>
+        {formatMetric(value)}
+      </dd>
     </div>
+  );
+}
+
+function WorkflowLink({
+  to,
+  title,
+  description,
+  detail,
+  emphasized = false,
+}: {
+  to: '/admin/review' | '/admin/scans' | '/admin/users';
+  title: string;
+  description: string;
+  detail: string;
+  emphasized?: boolean;
+}) {
+  return (
+    <Link
+      to={to}
+      className={`group flex min-h-20 items-center gap-4 border-b border-border/70 px-4 py-4 transition-colors last:border-b-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60 sm:px-5 ${
+        emphasized ? 'bg-primary/[0.06] hover:bg-primary/[0.1]' : 'hover:bg-muted/50'
+      }`}
+    >
+      <span className='min-w-0 flex-1'>
+        <span className='flex flex-wrap items-center gap-x-3 gap-y-1'>
+          <span className='font-semibold'>{title}</span>
+          <span className='font-mono text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground'>
+            {detail}
+          </span>
+        </span>
+        <span className='mt-1 block text-sm text-muted-foreground'>
+          {description}
+        </span>
+      </span>
+      <ChevronRight
+        className='size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground'
+        aria-hidden='true'
+      />
+    </Link>
   );
 }
