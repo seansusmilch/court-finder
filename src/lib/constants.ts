@@ -4,7 +4,7 @@ import { env } from "@/env";
 export const PINS_VISIBLE_FROM_ZOOM = 10;
 
 // Map defaults
-export const DEFAULT_MAP_CENTER: [number, number] = [-87.6952, 41.9442];
+export const DEFAULT_MAP_CENTER: [number, number] = [-93.09, 44.9537];
 export const DEFAULT_MAP_ZOOM = 15;
 export const MAP_STYLE_SATELLITE = 'mapbox://styles/mapbox/standard-satellite';
 export const MAP_STYLE_STANDARD_LIGHT = 'mapbox://styles/mapbox/standard';
