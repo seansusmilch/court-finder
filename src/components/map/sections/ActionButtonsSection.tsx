@@ -1,11 +1,13 @@
 import { Check, Radar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { ScanProgress } from '../CustomNavigationControls';
 import type { MapSectionConfig } from '../shared/types';
 
 export interface ScanAction {
   onScan: () => void;
   isScanning?: boolean;
+  scanProgress?: ScanProgress | null;
 }
 
 export interface UploadAction {
@@ -39,7 +41,9 @@ export function ActionButtonsSection({
           {scan.isScanning ? (
             <span className='flex items-center gap-2'>
               <Radar className='h-5 w-5 animate-scan-spin' />
-              Scanning area…
+              {scan.scanProgress && scan.scanProgress.totalTiles > 0
+                ? `Scanning area: ${Math.round((scan.scanProgress.tilesProcessed / scan.scanProgress.totalTiles) * 100)}%`
+                : 'Scanning area…'}
             </span>
           ) : (
             'Scan this area'
