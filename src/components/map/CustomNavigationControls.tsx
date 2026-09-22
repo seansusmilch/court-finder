@@ -1,7 +1,7 @@
-import { useCallback, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
 import { Button } from '@/components/ui/button';
-import { Compass, LocateFixed, Radar, SlidersHorizontal } from 'lucide-react';
+import { Compass, Layers3, Navigation2, Radar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type {
@@ -26,6 +26,7 @@ interface MapControlButtonProps {
   renderIcon?: (icon: ReactNode) => ReactNode;
   className?: string;
   ariaLabel?: string;
+  ariaExpanded?: boolean;
 }
 
 export function MapControlButton({
@@ -37,6 +38,7 @@ export function MapControlButton({
   renderIcon,
   className,
   ariaLabel,
+  ariaExpanded,
 }: MapControlButtonProps) {
   return (
     <Button
@@ -50,6 +52,7 @@ export function MapControlButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel ?? label}
+      aria-expanded={ariaExpanded}
       title={ariaLabel ?? label}
       type="button"
     >
@@ -73,6 +76,8 @@ export interface DefaultButtonFactoriesOptions {
   isLocating?: boolean;
   onLocateStart?: () => void;
   onLocateEnd?: () => void;
+  bearing?: number;
+  settingsOpen?: boolean;
 }
 
 export function createDefaultButtons(
@@ -87,9 +92,11 @@ export function createDefaultButtons(
     isLocating = false,
     onLocateStart,
     onLocateEnd,
+    bearing = 0,
+    settingsOpen = false,
   } = options;
 
-  const handleLocate = useCallback(() => {
+  const handleLocate = () => {
     if (!navigator.geolocation) {
       toast.error('Geolocation is not supported by your browser');
       return;
@@ -110,15 +117,15 @@ export function createDefaultButtons(
         onLocateEnd?.();
       }
     );
-  }, [mapRef, onLocateStart, onLocateEnd]);
+  };
 
-  const handleResetBearing = useCallback(() => {
+  const handleResetBearing = () => {
     mapRef.current?.easeTo({
       bearing: 0,
       pitch: 0,
-      duration: 1000,
+      duration: 250,
     });
-  }, [mapRef]);
+  };
 
   const getScanButtonLabel = () => {
     if (!isScanning || !scanProgress) return 'Scan this area';
@@ -142,7 +149,7 @@ export function createDefaultButtons(
       onClick: onScanClick ?? (() => {}),
       disabled: isScanning,
       show: false,
-      order: 1,
+      order: 4,
       className:
         'border-primary !bg-primary !text-primary-foreground hover:!bg-primary/90 dark:!bg-primary dark:!text-primary-foreground disabled:!bg-primary disabled:!text-primary-foreground disabled:!opacity-100 disabled:cursor-wait',
       renderIcon: (icon) => {
@@ -159,15 +166,16 @@ export function createDefaultButtons(
     },
     {
       id: 'settings',
-      icon: <SlidersHorizontal className={mapControlIconClassName} aria-hidden='true' />,
-      label: 'Open map controls',
+      icon: <Layers3 className={mapControlIconClassName} aria-hidden='true' />,
+      label: settingsOpen ? 'Close map filters' : 'Open map filters',
       onClick: onSettingsClick ?? (() => {}),
       show: false,
-      order: 2,
+      order: 1,
+      ariaExpanded: settingsOpen,
     },
     {
       id: 'locate',
-      icon: <LocateFixed className={mapControlIconClassName} aria-hidden='true' />,
+      icon: <Navigation2 className={mapControlIconClassName} aria-hidden='true' />,
       label: 'Locate me',
       onClick: handleLocate,
       disabled: isLocating,
@@ -179,11 +187,17 @@ export function createDefaultButtons(
     },
     {
       id: 'compass',
-      icon: <Compass className={mapControlIconClassName} aria-hidden='true' />,
+      icon: (
+        <Compass
+          className={`${mapControlIconClassName} transition-transform duration-200 motion-reduce:transition-none`}
+          style={{ transform: `rotate(${-bearing}deg)` }}
+          aria-hidden='true'
+        />
+      ),
       label: 'Reset bearing',
       onClick: handleResetBearing,
       show: true,
-      order: 4,
+      order: 2,
     },
   ];
 }
@@ -205,6 +219,8 @@ export interface CustomNavigationControlsProps {
   isLocating?: boolean;
   onLocateStart?: () => void;
   onLocateEnd?: () => void;
+  bearing?: number;
+  settingsOpen?: boolean;
   useDefaultButtons?: boolean;
 }
 
@@ -225,6 +241,8 @@ export function CustomNavigationControls({
   isLocating = false,
   onLocateStart,
   onLocateEnd,
+  bearing = 0,
+  settingsOpen = false,
   useDefaultButtons = true,
 }: CustomNavigationControlsProps) {
   const defaultButtons = useDefaultButtons
@@ -236,6 +254,8 @@ export function CustomNavigationControls({
         isLocating,
         onLocateStart,
         onLocateEnd,
+        bearing,
+        settingsOpen,
       })
     : [];
 
@@ -246,7 +266,7 @@ export function CustomNavigationControls({
       case 'locate':
         return { ...btn, show: showLocate, disabled: isLocating };
       case 'settings':
-        return { ...btn, show: showSettings };
+        return { ...btn, show: showSettings, ariaExpanded: settingsOpen };
       case 'scan':
         return { ...btn, show: showScan, disabled: isScanning };
       default:

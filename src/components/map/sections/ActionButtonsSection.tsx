@@ -88,7 +88,7 @@ export function createActionButtonsSection(
 ): MapSectionConfig {
   return {
     id: 'action-buttons',
-    order: 4,
+    order: 5,
     renderContent: () => <ActionButtonsSection {...props} />,
   };
 }

@@ -109,7 +109,7 @@ export function createCategoryFilterSection(
 ): MapSectionConfig {
   return {
     id: 'category-filter',
-    order: 1,
+    order: 0,
     renderContent: () => <CategoryFilterSection {...props} />,
   };
 }

@@ -60,7 +60,7 @@ export function createCourtCountSection(
 ): MapSectionConfig {
   return {
     id: 'court-count',
-    order: 0,
+    order: 1,
     renderContent: () => <CourtCountSection {...props} />,
   };
 }
