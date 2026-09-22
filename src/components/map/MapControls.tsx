@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
 import { Card, CardContent } from '@/components/ui/card';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
 import {
   createCourtCountSection,
   createConfidenceSection,
@@ -13,6 +20,7 @@ import { CustomNavigationControls } from './CustomNavigationControls';
 import { cn } from '@/lib/utils';
 import type { MapSectionConfig } from './shared/types';
 import { sortSections, filterSections } from './shared/types';
+import { X } from 'lucide-react';
 
 // ============================================================================
 // Settings Types
@@ -183,12 +191,25 @@ export function MapControls({
           />
           <DrawerContent className='h-[min(75dvh,42rem)] rounded-t-2xl no-zoom'>
             <DrawerHeader className='border-b border-border/70 px-5 pb-4 pt-5 text-left'>
-              <DrawerTitle className='font-display text-xl font-semibold tracking-tight'>
-                Map filters and display
-              </DrawerTitle>
-              <DrawerDescription>
-                Choose which possible facilities appear and how the map looks.
-              </DrawerDescription>
+              <div className='flex items-start justify-between gap-4'>
+                <div className='min-w-0'>
+                  <DrawerTitle className='font-display text-xl font-semibold tracking-tight'>
+                    Map filters and display
+                  </DrawerTitle>
+                  <DrawerDescription>
+                    Choose which possible facilities appear and how the map looks.
+                  </DrawerDescription>
+                </div>
+                <DrawerClose asChild>
+                  <button
+                    type='button'
+                    aria-label='Close map filters and display'
+                    className='inline-flex size-12 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-background text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+                  >
+                    <X className='size-5' aria-hidden='true' />
+                  </button>
+                </DrawerClose>
+              </div>
             </DrawerHeader>
             <div className='overflow-y-auto px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5'>
               <ControlsBody sections={sections} />
