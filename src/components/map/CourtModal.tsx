@@ -145,7 +145,7 @@ export function CourtModal({
                 <span className={cn(
                   'inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold',
                   isVerified
-                    ? 'border-success/25 bg-success/10 text-success'
+                    ? 'border-secondary/25 bg-secondary/10 text-secondary'
                     : 'border-border bg-muted text-muted-foreground'
                 )}>
                   {isVerified ? (
@@ -207,7 +207,7 @@ export function CourtModal({
 
                 {userFeedback ? (
                   <div className="flex items-start gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-                    {userFeedback.userResponse === 'yes' && <CircleCheck className="mt-0.5 h-4 w-4 text-success" aria-hidden="true" />}
+                    {userFeedback.userResponse === 'yes' && <CircleCheck className="mt-0.5 h-4 w-4 text-secondary" aria-hidden="true" />}
                     {userFeedback.userResponse === 'no' && <CircleX className="mt-0.5 h-4 w-4 text-destructive" aria-hidden="true" />}
                     {userFeedback.userResponse === 'unsure' && <CircleAlert className="mt-0.5 h-4 w-4 text-warning" aria-hidden="true" />}
                     <span>

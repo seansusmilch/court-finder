@@ -163,7 +163,7 @@ Individual court markers displayed at high zoom levels:
 **Sport Classifications:**
 
 - Basketball Court: 🏀 (gray background)
-- Tennis Court: 🎾 (green background)
+- Tennis Court: 🎾 (blue background)
 - Soccer/Football Field: ⚽ (red background)
 - Baseball Diamond: ⚾ (yellow background)
 - Track & Field: 🏃 (blue background)
@@ -227,7 +227,7 @@ Quick information popup for clusters and individual markers:
 **Visual Differentiation:**
 
 - Different colors and emojis for each court type
-- Status indicators (verified: green/vibrant, pending: muted)
+- Status indicators (verified: blue/vibrant, pending: muted)
 - Cluster sizing based on court count
 
 ### 2. Interactive Features

@@ -94,7 +94,7 @@ function TileDetailsPage() {
               </Button>
             )}
           {details.batch && details.batch.roboflowAnnotatedAt && (
-            <span className='inline-flex items-center gap-2 text-sm text-success'>
+            <span className='inline-flex items-center gap-2 text-sm text-secondary'>
               <CheckCircle2 className='size-4' /> Annotated
             </span>
           )}

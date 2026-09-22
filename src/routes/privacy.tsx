@@ -68,7 +68,7 @@ function PrivacyPage() {
 
           <div className='rounded-xl border border-border bg-muted/30 p-5 md:p-6'>
             <div className='flex items-start gap-3'>
-              <ShieldCheck className='mt-0.5 size-5 shrink-0 text-accent' aria-hidden='true' />
+              <ShieldCheck className='mt-0.5 size-5 shrink-0 text-secondary' aria-hidden='true' />
               <div>
                 <p className='font-display font-semibold text-foreground'>Plain-language notice</p>
                 <p className='mt-2 text-sm leading-6 text-muted-foreground'>

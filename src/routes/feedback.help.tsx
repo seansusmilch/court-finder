@@ -20,7 +20,7 @@ export function TrainingHelpPage() {
             variant='ghost'
             size='sm'
             onClick={() => navigate({ to: '/feedback' })}
-            className='flex items-center gap-2 hover:bg-accent'
+            className='flex items-center gap-2 hover:bg-muted'
           >
             <ArrowLeft className='h-4 w-4' />
             <span className='hidden sm:inline'>Back to Feedback</span>
@@ -92,7 +92,7 @@ export function TrainingHelpPage() {
               ].map((item, index) => (
                 <div
                   key={index}
-                  className='flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors'
+                  className='flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-muted/60 transition-colors'
                 >
                   <div className='flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center'>
                     <span className='text-sm font-semibold text-primary'>
@@ -129,12 +129,12 @@ export function TrainingHelpPage() {
                     icon: Check,
                     text: 'Yes',
                     variant: 'default',
-                    className: 'bg-success hover:bg-success/90 text-success-foreground',
+                    className: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground',
                   },
                   title: 'Yes - This is correct',
                   description:
                     'Click when the AI correctly identified a court in the highlighted area.',
-                  color: 'green',
+                  color: 'positive',
                 },
                 {
                   button: {
@@ -159,8 +159,8 @@ export function TrainingHelpPage() {
                 <div
                   key={index}
                   className={`flex items-center gap-4 p-4 rounded-lg border-2 ${
-                    item.color === 'green'
-                      ? 'border-success/20 bg-success/10 dark:bg-success/20 dark:border-success/30'
+                    item.color === 'positive'
+                      ? 'border-secondary/20 bg-secondary/10 dark:bg-secondary/20 dark:border-secondary/30'
                       : item.color === 'red'
                       ? 'border-destructive/20 bg-destructive/10 dark:bg-destructive/20 dark:border-destructive/30'
                       : 'border-muted bg-muted/50 dark:bg-muted/20 dark:border-muted/30'

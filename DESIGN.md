@@ -10,11 +10,9 @@ colors:
   signal-orange: "#F26B3A"
   signal-orange-strong: "#D95528"
   route-blue: "#2F6FED"
-  verified-green: "#2F8F5B"
   caution-yellow: "#D6A12C"
   alert-red: "#C63F3F"
   basketball-orange: "#E87A30"
-  tennis-green: "#58A96A"
   soccer-red: "#D75A4C"
   baseball-yellow: "#D7A63C"
   track-blue: "#5572C7"
@@ -141,12 +139,11 @@ The palette is neutral by default and decisive by exception. Carbon and paper ca
 - **Signal Orange** (`{colors.signal-orange}`): The primary action, active scan state, and high-attention affordance. Use it as a signal, not a page wash.
 
 ### Secondary
-- **Route Blue** (`{colors.route-blue}`): Search, location, navigation, and other movement-oriented actions.
+- **Route Blue** (`{colors.route-blue}`): Search, location, navigation, confirmed states, and other movement-oriented actions.
 
 ### Tertiary
-- **Verified Green** (`{colors.verified-green}`): Confirmed community status and positive completion states only.
 - **Basketball Orange** (`{colors.basketball-orange}`): Basketball facility identity on the map and in filters.
-- **Tennis Green** (`{colors.tennis-green}`): Tennis facility identity on the map and in filters.
+- **Tennis Blue** (`{colors.route-blue}`): Tennis facility identity on the map and in filters.
 - **Soccer Red** (`{colors.soccer-red}`): Soccer or football facility identity on the map and in filters.
 - **Baseball Yellow** (`{colors.baseball-yellow}`): Baseball facility identity on the map and in filters.
 - **Track Blue** (`{colors.track-blue}`): Track-and-field facility identity on the map and in filters.

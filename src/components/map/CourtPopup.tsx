@@ -80,7 +80,7 @@ export function CourtPopup({
             <div className={cn(
               'flex items-center gap-2 rounded-md border px-2.5 py-2 font-medium',
               isVerified
-                ? 'border-success/25 bg-success/10 text-success'
+                ? 'border-secondary/25 bg-secondary/10 text-secondary'
                 : 'border-border bg-muted text-muted-foreground'
             )}>
               {isVerified ? <CircleCheck className='h-3.5 w-3.5' aria-hidden='true' /> : <CircleAlert className='h-3.5 w-3.5' aria-hidden='true' />}

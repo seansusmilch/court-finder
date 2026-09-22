@@ -175,7 +175,7 @@ Allows admins to:
 **Component**: `src/components/map/CourtMarker.tsx`
 
 **Visual Design**:
-- Verified courts: Green marker with emoji
+- Verified courts: Blue marker with emoji
 - Pending courts: Yellow/Orange marker with emoji
 - Emoji by class: 🏀 🎾 🏈 ⚾ 🏃
 
@@ -408,7 +408,7 @@ COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
   'soccer-ball-field': {
     emoji: '🏈',
     displayName: 'Soccer/Football Field',
-    color: 'green',
+    color: 'red',
     dedupRadiusM: 16,
   },
   'baseball-diamond': {

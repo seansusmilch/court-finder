@@ -20,9 +20,9 @@
   --secondary: oklch(0.58 0.18 250);
   --secondary-foreground: oklch(0.98 0.01 250);
 
-  /* Accent - Forest Green (Nature) */
-  --accent: oklch(0.52 0.15 155);
-  --accent-foreground: oklch(0.98 0.01 155);
+  /* Accent - Quiet fog interaction surface */
+  --accent: oklch(0.94 0.01 85);
+  --accent-foreground: oklch(0.25 0.02 85);
 
   /* Muted & Borders */
   --muted: oklch(0.94 0.01 85);
@@ -33,8 +33,8 @@
   /* Semantic Colors */
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.98 0.01 25);
-  --success: oklch(0.65 0.20 145);
-  --success-foreground: oklch(0.98 0.01 145);
+  --success: oklch(0.58 0.18 250);
+  --success-foreground: oklch(0.98 0.01 250);
   --warning: oklch(0.75 0.18 65);
   --warning-foreground: oklch(0.25 0.02 65);
   --ring: oklch(0.68 0.19 35);
@@ -42,7 +42,7 @@
   /* Chart Colors */
   --chart-1: oklch(0.68 0.19 35);
   --chart-2: oklch(0.58 0.18 250);
-  --chart-3: oklch(0.52 0.15 155);
+  --chart-3: oklch(0.65 0.19 270);
   --chart-4: oklch(0.65 0.18 45);
   --chart-5: oklch(0.75 0.18 75);
 
@@ -51,8 +51,8 @@
   --sidebar-foreground: oklch(0.25 0.02 85);
   --sidebar-primary: oklch(0.68 0.19 35);
   --sidebar-primary-foreground: oklch(0.15 0.02 35);
-  --sidebar-accent: oklch(0.52 0.15 155);
-  --sidebar-accent-foreground: oklch(0.98 0.01 155);
+  --sidebar-accent: oklch(0.94 0.01 85);
+  --sidebar-accent-foreground: oklch(0.25 0.02 85);
   --sidebar-border: oklch(0.88 0.01 85);
   --sidebar-ring: oklch(0.68 0.19 35);
 
@@ -85,7 +85,6 @@
 
   /* Enhanced Glow Shadows */
   --shadow-glow-primary: 0 0 20px oklch(0.68 0.19 35 / 0.3);
-  --shadow-glow-accent: 0 0 20px oklch(0.52 0.15 155 / 0.3);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -117,9 +116,9 @@
   --secondary: oklch(0.65 0.20 250);
   --secondary-foreground: oklch(0.98 0.01 250);
 
-  /* Accent - Forest Green (Luminous for dark) */
-  --accent: oklch(0.60 0.17 155);
-  --accent-foreground: oklch(0.98 0.01 155);
+  /* Accent - Quiet fog interaction surface */
+  --accent: oklch(0.28 0.015 85);
+  --accent-foreground: oklch(0.92 0.01 85);
 
   /* Muted & Borders */
   --muted: oklch(0.28 0.015 85);
@@ -130,8 +129,8 @@
   /* Semantic Colors */
   --destructive: oklch(0.60 0.24 25);
   --destructive-foreground: oklch(0.98 0.01 25);
-  --success: oklch(0.70 0.22 145);
-  --success-foreground: oklch(0.98 0.01 145);
+  --success: oklch(0.65 0.20 250);
+  --success-foreground: oklch(0.98 0.01 250);
   --warning: oklch(0.80 0.20 65);
   --warning-foreground: oklch(0.15 0.02 65);
   --ring: oklch(0.72 0.21 35);
@@ -139,7 +138,7 @@
   /* Chart Colors */
   --chart-1: oklch(0.72 0.21 35);
   --chart-2: oklch(0.65 0.20 250);
-  --chart-3: oklch(0.60 0.17 155);
+  --chart-3: oklch(0.70 0.21 270);
   --chart-4: oklch(0.70 0.20 45);
   --chart-5: oklch(0.80 0.20 75);
 
@@ -148,8 +147,8 @@
   --sidebar-foreground: oklch(0.92 0.01 85);
   --sidebar-primary: oklch(0.72 0.21 35);
   --sidebar-primary-foreground: oklch(0.15 0.02 35);
-  --sidebar-accent: oklch(0.60 0.17 155);
-  --sidebar-accent-foreground: oklch(0.98 0.01 155);
+  --sidebar-accent: oklch(0.28 0.015 85);
+  --sidebar-accent-foreground: oklch(0.92 0.01 85);
   --sidebar-border: oklch(0.35 0.015 85);
   --sidebar-ring: oklch(0.72 0.21 35);
 
@@ -181,7 +180,6 @@
 
   /* Enhanced Glow Shadows */
   --shadow-glow-primary: 0 0 20px oklch(0.72 0.21 35 / 0.3);
-  --shadow-glow-accent: 0 0 20px oklch(0.60 0.17 155 / 0.3);
 }
 
 @theme inline {
@@ -246,7 +244,6 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
   --shadow-glow-primary: var(--shadow-glow-primary);
-  --shadow-glow-accent: var(--shadow-glow-accent);
 
   /* Transitions */
   --transition-fast: var(--transition-fast);
@@ -365,10 +362,10 @@
 .dark .bg-basketball { background-color: oklch(0.70 0.20 45); }
 .dark .border-basketball { border-color: oklch(0.60 0.18 45); }
 
-.bg-tennis { background-color: oklch(0.70 0.16 145); }
-.border-tennis { border-color: oklch(0.60 0.14 145); }
-.dark .bg-tennis { background-color: oklch(0.75 0.18 145); }
-.dark .border-tennis { border-color: oklch(0.65 0.16 145); }
+.bg-tennis { background-color: oklch(0.62 0.18 250); }
+.border-tennis { border-color: oklch(0.52 0.16 250); }
+.dark .bg-tennis { background-color: oklch(0.68 0.20 250); }
+.dark .border-tennis { border-color: oklch(0.58 0.18 250); }
 
 .bg-soccer { background-color: oklch(0.68 0.20 25); }
 .border-soccer { border-color: oklch(0.58 0.18 25); }

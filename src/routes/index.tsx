@@ -136,7 +136,7 @@ function SatellitePreview() {
           </div>
         </div>
         <div className='hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-white/70 sm:flex'>
-          <span className='size-1.5 rounded-full bg-accent' />
+          <span className='size-1.5 rounded-full bg-secondary' />
           example imagery
         </div>
       </div>
@@ -160,7 +160,7 @@ function TrustNote() {
         className='flex min-h-16 w-full items-center justify-between gap-4 py-4 text-left outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background'
       >
         <span className='flex items-center gap-3'>
-          <ShieldCheck aria-hidden='true' className='size-5 shrink-0 text-accent' />
+          <ShieldCheck aria-hidden='true' className='size-5 shrink-0 text-secondary' />
           <span>
             <span className='block font-display font-semibold'>A detection is a lead, not a promise.</span>
             <span className='mt-0.5 block text-sm text-muted-foreground'>
@@ -228,8 +228,8 @@ function HomeComponent() {
             </p>
 
             <div className='mt-9 hidden flex-wrap gap-x-6 gap-y-3 border-t border-border/70 pt-6 text-sm text-muted-foreground md:flex'>
-              <span className='flex items-center gap-2'><Check className='size-4 text-accent' /> Browse without an account</span>
-              <span className='flex items-center gap-2'><Check className='size-4 text-accent' /> Confidence shown on every result</span>
+              <span className='flex items-center gap-2'><Check className='size-4 text-secondary' /> Browse without an account</span>
+              <span className='flex items-center gap-2'><Check className='size-4 text-secondary' /> Confidence shown on every result</span>
             </div>
           </div>
 
@@ -345,7 +345,7 @@ function HomeComponent() {
                 'Favorites saved on your current device',
               ].map((item) => (
                 <li key={item} className='flex items-start gap-3'>
-                  <span className='mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent/15 text-accent'>
+                  <span className='mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-secondary/15 text-secondary'>
                     <Check className='size-3.5' strokeWidth={2.5} />
                   </span>
                   <span>{item}</span>
