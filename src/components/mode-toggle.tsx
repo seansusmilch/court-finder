@@ -25,7 +25,7 @@ export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
         <Button
           variant='outline'
           size='icon'
-          className='relative h-12 w-12 rounded-lg shadow-none hover:scale-100 hover:bg-muted active:scale-100 focus-visible:ring-[3px] focus-visible:ring-secondary/60 motion-reduce:transition-none'
+          className='relative h-12 w-12 rounded-lg shadow-none hover:scale-100 hover:bg-muted active:scale-100 focus-visible:ring-[3px] focus-visible:ring-primary/60 motion-reduce:transition-none'
           aria-label='Choose color theme'
           title='Choose color theme'
         >

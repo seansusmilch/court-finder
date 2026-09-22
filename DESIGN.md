@@ -9,13 +9,8 @@ colors:
   line: "#E0E0E0"
   signal-orange: "#F26B3A"
   signal-orange-strong: "#D95528"
-  route-blue: "#2F6FED"
   caution-yellow: "#D6A12C"
   alert-red: "#C63F3F"
-  basketball-orange: "#E87A30"
-  soccer-red: "#D75A4C"
-  baseball-yellow: "#D7A63C"
-  track-blue: "#5572C7"
 typography:
   display:
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
@@ -120,7 +115,7 @@ This is the target replacement language for the next implementation pass.
 
 Court Finder should feel like a dependable field instrument for someone standing somewhere unfamiliar. The interface is calm at rest, immediate when action is needed, and specific about what the system actually knows. It borrows the directness of mature mobility apps—destination-first search, a map that stays available beneath the task, and focused sheets that keep the next decision close—without copying another company's branding, assets, typography, or iconography.
 
-The visual world is mostly neutral: carbon, paper, fog, and utility gray give the map and satellite imagery room to speak. Bold accents are reserved for actions, facility types, route-like movement, and explicit state. A possible facility is treated like a field note: useful evidence to inspect, never a promise of access, availability, safety, or accuracy.
+The visual world is mostly neutral: carbon, paper, fog, and utility gray give the map and satellite imagery room to speak. Signal orange is reserved for actions and explicit positive state; red and yellow only communicate rejection or uncertainty. A possible facility is treated like a field note: useful evidence to inspect, never a promise of access, availability, safety, or accuracy.
 
 The intended target is a mobile-first operating experience. Controls are direct and tactile, with generous touch targets, short labels, strong contrast, and bottom sheets that bring detail into reach. Depth is hybrid: the map and content stay visually quiet, while search, controls, result sheets, and primary actions lift clearly above the surface.
 
@@ -133,20 +128,13 @@ The intended target is a mobile-first operating experience. Controls are direct 
 
 ## Colors
 
-The palette is neutral by default and decisive by exception. Carbon and paper carry most of the interface; color tells people what to do, what changed, or what kind of facility they are seeing.
+The palette is neutral by default and decisive by exception. Carbon and paper carry most of the interface; one signal color tells people what to do or what changed.
 
 ### Primary
 - **Signal Orange** (`{colors.signal-orange}`): The primary action, active scan state, and high-attention affordance. Use it as a signal, not a page wash.
 
 ### Secondary
-- **Route Blue** (`{colors.route-blue}`): Search, location, navigation, confirmed states, and other movement-oriented actions.
-
-### Tertiary
-- **Basketball Orange** (`{colors.basketball-orange}`): Basketball facility identity on the map and in filters.
-- **Tennis Blue** (`{colors.route-blue}`): Tennis facility identity on the map and in filters.
-- **Soccer Red** (`{colors.soccer-red}`): Soccer or football facility identity on the map and in filters.
-- **Baseball Yellow** (`{colors.baseball-yellow}`): Baseball facility identity on the map and in filters.
-- **Track Blue** (`{colors.track-blue}`): Track-and-field facility identity on the map and in filters.
+- **Carbon** (`{colors.carbon}`): High-contrast supporting actions and selected controls.
 
 ### Neutral
 - **Carbon** (`{colors.carbon}`): Primary text, high-emphasis controls, dark theme canvas, and the strongest selected state.
@@ -215,7 +203,7 @@ Components should feel direct and tactile: clear labels, obvious press states, g
 ### Buttons
 - **Shape:** Compact rectangular controls with gently rounded corners (`8px`) and a minimum height of `48px`.
 - **Primary:** Signal Orange with Carbon text; use for the main action in a region, such as opening the map, reviewing evidence, or starting a scan.
-- **Hover / Focus:** Deepen to Signal Orange Strong on hover; use a visible 3px focus ring based on Route Blue; press states may scale down subtly or reduce lift.
+- **Hover / Focus:** Deepen to Signal Orange Strong on hover; use a visible 3px focus ring based on Signal Orange; press states may scale down subtly or reduce lift.
 - **Secondary / Ghost / Tertiary:** Carbon-filled buttons are reserved for high-contrast secondary actions. Quiet actions use Paper or Fog with a low-contrast line; ghost actions should not compete with the primary.
 
 ### Chips
@@ -231,7 +219,7 @@ Components should feel direct and tactile: clear labels, obvious press states, g
 
 ### Inputs / Fields
 - **Style:** Paper or raised dark surface, `12px` radius, subtle Line border, `52px` height for search, and an icon or location affordance at the leading edge.
-- **Focus:** Route Blue border or ring with no layout shift. Preserve the input's readable contrast while suggestions are open.
+- **Focus:** Signal Orange border or ring with no layout shift. Preserve the input's readable contrast while suggestions are open.
 - **Error / Disabled:** Alert Red is reserved for actual errors. Disabled fields lower contrast and opacity without changing their geometry.
 
 ### Navigation
@@ -249,13 +237,13 @@ The detection sheet is the signature component: a possible facility becomes a fo
 - **Do** keep most of the screen neutral and let one signal color define the next action.
 - **Do** make primary controls at least `48px` tall and easy to operate with a thumb.
 - **Do** keep the map visible or one gesture away while people search, filter, and inspect.
-- **Do** use facility colors consistently across markers, chips, legends, and detail views.
+- **Do** use facility emoji and labels consistently; keep markers and category treatments signal orange.
 - **Do** show satellite context, confidence, and verification status as separate pieces of evidence.
 - **Do** use direct language such as “possible facility,” “model confidence,” and “verify access.”
 
 ### Don't:
 - **Don't** introduce borrowed brand assets, proprietary fonts, or branded component patterns; the system should feel native to Court Finder.
-- **Don't** flood a screen with orange, blue, or facility colors; saturation is a signal with a job.
+- **Don't** flood a screen with signal orange; saturation is a signal with a job.
 - **Don't** make every control a pill or every surface a floating card.
 - **Don't** use gradients, glass blur, or decorative shadows when a neutral surface and clear hierarchy are enough.
 - **Don't** describe a detection or confidence score as proof of accuracy, public access, availability, safety, or permission to enter.

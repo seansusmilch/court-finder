@@ -73,7 +73,7 @@ export function DistanceDisplay({
       aria-live="polite"
       aria-label={`Distance from your location: ${formatDistance(distanceKm)}`}
     >
-      <Navigation className="h-4 w-4 text-secondary" aria-hidden="true" />
+      <Navigation className="h-4 w-4 text-primary" aria-hidden="true" />
       <span className="font-medium">{formatDistance(distanceKm)}</span>
     </div>
   );

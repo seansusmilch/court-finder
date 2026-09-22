@@ -83,7 +83,7 @@ export function FeedbackActions({
           size='lg'
           variant='outline'
           type='button'
-          className='h-14 min-w-0 flex-col rounded-xl border-secondary/40 bg-secondary/10 px-2 text-secondary shadow-none hover:bg-secondary/20 hover:text-secondary hover:shadow-sm focus-visible:ring-secondary/40 disabled:cursor-wait sm:h-16'
+          className='h-14 min-w-0 flex-col rounded-xl border-primary/40 bg-primary/10 px-2 text-primary shadow-none hover:bg-primary/20 hover:text-primary hover:shadow-sm focus-visible:ring-primary/40 disabled:cursor-wait sm:h-16'
           onClick={() => onSubmit('yes')}
           disabled={disabled}
         >

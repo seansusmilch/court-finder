@@ -30,37 +30,31 @@ const facilityTypes: Array<{
   name: string;
   detail: string;
   icon: LucideIcon;
-  color: string;
 }> = [
   {
     name: 'Basketball',
     detail: 'Full and half courts',
     icon: Volleyball,
-    color: 'bg-basketball',
   },
   {
     name: 'Tennis',
     detail: 'Single courts and complexes',
     icon: CircleDotDashed,
-    color: 'bg-tennis',
   },
   {
     name: 'Soccer / football',
     detail: 'Marked fields and pitches',
     icon: Goal,
-    color: 'bg-soccer',
   },
   {
     name: 'Baseball',
     detail: 'Diamonds and ballparks',
     icon: Diamond,
-    color: 'bg-baseball',
   },
   {
     name: 'Track and field',
     detail: 'Running tracks and facilities',
     icon: RouteIcon,
-    color: 'bg-track',
   },
 ];
 
@@ -136,7 +130,7 @@ function SatellitePreview() {
           </div>
         </div>
         <div className='hidden items-center gap-2 font-mono text-xs uppercase tracking-widest text-white/70 sm:flex'>
-          <span className='size-1.5 rounded-full bg-secondary' />
+          <span className='size-1.5 rounded-full bg-primary' />
           example imagery
         </div>
       </div>
@@ -160,7 +154,7 @@ function TrustNote() {
         className='flex min-h-16 w-full items-center justify-between gap-4 py-4 text-left outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background'
       >
         <span className='flex items-center gap-3'>
-          <ShieldCheck aria-hidden='true' className='size-5 shrink-0 text-secondary' />
+          <ShieldCheck aria-hidden='true' className='size-5 shrink-0 text-primary' />
           <span>
             <span className='block font-display font-semibold'>A detection is a lead, not a promise.</span>
             <span className='mt-0.5 block text-sm text-muted-foreground'>
@@ -228,8 +222,8 @@ function HomeComponent() {
             </p>
 
             <div className='mt-9 hidden flex-wrap gap-x-6 gap-y-3 border-t border-border/70 pt-6 text-sm text-muted-foreground md:flex'>
-              <span className='flex items-center gap-2'><Check className='size-4 text-secondary' /> Browse without an account</span>
-              <span className='flex items-center gap-2'><Check className='size-4 text-secondary' /> Confidence shown on every result</span>
+              <span className='flex items-center gap-2'><Check className='size-4 text-primary' /> Browse without an account</span>
+              <span className='flex items-center gap-2'><Check className='size-4 text-primary' /> Confidence shown on every result</span>
             </div>
           </div>
 
@@ -246,9 +240,9 @@ function HomeComponent() {
               Five facility types. One search.
             </h2>
             <div className='grid flex-1 grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 lg:max-w-4xl lg:grid-cols-5'>
-              {facilityTypes.map(({ name, detail, icon: Icon, color }) => (
+              {facilityTypes.map(({ name, detail, icon: Icon }) => (
                 <div key={name} className='flex min-w-0 items-center gap-3'>
-                  <span className={`grid size-9 shrink-0 place-items-center rounded-full ${color} text-white`}>
+                  <span className='grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground'>
                     <Icon className='size-[18px]' strokeWidth={1.8} />
                   </span>
                   <span className='min-w-0'>
@@ -345,7 +339,7 @@ function HomeComponent() {
                 'Favorites saved on your current device',
               ].map((item) => (
                 <li key={item} className='flex items-start gap-3'>
-                  <span className='mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-secondary/15 text-secondary'>
+                  <span className='mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary'>
                     <Check className='size-3.5' strokeWidth={2.5} />
                   </span>
                   <span>{item}</span>

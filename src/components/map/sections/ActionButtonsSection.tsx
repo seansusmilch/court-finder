@@ -58,7 +58,7 @@ export function ActionButtonsSection({
           disabled={upload.isUploading || upload.uploadSuccess}
           className={cn(
             'w-full h-12 text-base font-medium transition-all',
-            upload.uploadSuccess && '!bg-secondary !text-secondary-foreground hover:!bg-secondary/90 border-secondary'
+            upload.uploadSuccess && '!bg-primary !text-primary-foreground hover:!bg-primary/90 border-primary'
           )}
         >
           {upload.uploadSuccess ? (

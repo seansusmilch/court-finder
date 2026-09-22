@@ -685,7 +685,7 @@ function UsersPageContent() {
           className={cn(
             'flex items-start gap-3 rounded-lg border px-4 py-3 text-sm',
             statusMessage.type === 'success'
-              ? 'border-secondary/30 bg-secondary/10 text-secondary'
+              ? 'border-primary/30 bg-primary/10 text-primary'
               : 'border-destructive/30 bg-destructive/10 text-destructive-foreground'
           )}
           role={statusMessage.type === 'error' ? 'alert' : 'status'}

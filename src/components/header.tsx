@@ -29,7 +29,7 @@ export default function Header() {
           <Link
             to='/'
             aria-label='Court Finder home'
-            className='flex min-h-12 items-center gap-3 rounded-lg pr-3 transition-opacity duration-200 hover:opacity-85 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-secondary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none'
+            className='flex min-h-12 items-center gap-3 rounded-lg pr-3 transition-opacity duration-200 hover:opacity-85 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none'
           >
             <img
               src='/logo.webp'
@@ -62,7 +62,7 @@ export default function Header() {
                 'aria-current': 'page',
                 className: 'bg-background text-foreground shadow-sm after:opacity-100',
               }}
-              className='relative inline-flex min-h-12 items-center rounded-md px-4 text-sm font-medium text-muted-foreground outline-none transition-[background-color,color,box-shadow] after:absolute after:bottom-1.5 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:bg-background/70 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-secondary/60 focus-visible:ring-offset-0 motion-reduce:transition-none'
+              className='relative inline-flex min-h-12 items-center rounded-md px-4 text-sm font-medium text-muted-foreground outline-none transition-[background-color,color,box-shadow] after:absolute after:bottom-1.5 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:bg-background/70 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-primary/60 focus-visible:ring-offset-0 motion-reduce:transition-none'
             >
               {to === '/map' ? 'Explore' : to === '/feedback' ? 'Review' : label}
             </Link>
@@ -72,7 +72,7 @@ export default function Header() {
         {/* Right: Controls */}
         <div className='flex items-center justify-end gap-2'>
           <Show when='signed-in'>
-            <div className='flex size-12 items-center justify-center rounded-lg focus-within:ring-[3px] focus-within:ring-secondary/60 focus-within:ring-offset-2 focus-within:ring-offset-background'>
+            <div className='flex size-12 items-center justify-center rounded-lg focus-within:ring-[3px] focus-within:ring-primary/60 focus-within:ring-offset-2 focus-within:ring-offset-background'>
               <UserButton>
                 <UserButton.MenuItems>
                   <UserButton.Link

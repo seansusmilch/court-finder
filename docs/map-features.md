@@ -137,7 +137,7 @@ Handles clustering of court markers at lower zoom levels:
 
 - Uses Mapbox's native clustering with GeoJSON source
 - Dynamic styling based on cluster size
-- Color-coded clusters: blue (1-99), yellow (100-749), pink (750+)
+- Signal-orange clusters for small groups, deeper orange for larger groups, and carbon for the largest groups
 - Cluster radius: 50 pixels (configurable via `CLUSTER_RADIUS`)
 - Maximum cluster zoom: 12 (configurable via `CLUSTER_MAX_ZOOM`)
 
@@ -163,10 +163,10 @@ Individual court markers displayed at high zoom levels:
 **Sport Classifications:**
 
 - Basketball Court: 🏀 (gray background)
-- Tennis Court: 🎾 (blue background)
+- Tennis Court: 🎾 (signal-orange background)
 - Soccer/Football Field: ⚽ (red background)
 - Baseball Diamond: ⚾ (yellow background)
-- Track & Field: 🏃 (blue background)
+- Track & Field: 🏃 (signal-orange background)
 
 #### 6. Court Detail Drawer (`CourtDetailDrawer.tsx`) **NEW**
 
@@ -227,7 +227,7 @@ Quick information popup for clusters and individual markers:
 **Visual Differentiation:**
 
 - Different colors and emojis for each court type
-- Status indicators (verified: blue/vibrant, pending: muted)
+- Status indicators (verified: signal orange/vibrant, pending: muted)
 - Cluster sizing based on court count
 
 ### 2. Interactive Features

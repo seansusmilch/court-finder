@@ -280,7 +280,7 @@ export default function ImageViewer({
     <div
       ref={containerRef}
       className={cn(
-        'relative isolate mx-auto aspect-[4/3] w-full max-h-[50vh] touch-none select-none overflow-hidden rounded-xl border border-border/70 bg-muted/30 shadow-sm outline-none focus-visible:ring-[3px] focus-visible:ring-secondary/60 focus-visible:ring-offset-2',
+        'relative isolate mx-auto aspect-[4/3] w-full max-h-[50vh] touch-none select-none overflow-hidden rounded-xl border border-border/70 bg-muted/30 shadow-sm outline-none focus-visible:ring-[3px] focus-visible:ring-primary/60 focus-visible:ring-offset-2',
         className
       )}
       role='region'

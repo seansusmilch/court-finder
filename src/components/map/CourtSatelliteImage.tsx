@@ -333,7 +333,7 @@ export function CourtSatelliteImage({
             <div className="relative">
               <Skeleton className="w-20 h-20 rounded-lg" />
               <div className="absolute inset-0 overflow-hidden rounded-lg">
-                <div className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-secondary/60 animate-pulse" />
+                <div className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-primary/60 animate-pulse" />
               </div>
             </div>
             <span className="text-sm text-muted-foreground">Preparing satellite evidence…</span>
@@ -365,7 +365,7 @@ export function CourtSatelliteImage({
       {/* Court bbox overlay */}
       {imageDataUrl && bboxStyle && (
         <div
-          className="pointer-events-none absolute box-border rounded-sm border-2 border-secondary/80 shadow-lg"
+          className="pointer-events-none absolute box-border rounded-sm border-2 border-primary/80 shadow-lg"
           style={bboxStyle}
           aria-hidden="true"
         />

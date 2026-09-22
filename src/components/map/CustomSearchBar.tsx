@@ -151,9 +151,9 @@ export function CustomSearchBar({
 
   return (
     <div ref={commandRef} className={cn('relative w-full', className)}>
-      <Command className="rounded-xl border border-border/70 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-[border-color,box-shadow] focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/30 dark:bg-card">
+      <Command className="rounded-xl border border-border/70 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-[border-color,box-shadow] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30 dark:bg-card">
         <div className="flex min-h-[52px] items-center px-4">
-          <Search className="mr-3 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
+          <Search className="mr-3 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
           <Command.Input
             ref={inputRef}
             value={query}
@@ -175,7 +175,7 @@ export function CustomSearchBar({
           />
           {isLoading && (
             <Loader2
-              className="ml-3 h-5 w-5 shrink-0 animate-spin text-secondary"
+              className="ml-3 h-5 w-5 shrink-0 animate-spin text-primary"
               aria-hidden="true"
             />
           )}
@@ -224,8 +224,8 @@ export function CustomSearchBar({
                     aria-selected={index === selectedIndex}
                     className={cn(
                       'relative flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-base outline-hidden select-none transition-colors',
-                      'hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary',
-                      index === selectedIndex && 'bg-secondary/10 text-foreground'
+                      'hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
+                      index === selectedIndex && 'bg-primary/10 text-foreground'
                     )}
                   >
                     {getSuggestionIcon(suggestion)}

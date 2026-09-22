@@ -16,7 +16,7 @@ function NavItem({ icon: Icon, label, to, isActive }: NavItemProps) {
       to={to}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-center outline-none transition-[background-color,color] duration-200 focus-visible:bg-muted focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-secondary/60 motion-reduce:transition-none',
+        'relative flex min-h-16 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-center outline-none transition-[background-color,color] duration-200 focus-visible:bg-muted focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-primary/60 motion-reduce:transition-none',
         isActive
           ? 'text-foreground'
           : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'

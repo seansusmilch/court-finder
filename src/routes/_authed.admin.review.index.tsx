@@ -350,11 +350,11 @@ function RouteComponent() {
                       </div>
                       <div className='relative mt-1 h-6 w-full overflow-hidden rounded-full bg-destructive/20'>
                         <div
-                          className='h-full bg-secondary'
+                          className='h-full bg-primary'
                           style={{ width: `${coveragePct}%` }}
                         />
                         <div className='absolute inset-0 flex items-center justify-between px-2 text-xs font-semibold'>
-                          <span className='text-secondary-foreground'>{covered}</span>
+                          <span className='text-primary-foreground'>{covered}</span>
                           <span className='text-destructive'>{missing}</span>
                         </div>
                       </div>

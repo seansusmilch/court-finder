@@ -42,10 +42,10 @@ export function TrainingHelpPage() {
 
       <div className='space-y-6'>
         {/* Overview Card */}
-        <Card className='border-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20'>
+        <Card className='border-0 bg-muted'>
           <CardHeader>
             <CardTitle className='text-lg sm:text-xl flex items-center gap-2'>
-              <HelpCircle className='h-5 w-5 text-blue-600 dark:text-blue-400' />
+              <HelpCircle className='h-5 w-5 text-primary' />
               How to Provide Training Feedback
             </CardTitle>
           </CardHeader>
@@ -129,7 +129,7 @@ export function TrainingHelpPage() {
                     icon: Check,
                     text: 'Yes',
                     variant: 'default',
-                    className: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground',
+                    className: 'bg-primary hover:bg-primary/90 text-primary-foreground',
                   },
                   title: 'Yes - This is correct',
                   description:
@@ -160,7 +160,7 @@ export function TrainingHelpPage() {
                   key={index}
                   className={`flex items-center gap-4 p-4 rounded-lg border-2 ${
                     item.color === 'positive'
-                      ? 'border-secondary/20 bg-secondary/10 dark:bg-secondary/20 dark:border-secondary/30'
+                      ? 'border-primary/20 bg-primary/10 dark:bg-primary/20 dark:border-primary/30'
                       : item.color === 'red'
                       ? 'border-destructive/20 bg-destructive/10 dark:bg-destructive/20 dark:border-destructive/30'
                       : 'border-muted bg-muted/50 dark:bg-muted/20 dark:border-muted/30'

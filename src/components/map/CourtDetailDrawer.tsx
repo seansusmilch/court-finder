@@ -75,7 +75,7 @@ export function CourtDetailDrawer({
   // Determine confidence color
   const getConfidenceColor = () => {
     if (confidence === null) return '';
-    if (confidence >= 80) return 'text-secondary bg-secondary/10 border-secondary/20';
+    if (confidence >= 80) return 'text-primary bg-primary/10 border-primary/20';
     if (confidence >= 60) return 'text-foreground bg-warning/20 border-warning/30';
     return 'text-destructive bg-destructive/10 border-destructive/20';
   };
@@ -145,7 +145,7 @@ export function CourtDetailDrawer({
                 <span className={cn(
                   'inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold',
                   isVerified
-                    ? 'border-secondary/25 bg-secondary/10 text-secondary'
+                    ? 'border-primary/25 bg-primary/10 text-primary'
                     : 'border-border bg-muted text-muted-foreground'
                 )}>
                   {isVerified ? (
@@ -207,7 +207,7 @@ export function CourtDetailDrawer({
 
                 {userFeedback ? (
                   <div className="flex items-start gap-2 text-sm text-muted-foreground" role="status" aria-live="polite">
-                    {userFeedback.userResponse === 'yes' && <CircleCheck className="mt-0.5 h-4 w-4 text-secondary" aria-hidden="true" />}
+                    {userFeedback.userResponse === 'yes' && <CircleCheck className="mt-0.5 h-4 w-4 text-primary" aria-hidden="true" />}
                     {userFeedback.userResponse === 'no' && <CircleX className="mt-0.5 h-4 w-4 text-destructive" aria-hidden="true" />}
                     {userFeedback.userResponse === 'unsure' && <CircleAlert className="mt-0.5 h-4 w-4 text-warning" aria-hidden="true" />}
                     <span>

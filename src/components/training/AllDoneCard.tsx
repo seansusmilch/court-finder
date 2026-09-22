@@ -15,7 +15,7 @@ export function AllDoneCard({ onNavigateToMap }: AllDoneCardProps) {
         className='w-full max-w-lg rounded-2xl border border-border/70 bg-card px-6 py-10 text-center shadow-sm sm:px-10'
         aria-labelledby='feedback-complete-heading'
       >
-        <div className='mx-auto flex size-16 items-center justify-center rounded-2xl bg-secondary/15 text-secondary'>
+        <div className='mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/15 text-primary'>
           <CheckCircle2 aria-hidden='true' className='size-8' />
         </div>
         <h1
