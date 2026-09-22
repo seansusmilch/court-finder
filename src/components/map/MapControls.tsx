@@ -184,7 +184,7 @@ export function MapControls({
     <Card
       role='region'
       aria-label='Map filters and display'
-      className='w-80 max-w-[92vw] gap-0 overflow-hidden rounded-xl border-0 bg-card py-0 shadow-[0_2px_8px_rgba(0,0,0,0.12)] no-zoom transition-none hover:translate-y-0 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
+      className='h-auto max-h-full min-h-0 w-80 max-w-full gap-0 overflow-hidden rounded-xl border-0 bg-card py-0 shadow-[0_2px_8px_rgba(0,0,0,0.12)] no-zoom transition-none hover:translate-y-0 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
     >
       <div className='border-b border-border/70 px-4 py-3'>
         <h2 className='font-display text-sm font-semibold tracking-tight'>
@@ -194,7 +194,7 @@ export function MapControls({
           Choose which possible facilities appear and how the map looks.
         </p>
       </div>
-      <CardContent className='max-h-[calc(100dvh-7rem)] overflow-y-auto px-4 py-4 md:max-h-[calc(100dvh-16rem)] xl:max-h-[calc(100dvh-7rem)]'>
+      <CardContent className='min-h-0 flex-1 overflow-y-auto px-4 py-4'>
         <ControlsBody sections={sections} />
       </CardContent>
     </Card>
@@ -206,7 +206,7 @@ export function MapControls({
       {!isMobile && (
         <div ref={desktopControlsRef} className='no-zoom'>
           {desktopPanelOpen && (
-            <div className='pointer-events-auto fixed bottom-4 right-[4.5rem] z-40'>
+            <div className='pointer-events-auto fixed inset-y-4 right-[4.5rem] z-40 flex max-w-[calc(100vw-5.5rem)] items-end'>
               {controlsCard}
             </div>
           )}
