@@ -142,7 +142,7 @@ function AccountPage() {
               </p>
             </div>
             {user.role === 'admin' ? (
-              <Shield className='h-5 w-5 text-orange-600 dark:text-orange-400' aria-hidden='true' />
+              <Shield className='h-5 w-5 text-primary' aria-hidden='true' />
             ) : null}
           </div>
         </CardContent>
@@ -229,9 +229,9 @@ function AccountPage() {
       </Card>
 
       {user.role === 'admin' ? (
-        <Card className='border-orange-500/30 bg-orange-500/5 dark:border-orange-500/20 dark:bg-orange-500/10'>
+        <Card className='border-primary/30 bg-primary/5'>
           <CardHeader>
-            <CardTitle className='text-orange-700 dark:text-orange-400'>
+            <CardTitle className='text-primary'>
               Administration
             </CardTitle>
             <CardDescription>Admin tools and dashboards</CardDescription>

@@ -5,17 +5,17 @@
 }
 
 .mapboxgl-ctrl-attrib {
-  background: rgba(11, 11, 11, 0.78) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: color-mix(in oklch, var(--background) 90%, transparent) !important;
+  border: 1px solid color-mix(in oklch, var(--foreground) 18%, transparent);
   border-radius: 4px;
-  color: rgba(255, 255, 255, 0.82);
+  color: color-mix(in oklch, var(--foreground) 82%, transparent);
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 0.75rem;
   padding: 2px 6px;
 }
 
 .mapboxgl-ctrl-attrib a {
-  color: #fff;
+  color: var(--secondary);
 }
 
 @media (max-width: 767px) {
@@ -31,10 +31,10 @@
 }
 
 .mapboxgl-ctrl-scale {
-  background: rgba(11, 11, 11, 0.82) !important;
-  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  background: color-mix(in oklch, var(--background) 92%, transparent) !important;
+  border: 1px solid color-mix(in oklch, var(--foreground) 28%, transparent) !important;
   border-top: 0 !important;
-  color: #fff !important;
+  color: var(--foreground) !important;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   font-size: 0.75rem;
   line-height: 1.2;
