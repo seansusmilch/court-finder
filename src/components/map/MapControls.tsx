@@ -61,10 +61,6 @@ export interface MapControlsProps {
   settings: MapControlsSettings;
   // Section customization
   sections?: MapSectionConfig[];
-  /**
-   * If true, renders a collapsible panel instead of always visible card
-   */
-  collapsible?: boolean;
 }
 
 /**
@@ -90,13 +86,8 @@ export function createDefaultSections(settings: MapControlsSettings): MapSection
       mapStyle: settings.mapStyle,
       onMapStyleChange: settings.onMapStyleChange,
     }),
-    ...(settings.scan || settings.upload
-      ? [
-          createActionButtonsSection({
-            scan: settings.scan,
-            upload: settings.upload,
-          }),
-        ]
+    ...(settings.upload
+      ? [createActionButtonsSection({ upload: settings.upload })]
       : []),
   ];
 }
@@ -128,8 +119,12 @@ export function MapControls({
   const sections = customSections ?? createDefaultSections(settings);
 
   const controlsCard = (
-    <Card className='w-80 max-w-[92vw] overflow-hidden rounded-xl border-border/70 bg-card/95 shadow-lg backdrop-blur no-zoom transition-none hover:translate-y-0 hover:shadow-lg'>
-      <CardContent className='max-h-[calc(100dvh-7rem)] overflow-y-auto px-4 py-4'>
+    <Card
+      role='region'
+      aria-label='Map settings'
+      className='w-80 max-w-[92vw] gap-0 overflow-hidden rounded-xl border-0 bg-card py-0 shadow-[0_2px_8px_rgba(0,0,0,0.12)] no-zoom transition-none hover:translate-y-0 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
+    >
+      <CardContent className='max-h-[calc(100dvh-7rem)] overflow-y-auto px-4 py-4 md:max-h-[calc(100dvh-16rem)] xl:max-h-[calc(100dvh-7rem)]'>
         <ControlsBody sections={sections} />
       </CardContent>
     </Card>
@@ -137,12 +132,12 @@ export function MapControls({
 
   return (
     <div className={cn(className)}>
-      {/* Desktop/tablet: show fixed card above zoom controls */}
-      <div className='pointer-events-auto absolute right-4 top-4 z-50 hidden no-zoom md:block'>
+      {/* Desktop/tablet: keep settings below the search and type filters */}
+      <div className='pointer-events-auto absolute right-4 top-4 z-50 hidden no-zoom md:top-[12rem] md:block xl:top-4'>
         {controlsCard}
       </div>
 
-      {/* Desktop: Navigation controls (locate, compass, scan) */}
+      {/* Desktop: quick map actions */}
       <div className='hidden md:block no-zoom'>
         <CustomNavigationControls
           mapRef={mapRef}
@@ -155,15 +150,16 @@ export function MapControls({
           isLocating={settings.locate?.isLocating}
           onLocateStart={settings.locate?.onLocateStart}
           onLocateEnd={settings.locate?.onLocateEnd}
-          className='pointer-events-auto fixed bottom-4 right-4'
+          className='pointer-events-auto fixed bottom-4 right-4 z-40'
         />
       </div>
 
-      {/* Mobile: FAB + drawer */}
+      {/* Mobile: compact actions + drawer */}
       <div className='md:hidden no-zoom'>
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <CustomNavigationControls
             mapRef={mapRef}
+            layout='grid'
             showSettings
             showScan={!!settings.scan}
             showLocate
@@ -175,9 +171,9 @@ export function MapControls({
             onLocateStart={settings.locate?.onLocateStart}
             onLocateEnd={settings.locate?.onLocateEnd}
             onSettingsClick={() => setDrawerOpen(true)}
-            className='pointer-events-auto fixed bottom-[5.5rem] right-4'
+            className='pointer-events-auto fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40'
           />
-          <DrawerContent className='h-[min(75vh,42rem)] rounded-t-2xl no-zoom'>
+          <DrawerContent className='h-[min(75dvh,42rem)] rounded-t-2xl no-zoom'>
             <DrawerHeader className='border-b border-border/70 px-5 pb-4 pt-5 text-left'>
               <DrawerTitle className='font-display text-xl font-semibold tracking-tight'>
                 Map Settings
@@ -186,7 +182,7 @@ export function MapControls({
                 Adjust filters and map context
               </DrawerDescription>
             </DrawerHeader>
-            <div className='overflow-y-auto px-5 pb-8 pt-5'>
+            <div className='overflow-y-auto px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5'>
               <ControlsBody sections={sections} />
             </div>
           </DrawerContent>
