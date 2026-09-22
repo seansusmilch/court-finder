@@ -151,7 +151,7 @@ export function CustomSearchBar({
 
   return (
     <div ref={commandRef} className={cn('relative w-full', className)}>
-      <Command className="rounded-xl border border-border/70 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-[border-color,box-shadow] focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/30 dark:bg-card">
+      <Command className="rounded-xl border border-border/80 bg-card shadow-[0_2px_8px_rgba(0,0,0,0.12)] transition-[border-color,box-shadow] focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/30">
         <div className="flex min-h-[52px] items-center px-4">
           <Search className="mr-3 h-5 w-5 shrink-0 text-secondary" aria-hidden="true" />
           <Command.Input
@@ -185,7 +185,7 @@ export function CustomSearchBar({
       {/* Suggestions dropdown - using plain divs instead of cmdk components */}
       {(open || isLoading) && (
         <div
-          className="absolute left-0 right-0 top-full z-[9999] mt-2 overflow-hidden rounded-xl border border-border/70 bg-popover text-popover-foreground shadow-[0_4px_16px_rgba(0,0,0,0.16)] no-zoom"
+          className="absolute left-0 right-0 top-full z-[9999] mt-2 overflow-hidden rounded-xl border border-border/80 bg-popover text-popover-foreground shadow-[0_4px_16px_rgba(0,0,0,0.16)] no-zoom"
         >
           {isLoading && (
             <div className="py-6 text-center text-sm text-muted-foreground" role="status">

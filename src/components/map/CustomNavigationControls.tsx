@@ -128,7 +128,7 @@ export function createDefaultButtons(
 
   const getScanButtonIcon = () => {
     if (!isScanning || !scanProgress) {
-      return <Radar className='size-5 text-white' aria-hidden='true' />;
+      return <Radar className='size-5 text-primary-foreground' aria-hidden='true' />;
     }
     return null;
   };

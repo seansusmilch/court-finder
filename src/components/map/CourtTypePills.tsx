@@ -42,7 +42,7 @@ export function CourtTypePills({
             'inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             selectedType === null
               ? 'border-foreground bg-foreground text-background shadow-sm'
-              : 'border-border/70 bg-background/95 text-foreground shadow-sm hover:bg-muted'
+              : 'border-border/80 bg-card/95 text-foreground shadow-sm hover:border-secondary/40 hover:bg-muted'
           )}
         >
           <span>All Courts</span>
@@ -63,7 +63,7 @@ export function CourtTypePills({
                 'inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-[background-color,border-color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 isSelected
                   ? 'text-primary-foreground shadow-sm'
-                  : 'border-border/70 bg-background/95 text-foreground shadow-sm hover:bg-muted'
+                  : 'border-border/80 bg-card/95 text-foreground shadow-sm hover:border-secondary/40 hover:bg-muted'
               )}
               style={
                 isSelected

@@ -42,10 +42,10 @@ export function TrainingHelpPage() {
 
       <div className='space-y-6'>
         {/* Overview Card */}
-        <Card className='border-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20'>
+        <Card className='border-secondary/20 bg-secondary/5'>
           <CardHeader>
             <CardTitle className='text-lg sm:text-xl flex items-center gap-2'>
-              <HelpCircle className='h-5 w-5 text-blue-600 dark:text-blue-400' />
+              <HelpCircle className='h-5 w-5 text-secondary' />
               How to Provide Training Feedback
             </CardTitle>
           </CardHeader>
