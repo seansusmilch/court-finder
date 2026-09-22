@@ -43,10 +43,10 @@ export function ActionButtonsSection({
               <Radar className='h-5 w-5 animate-scan-spin' />
               {scan.scanProgress && scan.scanProgress.totalTiles > 0
                 ? `Scanning area: ${Math.round((scan.scanProgress.tilesProcessed / scan.scanProgress.totalTiles) * 100)}%`
-                : 'Scanning area…'}
+                : 'Scanning for possible facilities…'}
             </span>
           ) : (
-            'Scan this area'
+            'Scan area for possible facilities'
           )}
         </Button>
       )}
@@ -64,15 +64,15 @@ export function ActionButtonsSection({
           {upload.uploadSuccess ? (
             <span className='flex items-center gap-2'>
               <Check className='h-5 w-5' />
-              Uploaded successfully!
+              Center image uploaded for training
             </span>
           ) : upload.isUploading ? (
             <span className='flex items-center gap-2'>
               <span className='h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current' />
-              Uploading…
+              Uploading center image…
             </span>
           ) : (
-            'Upload center tile'
+            'Upload center image for training'
           )}
         </Button>
       )}

@@ -21,7 +21,7 @@ export function ConfidenceSection({
       <div className='flex items-center gap-2'>
         <SlidersHorizontal className='h-4 w-4 text-muted-foreground' />
         <h3 className='font-display text-sm font-semibold tracking-tight'>
-          Minimum confidence
+          Minimum model confidence
         </h3>
         {showPercentage && (
           <span className='ml-auto text-xs font-mono text-muted-foreground'>

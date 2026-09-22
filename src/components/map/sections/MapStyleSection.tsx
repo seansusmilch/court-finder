@@ -18,9 +18,7 @@ export function MapStyleSection({
     <div className={cn('space-y-3', className)}>
       <div className='flex items-center gap-2'>
         <Layers3 className='h-4 w-4 text-muted-foreground' />
-        <h3 className='font-display text-sm font-semibold tracking-tight'>
-          Map Style
-        </h3>
+        <h3 className='font-display text-sm font-semibold tracking-tight'>Map appearance</h3>
       </div>
       <MapStyleControl
         mapStyle={mapStyle}
