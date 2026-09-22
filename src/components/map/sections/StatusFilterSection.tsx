@@ -16,15 +16,21 @@ export function StatusFilterSection({
   className,
 }: StatusFilterSectionProps) {
   return (
-    <div className={cn('flex items-center justify-between', className)}>
-      <div className='flex items-center gap-2'>
+    <div className={cn('flex items-start justify-between gap-4', className)}>
+      <div className='flex min-w-0 items-start gap-2'>
         <ShieldCheck className='h-4 w-4 text-muted-foreground' />
-        <Label htmlFor='verified-only' className='cursor-pointer text-sm font-medium'>
-          Verified only
-        </Label>
+        <div className='min-w-0'>
+          <Label htmlFor='verified-only' className='cursor-pointer text-sm font-medium'>
+            Community verified only
+          </Label>
+          <p className='mt-1 text-xs leading-4 text-muted-foreground'>
+            Show facilities with community confirmation.
+          </p>
+        </div>
       </div>
       <Switch
         id='verified-only'
+        className='mt-0.5'
         checked={verifiedOnly}
         onCheckedChange={onVerifiedOnlyChange}
       />

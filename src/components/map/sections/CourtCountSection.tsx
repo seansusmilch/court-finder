@@ -17,11 +17,11 @@ export function CourtCountSection({
 }: CourtCountSectionProps) {
   return (
     <div className={cn('space-y-3', className)}>
-      {/* Court count stat - prominent */}
+      {/* Possible facility count - prominent */}
       <div className='flex items-center justify-between'>
         <div>
           <p className='font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
-            Courts in view
+            Possible facilities in view
           </p>
           <p className={cn(
             'mt-1 font-display text-3xl font-semibold tracking-tight',
@@ -44,7 +44,7 @@ export function CourtCountSection({
         <div className='rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2 flex items-start gap-2'>
           <AlertCircle className='mt-0.5 size-4 flex-shrink-0 text-amber-600 dark:text-amber-400' />
           <p className='text-xs leading-5 text-amber-700 dark:text-amber-300'>
-            Zoom in to reveal court pins
+            Zoom in to reveal possible facilities.
           </p>
         </div>
       )}

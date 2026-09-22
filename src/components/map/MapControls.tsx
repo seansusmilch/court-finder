@@ -121,9 +121,17 @@ export function MapControls({
   const controlsCard = (
     <Card
       role='region'
-      aria-label='Map settings'
+      aria-label='Map filters and display'
       className='w-80 max-w-[92vw] gap-0 overflow-hidden rounded-xl border-0 bg-card py-0 shadow-[0_2px_8px_rgba(0,0,0,0.12)] no-zoom transition-none hover:translate-y-0 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
     >
+      <div className='border-b border-border/70 px-4 py-3'>
+        <h2 className='font-display text-sm font-semibold tracking-tight'>
+          Map filters and display
+        </h2>
+        <p className='mt-1 text-xs leading-4 text-muted-foreground'>
+          Choose which possible facilities appear and how the map looks.
+        </p>
+      </div>
       <CardContent className='max-h-[calc(100dvh-7rem)] overflow-y-auto px-4 py-4 md:max-h-[calc(100dvh-16rem)] xl:max-h-[calc(100dvh-7rem)]'>
         <ControlsBody sections={sections} />
       </CardContent>
@@ -176,10 +184,10 @@ export function MapControls({
           <DrawerContent className='h-[min(75dvh,42rem)] rounded-t-2xl no-zoom'>
             <DrawerHeader className='border-b border-border/70 px-5 pb-4 pt-5 text-left'>
               <DrawerTitle className='font-display text-xl font-semibold tracking-tight'>
-                Map Settings
+                Map filters and display
               </DrawerTitle>
               <DrawerDescription>
-                Adjust filters and map context
+                Choose which possible facilities appear and how the map looks.
               </DrawerDescription>
             </DrawerHeader>
             <div className='overflow-y-auto px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5'>

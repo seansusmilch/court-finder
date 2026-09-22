@@ -47,10 +47,16 @@ export function MapStyleControl({
   };
 
   return (
-    <div className='flex items-center justify-between'>
-      <Label htmlFor='map-style-switch'>Satellite View</Label>
+    <div className='flex items-start justify-between gap-4'>
+      <div>
+        <Label htmlFor='map-style-switch'>Use satellite imagery</Label>
+        <p className='mt-1 text-xs leading-4 text-muted-foreground'>
+          Inspect the visual context around possible facilities.
+        </p>
+      </div>
       <Switch
         id='map-style-switch'
+        className='mt-0.5'
         checked={isSatellite}
         onCheckedChange={handleStyleChange}
       />

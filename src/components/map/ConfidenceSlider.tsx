@@ -12,8 +12,7 @@ export function ConfidenceSlider({
   return (
     <div className='mt-2 space-y-2'>
       <div className='flex items-center justify-between text-xs text-muted-foreground'>
-        <span>Show detections at or above</span>
-        <span className='font-mono text-foreground'>Confidence: {Math.round(confidenceThreshold * 100)}%</span>
+        <span>Show possible facilities at or above this model confidence</span>
       </div>
       <input
         aria-label='Minimum model confidence'
