@@ -7,7 +7,6 @@ import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/mapbox.css';
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
-import { Loader2, MapPin, SearchX, ZoomIn } from 'lucide-react';
 import { useLocalStorage, useIsMobile } from '@/hooks';
 import { useAction, useQuery } from 'convex/react';
 import { useMutation } from '@tanstack/react-query';
@@ -465,38 +464,6 @@ function MapPage() {
             );
           })}
       </Map>
-
-      <div
-        className='pointer-events-none absolute bottom-[9rem] left-4 z-30 md:bottom-14'
-        aria-live='polite'
-      >
-        <div className='flex min-h-10 items-center gap-2 rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-sm text-white shadow-lg backdrop-blur-sm'>
-          {viewState.zoom < PINS_VISIBLE_FROM_ZOOM ? (
-            <>
-              <ZoomIn className='size-4 text-primary' aria-hidden />
-              <span>Zoom in to see possible facilities</span>
-            </>
-          ) : featureCollection === undefined ? (
-            <>
-              <Loader2 className='size-4 animate-spin text-primary' aria-hidden />
-              <span>Searching this area…</span>
-            </>
-          ) : geojson.features.length > 0 ? (
-            <>
-              <MapPin className='size-4 text-primary' aria-hidden />
-              <span>
-                {geojson.features.length.toLocaleString()} possible{' '}
-                {geojson.features.length === 1 ? 'facility' : 'facilities'} in view
-              </span>
-            </>
-          ) : (
-            <>
-              <SearchX className='size-4 text-white/70' aria-hidden />
-              <span>No possible facilities in this view</span>
-            </>
-          )}
-        </div>
-      </div>
 
       {isMobile && selectedPin && (
         <CourtDetailDrawer
