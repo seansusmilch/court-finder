@@ -64,6 +64,9 @@ export interface MapViewState {
   longitude: number;
   latitude: number;
   zoom: number;
+  /** Optional so view state saved before rotation support remains valid. */
+  bearing?: number;
+  pitch?: number;
 }
 
 // Bounding box for viewport queries

@@ -45,7 +45,7 @@ export function createConfidenceSection(
 ): MapSectionConfig {
   return {
     id: 'confidence',
-    order: 2,
+    order: 3,
     renderContent: () => <ConfidenceSection {...props} />,
   };
 }

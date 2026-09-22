@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { CustomNavigationControls } from '@/components/map/CustomNavigationControls';
 import Map, {
   ScaleControl,
 } from 'react-map-gl/mapbox';
@@ -21,7 +20,6 @@ import CourtClusters from '@/components/map/CourtClusters';
 import { CourtMarker } from '@/components/map/CourtMarker';
 import MapControls from '@/components/map/MapControls';
 import { FloatingSearchBar } from '@/components/map/FloatingSearchBar';
-import { CourtTypePills } from '@/components/map/CourtTypePills';
 import { CourtDetailDrawer } from '@/components/map/CourtDetailDrawer';
 import { CourtModal } from '@/components/map/CourtModal';
 import {
@@ -63,6 +61,8 @@ const EMPTY_FEATURE_COLLECTION: GeoJSONFeatureCollection = {
   type: 'FeatureCollection',
   features: [],
 };
+
+const COURT_CATEGORIES = Object.keys(COURT_CLASS_VISUALS);
 
 function getScanErrorMessage(error: unknown) {
   const data =
@@ -124,6 +124,7 @@ function MapPage() {
     LOCALSTORAGE_KEYS.MAP_VIEW_STATE,
     loaderData.defaultViewState
   );
+  const [bearing, setBearing] = useState(viewState.bearing ?? 0);
 
   // Use individual localStorage hooks for each setting to avoid circular dependencies
   const [confidenceThreshold, setConfidenceThreshold] = useLocalStorage<number>(
@@ -147,9 +148,6 @@ function MapPage() {
   );
 
   const [bbox, setBbox] = useState<ViewportBbox | null>(null);
-
-  // Single filter pill selection (null = all types shown)
-  const [selectedType, setSelectedType] = useState<string | null>(null);
 
   // Track when map is loaded to prevent adding sources before style is ready
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -344,6 +342,7 @@ function MapPage() {
         };
       };
       setViewState(viewState);
+      setBearing(viewState.bearing ?? 0);
       const newBbox = computeBbox({
         getBounds: () => target.getBounds?.() ?? undefined,
       });
@@ -351,6 +350,10 @@ function MapPage() {
     },
     [setViewState]
   );
+
+  const onRotate = useCallback((evt: { viewState: MapViewState }) => {
+    setBearing(evt.viewState.bearing ?? 0);
+  }, []);
 
   // Keep previous pins visible during refetches to avoid flicker on pan/zoom/filters
   const [stableFeatureCollection, setStableFeatureCollection] =
@@ -368,17 +371,7 @@ function MapPage() {
     const source =
       featureCollection ?? stableFeatureCollection ?? EMPTY_FEATURE_COLLECTION;
 
-    // If a pill is selected, filter to just that type
-    if (selectedType !== null) {
-      return {
-        type: 'FeatureCollection',
-        features: source.features.filter(
-          (f) => String(f.properties.class) === selectedType
-        ),
-      } as GeoJSONFeatureCollection;
-    }
-
-    // Otherwise use the existing enabledCategories filter
+    // A null category selection means all facility types are enabled.
     if (enabledCategories === null) return source;
     if (enabledCategories.length === 0)
       return {
@@ -396,7 +389,6 @@ function MapPage() {
     featureCollection,
     stableFeatureCollection,
     enabledCategories,
-    selectedType,
     viewState.zoom,
     PINS_VISIBLE_FROM_ZOOM,
   ]);
@@ -414,6 +406,7 @@ function MapPage() {
         style={{ width: '100%', height: '100%' }}
         mapStyle={mapStyle}
         onMoveEnd={onMoveEnd}
+        onRotate={onRotate}
         onLoad={(e) => {
           setMapLoaded(true);
           const b = computeBbox({
@@ -490,17 +483,15 @@ function MapPage() {
         mapRef={mapRef}
       />
 
-      <CourtTypePills
-        selectedType={selectedType}
-        onTypeChange={setSelectedType}
-      />
-
       <MapControls
         className='absolute inset-0 pointer-events-none'
         mapRef={mapRef}
         settings={{
           courtCount: geojson.features.length,
           isZoomSufficient: viewState.zoom >= PINS_VISIBLE_FROM_ZOOM,
+          categories: COURT_CATEGORIES,
+          enabledCategories,
+          onCategoriesChange: setEnabledCategories,
           confidenceThreshold,
           onConfidenceChange: setConfidenceThreshold,
           verifiedOnly,
@@ -526,6 +517,7 @@ function MapPage() {
             onLocateStart: () => setIsLocating(true),
             onLocateEnd: () => setIsLocating(false),
           },
+          bearing,
         }}
       />
     </div>

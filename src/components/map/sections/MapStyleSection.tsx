@@ -36,7 +36,7 @@ export function createMapStyleSection(
 ): MapSectionConfig {
   return {
     id: 'map-style',
-    order: 3,
+    order: 4,
     renderContent: () => <MapStyleSection {...props} />,
   };
 }

@@ -43,7 +43,7 @@ export function createStatusFilterSection(
 ): MapSectionConfig {
   return {
     id: 'statusFilter',
-    order: 1,
+    order: 2,
     renderContent: () => <StatusFilterSection {...props} />,
   };
 }
