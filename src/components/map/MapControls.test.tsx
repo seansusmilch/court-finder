@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { MapControls } from './MapControls';
 
 function createMapRef() {
@@ -33,14 +33,20 @@ describe('MapControls', () => {
   it('toggles the anchored filter panel from the stack control', () => {
     render(<MapControls mapRef={createMapRef()} settings={createSettings()} />);
 
-    const filterButtons = screen.getAllByRole('button', { name: 'Open map filters' });
+    const filterButtons = screen.getAllByRole('button', {
+      name: 'Open map filters',
+    });
     expect(filterButtons[0]).toHaveAttribute('aria-expanded', 'false');
 
     fireEvent.click(filterButtons[0]);
 
     expect(filterButtons[0]).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('region', { name: 'Map filters and display' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Scan area for possible facilities' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Map filters and display' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Scan area for possible facilities' })
+    ).toBeInTheDocument();
 
     fireEvent.click(filterButtons[0]);
     expect(filterButtons[0]).toHaveAttribute('aria-expanded', 'false');

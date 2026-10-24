@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { CategoryFilterSection } from './CategoryFilterSection';
 
 const categories = ['basketball-court', 'tennis-court', 'baseball-diamond'];

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import {
   ensureCurrentUserRecord,
@@ -24,7 +24,9 @@ describe('Clerk auth helpers', () => {
 
   it('reads a direct Clerk role claim', () => {
     expect(getRoleFromIdentity(clerkIdentity)).toBe('admin');
-    expect(roleHasPermissionForIdentity(clerkIdentity, 'admin.access')).toBe(true);
+    expect(roleHasPermissionForIdentity(clerkIdentity, 'admin.access')).toBe(
+      true
+    );
   });
 
   it('reads a nested metadata role claim', () => {
@@ -38,10 +40,12 @@ describe('Clerk auth helpers', () => {
   });
 
   it('defaults an absent or unsupported role to a regular user', () => {
+    expect(getRoleFromIdentity({ ...clerkIdentity, role: 'unsupported' })).toBe(
+      'user'
+    );
     expect(
-      getRoleFromIdentity({ ...clerkIdentity, role: 'unsupported' })
-    ).toBe('user');
-    expect(roleHasPermissionForIdentity(clerkIdentity, 'unknown.permission')).toBe(false);
+      roleHasPermissionForIdentity(clerkIdentity, 'unknown.permission')
+    ).toBe(false);
   });
 
   it('derives permissions from roles without persisting them', () => {
@@ -50,12 +54,18 @@ describe('Clerk auth helpers', () => {
   });
 
   it('reuses an existing local identity bridge', async () => {
-    const existing = { _id: 'local_user', _creationTime: 1, externalId: clerkIdentity.subject };
+    const existing = {
+      _id: 'local_user',
+      _creationTime: 1,
+      externalId: clerkIdentity.subject,
+    };
     const ctx = {
       auth: { getUserIdentity: vi.fn().mockResolvedValue(clerkIdentity) },
       db: {
         query: vi.fn().mockReturnValue({
-          withIndex: vi.fn().mockReturnValue({ unique: vi.fn().mockResolvedValue(existing) }),
+          withIndex: vi
+            .fn()
+            .mockReturnValue({ unique: vi.fn().mockResolvedValue(existing) }),
         }),
         insert: vi.fn(),
       },
@@ -78,7 +88,9 @@ describe('Clerk auth helpers', () => {
       auth: { getUserIdentity: vi.fn().mockResolvedValue(clerkIdentity) },
       db: {
         query: vi.fn().mockReturnValue({
-          withIndex: vi.fn().mockReturnValue({ unique: vi.fn().mockResolvedValue(null) }),
+          withIndex: vi
+            .fn()
+            .mockReturnValue({ unique: vi.fn().mockResolvedValue(null) }),
         }),
         insert,
         get,
@@ -87,7 +99,12 @@ describe('Clerk auth helpers', () => {
 
     const result = await ensureCurrentUserRecord(ctx as never);
 
-    expect(insert).toHaveBeenCalledWith('users', { externalId: clerkIdentity.subject });
-    expect(result).toMatchObject({ externalId: clerkIdentity.subject, role: 'admin' });
+    expect(insert).toHaveBeenCalledWith('users', {
+      externalId: clerkIdentity.subject,
+    });
+    expect(result).toMatchObject({
+      externalId: clerkIdentity.subject,
+      role: 'admin',
+    });
   });
 });

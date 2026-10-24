@@ -13,7 +13,7 @@ Use this skill for user-facing frontend work in `src/`.
 - TanStack Router file routes live in `src/routes/`; keep the route component in the same route file.
 - Tailwind CSS v4 is configured through `src/index.css` and `@tailwindcss/vite`.
 - shadcn/ui components live in `src/components/ui/`; they are customized in this app, so edit them when the task genuinely affects shared primitives.
-- Use Bun as the package/script runner. This project intentionally uses Vite and Vitest through Bun scripts.
+- Use Bun as the package/script runner. This project uses Vite Plus through Bun scripts, with config imports from `vite-plus` and test imports from `vite-plus/test`.
 
 ## Project Conventions
 

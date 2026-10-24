@@ -3,10 +3,23 @@ import tailwindcss from '@tailwindcss/vite';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, lazyPlugins } from 'vite-plus';
 
 export default defineConfig({
-  plugins: [
+  fmt: {
+    singleQuote: true,
+    jsxSingleQuote: true,
+    printWidth: 80,
+    trailingComma: 'es5',
+    ignorePatterns: ['convex/_generated/**', 'src/routeTree.gen.ts'],
+  },
+  lint: {
+    ignorePatterns: ['convex/_generated/**', 'src/routeTree.gen.ts'],
+    jsPlugins: [{ name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' }],
+    rules: { 'vite-plus/prefer-vite-plus-imports': 'error' },
+    options: { typeAware: true, typeCheck: true },
+  },
+  plugins: lazyPlugins(() => [
     tailwindcss(),
     tanstackRouter({}),
     react(),
@@ -27,11 +40,11 @@ export default defineConfig({
       pwaAssets: { disabled: false, config: true },
       devOptions: { enabled: true },
     }),
-  ],
+  ]),
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@backend': path.resolve(__dirname, './convex'),
+      '@': path.resolve(import.meta.dirname, './src'),
+      '@backend': path.resolve(import.meta.dirname, './convex'),
     },
     dedupe: ['convex', 'convex/react'],
   },

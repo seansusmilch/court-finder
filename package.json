@@ -1,22 +1,25 @@
 {
   "name": "court-finder",
   "version": "0.0.1",
-  "author": "Sean Susmilch",
-  "packageManager": "bun@1.2.19",
   "private": true,
+  "author": "Sean Susmilch",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n S,C \"bun run dev:backend\" \"bun run dev:frontend\"",
     "dev:backend": "convex dev",
     "dev:backend:setup": "convex dev --configure --until-success",
-    "dev:frontend": "vite --port=3001",
-    "build": "vite build",
-    "serve": "vite preview",
-    "start": "vite",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "dev:frontend": "vp dev --port=3001",
+    "build": "vp build",
+    "serve": "vp preview",
+    "start": "vp dev",
+    "test": "vp test run",
+    "test:watch": "vp test",
+    "check": "bun run generate-routes && vp check",
+    "lint": "vp lint",
+    "fmt": "vp fmt",
+    "fmt:check": "vp fmt --check",
     "generate-routes": "tsr generate",
-    "check-types": "bun run generate-routes && tsc --noEmit",
+    "check-types": "bun run generate-routes && vp check --no-fmt --no-lint",
     "generate-pwa-assets": "pwa-assets-generator"
   },
   "dependencies": {
@@ -73,7 +76,14 @@
     "jsdom": "^29.1.1",
     "postcss": "^8.5.28",
     "typescript": "^6.0.3",
-    "vite": "^8.3.0",
-    "vitest": "^4.1.11"
-  }
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
+    "vite-plus": "1.4.0"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
+  },
+  "engines": {
+    "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+  },
+  "packageManager": "bun@1.2.19"
 }

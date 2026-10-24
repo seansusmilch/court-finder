@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { DistanceDisplay } from './DistanceDisplay';
 
 describe('DistanceDisplay', () => {
@@ -25,7 +25,9 @@ describe('DistanceDisplay', () => {
       />
     );
 
-    expect(screen.getByText('Enable location to see distance')).toBeInTheDocument();
+    expect(
+      screen.getByText('Enable location to see distance')
+    ).toBeInTheDocument();
   });
 
   it('renders formatted distance from the user location', () => {

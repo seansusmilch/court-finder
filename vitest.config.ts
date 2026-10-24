@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
   test: {
@@ -15,8 +15,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@backend': path.resolve(__dirname, './convex'),
+      '@': path.resolve(import.meta.dirname, './src'),
+      '@backend': path.resolve(import.meta.dirname, './convex'),
     },
   },
 });

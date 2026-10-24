@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   pixelOnTileToLngLat,
   pointToTile,
@@ -36,11 +36,9 @@ describe('Convex tile helpers', () => {
 
   it('enumerates tiles around a center tile without crossing world bounds', () => {
     expect(
-      tilesInRadiusFromTile(
-        { z: 1, x: 0, y: 0 },
-        1,
-        { accessToken: 'token' }
-      ).tiles.map(({ x, y }) => ({ x, y }))
+      tilesInRadiusFromTile({ z: 1, x: 0, y: 0 }, 1, {
+        accessToken: 'token',
+      }).tiles.map(({ x, y }) => ({ x, y }))
     ).toEqual([
       { x: 0, y: 0 },
       { x: 0, y: 1 },
@@ -105,10 +103,7 @@ describe('Convex tile helpers', () => {
 
   it('enumerates tiles intersecting ordinary and dateline-crossing bboxes', () => {
     expect(
-      tilesIntersectingBbox(
-        { minLat: -1, minLng: -1, maxLat: 1, maxLng: 1 },
-        1
-      )
+      tilesIntersectingBbox({ minLat: -1, minLng: -1, maxLat: 1, maxLng: 1 }, 1)
     ).toEqual([
       { z: 1, x: 0, y: 0 },
       { z: 1, x: 0, y: 1 },

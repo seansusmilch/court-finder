@@ -1,13 +1,17 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { applyClerkMigrationLinks, upsertFromClerk } from './users';
 
-const handler = (upsertFromClerk as unknown as {
-  _handler: (ctx: unknown, args: Record<string, unknown>) => Promise<unknown>;
-})._handler;
+const handler = (
+  upsertFromClerk as unknown as {
+    _handler: (ctx: unknown, args: Record<string, unknown>) => Promise<unknown>;
+  }
+)._handler;
 
-const migrationHandler = (applyClerkMigrationLinks as unknown as {
-  _handler: (ctx: unknown, args: Record<string, unknown>) => Promise<unknown>;
-})._handler;
+const migrationHandler = (
+  applyClerkMigrationLinks as unknown as {
+    _handler: (ctx: unknown, args: Record<string, unknown>) => Promise<unknown>;
+  }
+)._handler;
 
 function context(
   existing: Record<string, unknown> | null = null,
@@ -16,7 +20,9 @@ function context(
   return {
     db: {
       query: vi.fn().mockReturnValue({
-        withIndex: vi.fn().mockReturnValue({ unique: vi.fn().mockResolvedValue(existing) }),
+        withIndex: vi
+          .fn()
+          .mockReturnValue({ unique: vi.fn().mockResolvedValue(existing) }),
         collect: vi.fn().mockResolvedValue(users),
       }),
       insert: vi.fn().mockResolvedValue('new_user'),
@@ -38,7 +44,9 @@ describe('Clerk user synchronization', () => {
     const ctx = context();
 
     expect(await handler(ctx, { id: 'clerk_user' })).toBe('new_user');
-    expect(ctx.db.insert).toHaveBeenCalledWith('users', { externalId: 'clerk_user' });
+    expect(ctx.db.insert).toHaveBeenCalledWith('users', {
+      externalId: 'clerk_user',
+    });
   });
 
   it('links legacy users without deleting their application data', async () => {

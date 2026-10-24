@@ -76,3 +76,5 @@ routeTree.gen.ts
 .impeccable/critique/
 
 .env.local
+.vitest/
+.vite/

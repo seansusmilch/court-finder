@@ -13,15 +13,19 @@ Court Finder is a React + Convex app for finding and validating sports courts fr
 
 ## Stack
 
-- React 19, TypeScript, Vite, and Bun
+- React 19, TypeScript, Vite Plus, and Bun
 - TanStack Router for file-based routing
 - Convex for backend data and functions, with Clerk for authentication and account management
 - Tailwind CSS v4 and shadcn/ui
 - Mapbox GL JS, Mapbox Search, and `react-map-gl`
 - Roboflow integration for satellite court detection
-- Vitest and Testing Library
+- Vitest (through Vite Plus) and Testing Library
+- Oxlint and Oxfmt (through Vite Plus) for linting, formatting, and type checking
 
 ## Getting Started
+
+Use Bun (the version in `package.json`) and Node.js `^22.18.0 || ^24.11.0 || >=26.0.0`.
+Vite Plus is installed locally with the project; a global `vp` installation is optional.
 
 Install dependencies:
 
@@ -41,7 +45,7 @@ Run the backend and frontend together:
 bun dev
 ```
 
-The Vite app runs at [http://localhost:3001](http://localhost:3001).
+The Vite Plus frontend runs at [http://localhost:3001](http://localhost:3001).
 
 ## Environment
 
@@ -69,17 +73,27 @@ CONVEX_SITE_URL=
 
 ## Scripts
 
-- `bun dev` - Run Convex and Vite concurrently
+- `bun dev` - Run Convex and the Vite Plus frontend concurrently
 - `bun dev:backend` - Run the Convex dev server
 - `bun dev:backend:setup` - Configure Convex for local development
-- `bun dev:frontend` - Run Vite on port 3001
-- `bun check-types` - Generate TanStack routes and run TypeScript checking
-- `bun run test` - Run Vitest tests once
-- `bun run test:watch` - Run Vitest in watch mode
+- `bun dev:frontend` - Run `vp dev` on port 3001
+- `bun run check` - Generate TanStack routes, then check formatting, lint, and types with `vp check`
+- `bun check-types` - Generate TanStack routes and run Vite Plus type checking
+- `bun run lint` - Run Oxlint with type-aware rules and type checking
+- `bun run fmt` - Format the repository with Oxfmt
+- `bun run fmt:check` - Check formatting without writing files
+- `bun run test` - Run the bundled Vitest tests once with `vp test run`
+- `bun run test:watch` - Run the bundled Vitest in watch mode
 - `bun run build` - Build the production frontend
 - `bun serve` - Preview the production build
 - `bun generate-routes` - Regenerate TanStack Router route types
 - `bun generate-pwa-assets` - Generate PWA image assets
+
+The Bun scripts use the local `vp` binary. For other Vite Plus commands, use
+`bunx --no-install vp <command>`. Keep using `bun dev` to start both servers;
+`vp dev` starts only the frontend. Test configuration stays in `vitest.config.ts`
+so unit tests do not run the app's router or PWA plugins. Lint and format settings
+live in `vite.config.ts` and exclude generated Convex and route files.
 
 ## Project Structure
 
@@ -100,7 +114,7 @@ src/styles/              Mapbox and global style support
 Use the smallest relevant check for the change:
 
 ```bash
-bun check-types
+bun run check
 bun run test
 bun run build
 ```

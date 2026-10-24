@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { FeedbackActions } from './FeedbackActions';
 
 describe('FeedbackActions', () => {
@@ -10,8 +10,8 @@ describe('FeedbackActions', () => {
 
     render(
       <FeedbackActions
-        displayName="Basketball Court"
-        emoji="B"
+        displayName='Basketball Court'
+        emoji='B'
         onSubmit={onSubmit}
         disabled={false}
       />
@@ -33,8 +33,8 @@ describe('FeedbackActions', () => {
   it('disables feedback buttons while submitting', () => {
     render(
       <FeedbackActions
-        displayName="Basketball Court"
-        emoji="B"
+        displayName='Basketball Court'
+        emoji='B'
         onSubmit={vi.fn()}
         disabled
       />
