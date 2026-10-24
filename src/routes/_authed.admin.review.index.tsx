@@ -354,7 +354,9 @@ function RouteComponent() {
                           style={{ width: `${coveragePct}%` }}
                         />
                         <div className='absolute inset-0 flex items-center justify-between px-2 text-xs font-semibold'>
-                          <span className='text-success-foreground'>{covered}</span>
+                          <span className='text-success-foreground'>
+                            {covered}
+                          </span>
                           <span className='text-destructive'>{missing}</span>
                         </div>
                       </div>
@@ -440,8 +442,8 @@ function RouteComponent() {
               const status = (item as any).annotated
                 ? 'Annotated'
                 : (item as any).imageUploaded
-                ? 'Image Uploaded'
-                : 'Created';
+                  ? 'Image Uploaded'
+                  : 'Created';
               return (
                 <Card key={batch._id} className='h-full hover:shadow'>
                   <Link

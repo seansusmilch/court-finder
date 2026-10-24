@@ -3,6 +3,7 @@
 ## Overview
 
 Transform the court finder from a **prediction-centric** to a **court-centric** model where:
+
 - The map displays ONLY court records (never raw predictions)
 - Every prediction MUST be linked to a court (no null `courtId`)
 - Courts aggregate predictions using **75% bounding box overlap** logic
@@ -12,6 +13,7 @@ Transform the court finder from a **prediction-centric** to a **court-centric** 
 ## Current State Analysis
 
 ### What's Already Working
+
 - `courts` table exists with `status` field ('verified', 'pending', 'rejected')
 - Verification thresholds configured (3 feedbacks, 75% positive rate)
 - `createPendingCourtFromPrediction` mutation exists
@@ -20,6 +22,7 @@ Transform the court finder from a **prediction-centric** to a **court-centric** 
 - Schema has `courtId` on predictions (nullable)
 
 ### What Needs To Change
+
 1. **Linking logic**: Uses proximity (20m radius) instead of bounding box overlap
 2. **Map display**: Shows both predictions AND courts (should show ONLY courts)
 3. **Court enforcement**: No guarantee every prediction has a `courtId`
@@ -98,10 +101,15 @@ export const findOverlappingCourt = internalQuery({
     // Get all courts on same tile with same class
     const allCourts = await ctx.db.query('courts').collect();
 
-    const candidateCourts = allCourts.filter(court => {
+    const candidateCourts = allCourts.filter((court) => {
       if (court.tileId !== args.tileId) return false;
       if (court.class !== args.class) return false;
-      if (!court.pixelX || !court.pixelY || !court.pixelWidth || !court.pixelHeight) {
+      if (
+        !court.pixelX ||
+        !court.pixelY ||
+        !court.pixelWidth ||
+        !court.pixelHeight
+      ) {
         return false;
       }
       return true;
@@ -113,16 +121,36 @@ export const findOverlappingCourt = internalQuery({
 
     for (const court of candidateCourts) {
       const overlaps = bboxOverlapMeetsThreshold(
-        { x: args.pixelX, y: args.pixelY, width: args.pixelWidth, height: args.pixelHeight },
-        { x: court.pixelX!, y: court.pixelY!, width: court.pixelWidth!, height: court.pixelHeight! },
+        {
+          x: args.pixelX,
+          y: args.pixelY,
+          width: args.pixelWidth,
+          height: args.pixelHeight,
+        },
+        {
+          x: court.pixelX!,
+          y: court.pixelY!,
+          width: court.pixelWidth!,
+          height: court.pixelHeight!,
+        },
         OVERLAP_THRESHOLD
       );
 
       if (overlaps) {
         // Calculate IoU for best match selection
         const intersection = bboxIntersectionArea(
-          { x: args.pixelX, y: args.pixelY, width: args.pixelWidth, height: args.pixelHeight },
-          { x: court.pixelX!, y: court.pixelY!, width: court.pixelWidth!, height: court.pixelHeight! }
+          {
+            x: args.pixelX,
+            y: args.pixelY,
+            width: args.pixelWidth,
+            height: args.pixelHeight,
+          },
+          {
+            x: court.pixelX!,
+            y: court.pixelY!,
+            width: court.pixelWidth!,
+            height: court.pixelHeight!,
+          }
         );
         const area1 = args.pixelWidth * args.pixelHeight;
         const area2 = court.pixelWidth! * court.pixelHeight!;
@@ -211,11 +239,7 @@ export const featuresByViewport = query({
     zoom: v.number(),
     confidenceThreshold: v.optional(v.number()),
     statusFilter: v.optional(
-      v.union(
-        v.literal('all'),
-        v.literal('verified'),
-        v.literal('pending')
-      )
+      v.union(v.literal('all'), v.literal('verified'), v.literal('pending'))
     ),
   },
   handler: async (ctx, args) => {
@@ -240,7 +264,9 @@ export const featuresByViewport = query({
     if (statusFilter === 'verified') {
       courts = courts.filter((c) => c.status === 'verified');
     } else if (statusFilter === 'pending') {
-      courts = courts.filter((c) => c.status === 'pending' || c.status === 'verified');
+      courts = courts.filter(
+        (c) => c.status === 'pending' || c.status === 'verified'
+      );
     }
 
     // Build features from courts
@@ -301,9 +327,15 @@ export const featuresByViewport = query({
 **Modify**: `/home/sean/code/court-finder/convex/courts.ts`
 
 **Import additions** (add to top of file):
+
 ```typescript
-import { internalMutation, internalQuery, query, mutation } from './_generated/server';
-import { internal } from './_generated/api';  // ADD THIS for internal.courts.setCourtStatus
+import {
+  internalMutation,
+  internalQuery,
+  query,
+  mutation,
+} from './_generated/server';
+import { internal } from './_generated/api'; // ADD THIS for internal.courts.setCourtStatus
 ```
 
 **Add internal mutation**:
@@ -312,7 +344,11 @@ import { internal } from './_generated/api';  // ADD THIS for internal.courts.se
 export const setCourtStatus = internalMutation({
   args: {
     courtId: v.id('courts'),
-    status: v.union(v.literal('verified'), v.literal('pending'), v.literal('rejected')),
+    status: v.union(
+      v.literal('verified'),
+      v.literal('pending'),
+      v.literal('rejected')
+    ),
     userId: v.id('users'),
   },
   handler: async (ctx, args) => {
@@ -344,7 +380,11 @@ export const setCourtStatus = internalMutation({
 export const updateCourtStatus = mutation({
   args: {
     courtId: v.id('courts'),
-    status: v.union(v.literal('verified'), v.literal('pending'), v.literal('rejected')),
+    status: v.union(
+      v.literal('verified'),
+      v.literal('pending'),
+      v.literal('rejected')
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -399,21 +439,27 @@ export const linkPredictionsToCourtsByBboxOverlap = migrations.define({
 
       if (overlappingCourt) {
         await ctx.db.patch(doc._id, { courtId: overlappingCourt.courtId });
-        console.log('[linkPredictionsToCourtsByBboxOverlap] linked to existing court', {
-          predictionId: doc._id,
-          courtId: overlappingCourt.courtId,
-          overlapRatio: overlappingCourt.overlap,
-        });
+        console.log(
+          '[linkPredictionsToCourtsByBboxOverlap] linked to existing court',
+          {
+            predictionId: doc._id,
+            courtId: overlappingCourt.courtId,
+            overlapRatio: overlappingCourt.overlap,
+          }
+        );
       } else {
         const courtId = await ctx.runMutation(
           internal.courts.createPendingCourtFromPrediction,
           { predictionId: doc._id }
         );
         await ctx.db.patch(doc._id, { courtId: courtId });
-        console.log('[linkPredictionsToCourtsByBboxOverlap] created new court', {
-          predictionId: doc._id,
-          courtId,
-        });
+        console.log(
+          '[linkPredictionsToCourtsByBboxOverlap] created new court',
+          {
+            predictionId: doc._id,
+            courtId,
+          }
+        );
       }
     } catch (error) {
       console.error('[linkPredictionsToCourtsByBboxOverlap] error', {
@@ -426,14 +472,16 @@ export const linkPredictionsToCourtsByBboxOverlap = migrations.define({
 ```
 
 **Add to runAll** (in the same file):
+
 ```typescript
 export const runAll = migrations.runner([
   // ... other migrations ...
-  internal.migrations.linkPredictionsToCourtsByBboxOverlap,  // ADD THIS
+  internal.migrations.linkPredictionsToCourtsByBboxOverlap, // ADD THIS
 ]);
 ```
 
 **Execute migration**:
+
 ```bash
 bun convex run --no-push migrations:runAll
 ```
@@ -466,29 +514,32 @@ bun convex run --no-push migrations:runAll
 
 ## Critical Files Summary
 
-| File | Action | Phase |
-|------|--------|-------|
-| `/home/sean/code/court-finder/convex/lib/bbox.ts` | **CREATE** | 1 |
-| `/home/sean/code/court-finder/convex/courts.ts` | Add `findOverlappingCourt`, `setCourtStatus`, `updateCourtStatus` | 2, 5 |
-| `/home/sean/code/court-finder/convex/inference_predictions.ts` | Replace lines 120-144 | 3 |
-| `/home/sean/code/court-finder/convex/inferences.ts` | Refactor `featuresByViewport` | 4 |
-| `/home/sean/code/court-finder/convex/migrations.ts` | Add migration function | 6 |
+| File                                                           | Action                                                            | Phase |
+| -------------------------------------------------------------- | ----------------------------------------------------------------- | ----- |
+| `/home/sean/code/court-finder/convex/lib/bbox.ts`              | **CREATE**                                                        | 1     |
+| `/home/sean/code/court-finder/convex/courts.ts`                | Add `findOverlappingCourt`, `setCourtStatus`, `updateCourtStatus` | 2, 5  |
+| `/home/sean/code/court-finder/convex/inference_predictions.ts` | Replace lines 120-144                                             | 3     |
+| `/home/sean/code/court-finder/convex/inferences.ts`            | Refactor `featuresByViewport`                                     | 4     |
+| `/home/sean/code/court-finder/convex/migrations.ts`            | Add migration function                                            | 6     |
 
 ---
 
 ## Testing & Verification
 
 ### Unit Tests
+
 1. **BBox overlap logic**: Test 0%, 50%, 75%, 100% overlap scenarios
 2. **Court linking**: Test same-tile, same-class, 75% threshold
 3. **Verification aggregation**: Test feedback across multiple predictions
 
 ### Integration Tests
+
 1. **Full prediction flow**: Scan → predictions → courts → map display
 2. **Feedback loop**: Submit feedback → verification → status update
 3. **Admin override**: Manual status changes
 
 ### Manual Testing Checklist
+
 - [ ] Map displays only courts (no raw predictions)
 - [ ] New predictions auto-link or create courts
 - [ ] 75% bbox overlap correctly links predictions
@@ -513,16 +564,20 @@ bun convex run --no-push migrations:runAll
 ## Implementation Notes & Lessons Learned
 
 ### Import Requirements
+
 - **courts.ts**: Must add `import { internal } from './_generated/api';` to access `internal.courts.setCourtStatus` in the public mutation
 - **courts.ts**: Must add `mutation` to the import from `./_generated/server`
 
 ### Migration Pattern
+
 - Use `migrations.define()` instead of standalone `internalMutation` for data migrations
 - This allows the migration to be included in the `runAll` runner
 - The `migrateOne` function processes each document individually with automatic retry logic
 
 ### Import Cleanup
+
 After simplifying `featuresByViewport`, these imports are no longer needed in `inferences.ts`:
+
 - `internalMutation` (no internal mutations after cleanup)
 - `RoboflowPrediction` type (no prediction processing)
 - `CourtStatus` type (status comes from court records)
@@ -531,9 +586,11 @@ After simplifying `featuresByViewport`, these imports are no longer needed in `i
 - `predictionToFeature` (predictions not converted to features)
 
 After removing `findNearbyCourt`, these imports are no longer needed in `courts.ts`:
+
 - `haversineMeters` (no distance calculations)
 - `MARKER_DEDUP_BASE_RADIUS_M`, `MARKER_DEDUP_RADIUS_BY_CLASS_M` (proximity-based constants)
 
 ### Type Safety
+
 - All modified files pass TypeScript type checking
 - Run `bun check-types` to verify after each phase

@@ -163,7 +163,11 @@ const processTile = async (
   console.log('query', {
     table: 'inference_predictions',
     index: 'by_tile_model_version',
-    params: { tileId, model: ROBOFLOW_MODEL_NAME, version: ROBOFLOW_MODEL_VERSION },
+    params: {
+      tileId,
+      model: ROBOFLOW_MODEL_NAME,
+      version: ROBOFLOW_MODEL_VERSION,
+    },
     found: existingPredictions.length > 0,
     predictionsCount: existingPredictions.length,
   });
@@ -237,7 +241,10 @@ export const startScanArea = action({
     latitude: v.number(),
     longitude: v.number(),
   },
-  handler: async (ctx, args: ScanAreaArgs): Promise<{ scanId: Id<'scans'> }> => {
+  handler: async (
+    ctx,
+    args: ScanAreaArgs
+  ): Promise<{ scanId: Id<'scans'> }> => {
     // Validate permissions
     const user = await ctx.runQuery(api.users.me, {});
     if (!user) {

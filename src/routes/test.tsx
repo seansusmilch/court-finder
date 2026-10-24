@@ -16,7 +16,10 @@ function RouteComponent() {
         onChange={(e) =>
           navigate({
             to: '.',
-            search: (old: Record<string, unknown>) => ({ ...old, query: e.target.value }),
+            search: (old: Record<string, unknown>) => ({
+              ...old,
+              query: e.target.value,
+            }),
             replace: true,
             resetScroll: false,
           })

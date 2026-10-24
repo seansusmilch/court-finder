@@ -58,7 +58,8 @@ export const mapControlButtonClassName =
 export const mapControlIconClassName = 'size-5 text-foreground';
 
 export const mapSectionHeaderClassName = 'flex items-center gap-2';
-export const mapSectionTitleClassName = 'font-display text-sm font-semibold tracking-tight';
+export const mapSectionTitleClassName =
+  'font-display text-sm font-semibold tracking-tight';
 export const mapSectionIconClassName = 'h-4 w-4 text-muted-foreground';
 
 // ============================================================================
@@ -68,7 +69,9 @@ export const mapSectionIconClassName = 'h-4 w-4 text-muted-foreground';
 /**
  * Combines class names using the cn utility
  */
-export function combineClasses(...classes: (string | undefined | false | null)[]): string {
+export function combineClasses(
+  ...classes: (string | undefined | false | null)[]
+): string {
   return cn(...classes);
 }
 

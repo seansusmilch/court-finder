@@ -304,9 +304,7 @@ export const resetUserScanLimit = mutation({
       count: 0,
       limit: SCAN_INITIATION_RATE_LIMIT.LIMIT,
       remaining: SCAN_INITIATION_RATE_LIMIT.LIMIT,
-      resetAtMs: existing
-        ? now + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS
-        : null,
+      resetAtMs: existing ? now + SCAN_INITIATION_RATE_LIMIT.WINDOW_MS : null,
     };
   },
 });
@@ -438,7 +436,9 @@ export const getProgress = query({
       totalTiles: scan.totalTiles,
       tilesProcessed: scan.tilesProcessed,
       predictionsFound: scan.predictionsFound,
-      isComplete: scan.totalTiles !== undefined && scan.tilesProcessed === scan.totalTiles,
+      isComplete:
+        scan.totalTiles !== undefined &&
+        scan.tilesProcessed === scan.totalTiles,
     };
   },
 });

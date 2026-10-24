@@ -68,11 +68,7 @@ function MapCta() {
   return (
     <>
       <Show when='signed-out'>
-        <Button
-          asChild
-          size='lg'
-          className='h-13 px-7 text-base'
-        >
+        <Button asChild size='lg' className='h-13 px-7 text-base'>
           <Link to='/map'>
             Explore the map
             <ArrowRight aria-hidden='true' className='size-4' />
@@ -80,11 +76,7 @@ function MapCta() {
         </Button>
       </Show>
       <Show when='signed-in'>
-        <Button
-          asChild
-          size='lg'
-          className='h-13 px-7 text-base'
-        >
+        <Button asChild size='lg' className='h-13 px-7 text-base'>
           <Link to='/map'>
             Open the map
             <ArrowRight aria-hidden='true' className='size-4' />
@@ -160,9 +152,14 @@ function TrustNote() {
         className='flex min-h-16 w-full items-center justify-between gap-4 py-4 text-left outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background'
       >
         <span className='flex items-center gap-3'>
-          <ShieldCheck aria-hidden='true' className='size-5 shrink-0 text-accent' />
+          <ShieldCheck
+            aria-hidden='true'
+            className='size-5 shrink-0 text-accent'
+          />
           <span>
-            <span className='block font-display font-semibold'>A detection is a lead, not a promise.</span>
+            <span className='block font-display font-semibold'>
+              A detection is a lead, not a promise.
+            </span>
             <span className='mt-0.5 block text-sm text-muted-foreground'>
               Check access, hours, conditions, and permission before visiting.
             </span>
@@ -181,13 +178,27 @@ function TrustNote() {
           className='max-w-3xl pb-6 pl-8 text-sm leading-6 text-muted-foreground'
         >
           <p>
-            Computer vision can be wrong, and satellite imagery may not reflect current conditions.
-            A pin does not mean a facility is public, open, safe, or available. Respect posted signs
-            and never enter private property without permission.
+            Computer vision can be wrong, and satellite imagery may not reflect
+            current conditions. A pin does not mean a facility is public, open,
+            safe, or available. Respect posted signs and never enter private
+            property without permission.
           </p>
           <p className='mt-3'>
-            Read the <Link to='/terms' className='underline decoration-primary/60 underline-offset-4 hover:text-foreground'>terms</Link>
-            {' '}and <Link to='/privacy' className='underline decoration-primary/60 underline-offset-4 hover:text-foreground'>privacy policy</Link>.
+            Read the{' '}
+            <Link
+              to='/terms'
+              className='underline decoration-primary/60 underline-offset-4 hover:text-foreground'
+            >
+              terms
+            </Link>{' '}
+            and{' '}
+            <Link
+              to='/privacy'
+              className='underline decoration-primary/60 underline-offset-4 hover:text-foreground'
+            >
+              privacy policy
+            </Link>
+            .
           </p>
         </div>
       )}
@@ -209,8 +220,9 @@ function HomeComponent() {
             </h1>
 
             <p className='mt-6 max-w-[58ch] text-base leading-7 text-muted-foreground md:mt-7 md:text-xl md:leading-8'>
-              Court Finder scans available satellite imagery for possible facilities, then puts
-              basketball courts, tennis courts, fields, diamonds, and tracks on one map.
+              Court Finder scans available satellite imagery for possible
+              facilities, then puts basketball courts, tennis courts, fields,
+              diamonds, and tracks on one map.
             </p>
 
             <div className='mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center'>
@@ -224,12 +236,19 @@ function HomeComponent() {
             </div>
 
             <p className='mt-4 max-w-[50ch] text-sm leading-6 text-muted-foreground'>
-              Detections are leads—verify access, hours, and conditions before visiting.
+              Detections are leads—verify access, hours, and conditions before
+              visiting.
             </p>
 
             <div className='mt-9 hidden flex-wrap gap-x-6 gap-y-3 border-t border-border/70 pt-6 text-sm text-muted-foreground md:flex'>
-              <span className='flex items-center gap-2'><Check className='size-4 text-accent' /> Browse without an account</span>
-              <span className='flex items-center gap-2'><Check className='size-4 text-accent' /> Confidence shown on every result</span>
+              <span className='flex items-center gap-2'>
+                <Check className='size-4 text-accent' /> Browse without an
+                account
+              </span>
+              <span className='flex items-center gap-2'>
+                <Check className='size-4 text-accent' /> Confidence shown on
+                every result
+              </span>
             </div>
           </div>
 
@@ -239,21 +258,33 @@ function HomeComponent() {
         </div>
       </section>
 
-      <section aria-labelledby='facility-heading' className='bg-foreground text-background'>
+      <section
+        aria-labelledby='facility-heading'
+        className='bg-foreground text-background'
+      >
         <div className='mx-auto max-w-[90rem] px-5 py-8 sm:px-8 lg:px-12 xl:px-16'>
           <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
-            <h2 id='facility-heading' className='max-w-sm font-display text-2xl font-semibold tracking-tight'>
+            <h2
+              id='facility-heading'
+              className='max-w-sm font-display text-2xl font-semibold tracking-tight'
+            >
               Five facility types. One search.
             </h2>
             <div className='grid flex-1 grid-cols-2 gap-x-5 gap-y-5 sm:grid-cols-3 lg:max-w-4xl lg:grid-cols-5'>
               {facilityTypes.map(({ name, detail, icon: Icon, color }) => (
                 <div key={name} className='flex min-w-0 items-center gap-3'>
-                  <span className={`grid size-9 shrink-0 place-items-center rounded-full ${color} text-white`}>
+                  <span
+                    className={`grid size-9 shrink-0 place-items-center rounded-full ${color} text-white`}
+                  >
                     <Icon className='size-[18px]' strokeWidth={1.8} />
                   </span>
                   <span className='min-w-0'>
-                    <span className='block text-sm font-semibold leading-5'>{name}</span>
-                    <span className='mt-0.5 hidden text-xs text-background/55 xl:block'>{detail}</span>
+                    <span className='block text-sm font-semibold leading-5'>
+                      {name}
+                    </span>
+                    <span className='mt-0.5 hidden text-xs text-background/55 xl:block'>
+                      {detail}
+                    </span>
                   </span>
                 </div>
               ))}
@@ -262,15 +293,19 @@ function HomeComponent() {
         </div>
       </section>
 
-      <section id='how-it-works' className='mx-auto max-w-[90rem] px-5 py-20 sm:px-8 md:py-28 lg:px-12 xl:px-16'>
+      <section
+        id='how-it-works'
+        className='mx-auto max-w-[90rem] px-5 py-20 sm:px-8 md:py-28 lg:px-12 xl:px-16'
+      >
         <div className='grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20'>
           <div className='lg:sticky lg:top-28 lg:self-start'>
             <h2 className='max-w-[10ch] text-balance font-display text-4xl font-bold leading-[1.02] tracking-[-0.035em] md:text-6xl'>
               From overhead pixels to a place worth checking.
             </h2>
             <p className='mt-6 max-w-[48ch] text-lg leading-8 text-muted-foreground'>
-              Normal place listings depend on somebody adding and maintaining them. Court Finder
-              starts with what is visible from above, then keeps the uncertainty attached.
+              Normal place listings depend on somebody adding and maintaining
+              them. Court Finder starts with what is visible from above, then
+              keeps the uncertainty attached.
             </p>
           </div>
 
@@ -292,13 +327,20 @@ function HomeComponent() {
                 text: 'Open a result to review the satellite image, facility type, confidence, and community feedback before deciding to visit.',
               },
             ].map(({ icon: Icon, title, text }) => (
-              <li key={title} className='grid gap-4 py-8 sm:grid-cols-[3.5rem_1fr] sm:py-10'>
+              <li
+                key={title}
+                className='grid gap-4 py-8 sm:grid-cols-[3.5rem_1fr] sm:py-10'
+              >
                 <span className='grid size-12 place-items-center rounded-full bg-primary/12 text-primary'>
                   <Icon className='size-6' strokeWidth={1.8} />
                 </span>
                 <div>
-                  <h3 className='font-display text-2xl font-semibold tracking-tight'>{title}</h3>
-                  <p className='mt-3 max-w-[58ch] leading-7 text-muted-foreground'>{text}</p>
+                  <h3 className='font-display text-2xl font-semibold tracking-tight'>
+                    {title}
+                  </h3>
+                  <p className='mt-3 max-w-[58ch] leading-7 text-muted-foreground'>
+                    {text}
+                  </p>
                 </div>
               </li>
             ))}
@@ -322,10 +364,16 @@ function HomeComponent() {
             <div className='absolute left-[61%] top-[13%] h-[32%] w-[26%] rounded-sm border-2 border-primary shadow-[0_10px_30px_oklch(0_0_0/.35)]' />
             <div className='absolute bottom-4 left-4 right-4 flex items-center justify-between gap-4 rounded-xl bg-black/80 p-4 text-white backdrop-blur-md'>
               <div>
-                <p className='font-mono text-xs uppercase tracking-[0.16em] text-white/70'>Example result</p>
-                <p className='mt-1 font-display font-semibold'>Possible tennis courts</p>
+                <p className='font-mono text-xs uppercase tracking-[0.16em] text-white/70'>
+                  Example result
+                </p>
+                <p className='mt-1 font-display font-semibold'>
+                  Possible tennis courts
+                </p>
               </div>
-              <span className='rounded-full bg-white/10 px-3 py-1.5 font-mono text-xs'>86% model confidence</span>
+              <span className='rounded-full bg-white/10 px-3 py-1.5 font-mono text-xs'>
+                86% model confidence
+              </span>
             </div>
           </div>
 
@@ -334,8 +382,9 @@ function HomeComponent() {
               See what the model saw.
             </h2>
             <p className='mt-6 max-w-[52ch] text-lg leading-8 text-muted-foreground'>
-              Every pin leads back to its satellite context. Confidence helps you sort results. It
-              is not an accuracy guarantee, so the image and local rules still matter.
+              Every pin leads back to its satellite context. Confidence helps
+              you sort results. It is not an accuracy guarantee, so the image
+              and local rules still matter.
             </p>
             <ul className='mt-8 space-y-4 text-sm'>
               {[
@@ -364,14 +413,15 @@ function HomeComponent() {
               A possible facility may be one pin away.
             </h2>
             <p className='mt-6 max-w-[54ch] text-lg leading-8 text-muted-foreground'>
-              Search somewhere familiar or explore a city you have never played in. No account is
-              needed to browse detections.
+              Search somewhere familiar or explore a city you have never played
+              in. No account is needed to browse detections.
             </p>
           </div>
           <div className='flex flex-col items-start gap-4 lg:items-end'>
             <MapCta />
             <span className='flex items-center gap-2 text-xs text-muted-foreground'>
-              <MapPin aria-hidden='true' className='size-3.5' /> Verify access before visiting
+              <MapPin aria-hidden='true' className='size-3.5' /> Verify access
+              before visiting
             </span>
           </div>
         </div>

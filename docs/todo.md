@@ -52,4 +52,4 @@ Let's show the user how many predictions they have left to evaluate this number 
 
 ## Fixing Multiple detections at edges of satellite images
 
--  please group courts that are the same type and really close to each other together into 1 marker. 
+- please group courts that are the same type and really close to each other together into 1 marker.

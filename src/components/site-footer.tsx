@@ -7,7 +7,9 @@ export default function SiteFooter() {
         <div className='flex items-center gap-3 text-foreground'>
           <img src='/logo.webp' alt='' className='size-7 object-contain' />
           <span className='font-display font-semibold'>Court Finder</span>
-          <span className='text-muted-foreground'>© {new Date().getFullYear()}</span>
+          <span className='text-muted-foreground'>
+            © {new Date().getFullYear()}
+          </span>
         </div>
         <nav aria-label='Footer' className='flex flex-wrap gap-x-6 gap-y-3'>
           <Link to='/map' className='transition-colors hover:text-foreground'>
@@ -16,7 +18,10 @@ export default function SiteFooter() {
           <Link to='/terms' className='transition-colors hover:text-foreground'>
             Terms of Service
           </Link>
-          <Link to='/privacy' className='transition-colors hover:text-foreground'>
+          <Link
+            to='/privacy'
+            className='transition-colors hover:text-foreground'
+          >
             Privacy policy
           </Link>
         </nav>

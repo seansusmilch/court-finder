@@ -37,7 +37,10 @@ export function getRoleFromIdentity(
     }
   }
 
-  return candidates.map(readRole).find((role): role is UserRole => role !== null) ?? ROLES.USER;
+  return (
+    candidates.map(readRole).find((role): role is UserRole => role !== null) ??
+    ROLES.USER
+  );
 }
 
 export function roleHasPermissionForIdentity(
@@ -77,7 +80,9 @@ function withRole(
   };
 }
 
-export async function getCurrentUser(ctx: AuthCtx): Promise<CurrentUser | null> {
+export async function getCurrentUser(
+  ctx: AuthCtx
+): Promise<CurrentUser | null> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
 

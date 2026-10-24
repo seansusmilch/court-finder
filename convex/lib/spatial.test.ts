@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { haversineMeters, metersToLatDegrees, metersToLngDegrees } from './spatial';
+import { describe, expect, it } from 'vite-plus/test';
+import {
+  haversineMeters,
+  metersToLatDegrees,
+  metersToLngDegrees,
+} from './spatial';
 
 describe('spatial helpers', () => {
   it('converts meters to latitude degrees using the configured approximation', () => {

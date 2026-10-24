@@ -14,7 +14,7 @@ export async function reverseGeocode(
         lng,
         hasApiKey: false,
       });
-      throw new Error("MAPBOX_API_KEY environment variable not set");
+      throw new Error('MAPBOX_API_KEY environment variable not set');
     }
 
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=***&types=place&limit=5`;

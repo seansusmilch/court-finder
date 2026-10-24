@@ -21,9 +21,10 @@ export function CourtPopup({
   const courtClass = properties.class ? String(properties.class) : '';
   const { bgClass, displayName } = getVisualForClass(courtClass);
   const isVerified = properties.status === 'verified';
-  const confidence = properties.confidence != null
-    ? Math.round(Number(properties.confidence) * 100)
-    : null;
+  const confidence =
+    properties.confidence != null
+      ? Math.round(Number(properties.confidence) * 100)
+      : null;
   const verificationLabel = isVerified
     ? 'Community verified'
     : properties.status === 'rejected'
@@ -32,8 +33,10 @@ export function CourtPopup({
 
   const getConfidenceColor = () => {
     if (confidence === null) return '';
-    if (confidence >= 80) return 'border-secondary/20 bg-secondary/10 text-secondary';
-    if (confidence >= 60) return 'border-warning/30 bg-warning/20 text-foreground';
+    if (confidence >= 80)
+      return 'border-secondary/20 bg-secondary/10 text-secondary';
+    if (confidence >= 60)
+      return 'border-warning/30 bg-warning/20 text-foreground';
     return 'border-destructive/20 bg-destructive/10 text-destructive';
   };
 
@@ -61,9 +64,17 @@ export function CourtPopup({
           </button>
 
           <div className='flex items-start gap-2'>
-            <span className={cn('mt-1 size-3 shrink-0 rounded-full ring-2 ring-background', bgClass)} aria-hidden='true' />
+            <span
+              className={cn(
+                'mt-1 size-3 shrink-0 rounded-full ring-2 ring-background',
+                bgClass
+              )}
+              aria-hidden='true'
+            />
             <div className='min-w-0'>
-              <h2 className='text-base font-semibold leading-tight'>Possible {displayName}</h2>
+              <h2 className='text-base font-semibold leading-tight'>
+                Possible {displayName}
+              </h2>
               <p className='mt-1 text-xs leading-relaxed text-muted-foreground'>
                 Satellite detection; confirm access before visiting.
               </p>
@@ -72,18 +83,29 @@ export function CourtPopup({
 
           <div className='grid gap-2 text-xs'>
             {confidence !== null && (
-              <div className={cn('flex items-center justify-between gap-3 rounded-md border px-2.5 py-2', getConfidenceColor())}>
+              <div
+                className={cn(
+                  'flex items-center justify-between gap-3 rounded-md border px-2.5 py-2',
+                  getConfidenceColor()
+                )}
+              >
                 <span className='font-normal'>Model confidence</span>
                 <span className='font-semibold'>{confidence}%</span>
               </div>
             )}
-            <div className={cn(
-              'flex items-center gap-2 rounded-md border px-2.5 py-2 font-medium',
-              isVerified
-                ? 'border-success/25 bg-success/10 text-success'
-                : 'border-border bg-muted text-muted-foreground'
-            )}>
-              {isVerified ? <CircleCheck className='h-3.5 w-3.5' aria-hidden='true' /> : <CircleAlert className='h-3.5 w-3.5' aria-hidden='true' />}
+            <div
+              className={cn(
+                'flex items-center gap-2 rounded-md border px-2.5 py-2 font-medium',
+                isVerified
+                  ? 'border-success/25 bg-success/10 text-success'
+                  : 'border-border bg-muted text-muted-foreground'
+              )}
+            >
+              {isVerified ? (
+                <CircleCheck className='h-3.5 w-3.5' aria-hidden='true' />
+              ) : (
+                <CircleAlert className='h-3.5 w-3.5' aria-hidden='true' />
+              )}
               <span>{verificationLabel}</span>
             </div>
           </div>
@@ -99,7 +121,8 @@ export function CourtPopup({
             <div className='text-xs text-muted-foreground'>
               Community signal:{' '}
               <span className='font-medium text-foreground'>
-                {properties.positiveFeedbackCount ?? 0}/{properties.totalFeedbackCount} matching reviews
+                {properties.positiveFeedbackCount ?? 0}/
+                {properties.totalFeedbackCount} matching reviews
               </span>
             </div>
           )}
@@ -108,20 +131,30 @@ export function CourtPopup({
               {properties.zoom_level != null && (
                 <div className='flex justify-between gap-3'>
                   <span>Detected at zoom</span>
-                  <span className='font-mono text-foreground'>{String(properties.zoom_level)}</span>
+                  <span className='font-mono text-foreground'>
+                    {String(properties.zoom_level)}
+                  </span>
                 </div>
               )}
               {properties.model != null && (
                 <div className='flex justify-between gap-3'>
                   <span>Model</span>
                   <span className='font-mono text-foreground'>
-                    {properties.model}{properties.version != null ? ` v${properties.version}` : ''}
+                    {properties.model}
+                    {properties.version != null
+                      ? ` v${properties.version}`
+                      : ''}
                   </span>
                 </div>
               )}
             </div>
           )}
-          <Button asChild size='lg' variant='default' className='mt-1 min-h-12 w-full'>
+          <Button
+            asChild
+            size='lg'
+            variant='default'
+            className='mt-1 min-h-12 w-full'
+          >
             <a
               href={`https://maps.google.com/maps?q=${latitude},${longitude}`}
               target='_blank'

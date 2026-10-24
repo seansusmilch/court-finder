@@ -8,97 +8,241 @@
         "role": "neutral",
         "displayName": "Carbon",
         "canonical": "#0B0B0B",
-        "tonalRamp": ["#0B0B0B", "#242424", "#3D3D3D", "#595959", "#757575", "#929292", "#BDBDBD", "#FFFFFF"]
+        "tonalRamp": [
+          "#0B0B0B",
+          "#242424",
+          "#3D3D3D",
+          "#595959",
+          "#757575",
+          "#929292",
+          "#BDBDBD",
+          "#FFFFFF"
+        ]
       },
       "paper": {
         "role": "neutral",
         "displayName": "Paper",
         "canonical": "#FFFFFF",
-        "tonalRamp": ["#1A1A1A", "#333333", "#4D4D4D", "#666666", "#808080", "#999999", "#CCCCCC", "#FFFFFF"]
+        "tonalRamp": [
+          "#1A1A1A",
+          "#333333",
+          "#4D4D4D",
+          "#666666",
+          "#808080",
+          "#999999",
+          "#CCCCCC",
+          "#FFFFFF"
+        ]
       },
       "fog": {
         "role": "neutral",
         "displayName": "Fog",
         "canonical": "#F3F3F3",
-        "tonalRamp": ["#1F1F1F", "#3A3A3A", "#555555", "#707070", "#8C8C8C", "#A7A7A7", "#CDCDCD", "#F3F3F3"]
+        "tonalRamp": [
+          "#1F1F1F",
+          "#3A3A3A",
+          "#555555",
+          "#707070",
+          "#8C8C8C",
+          "#A7A7A7",
+          "#CDCDCD",
+          "#F3F3F3"
+        ]
       },
       "utility-gray": {
         "role": "neutral",
         "displayName": "Utility Gray",
         "canonical": "#6B6B6B",
-        "tonalRamp": ["#161616", "#2A2A2A", "#414141", "#595959", "#707070", "#858585", "#A6A6A6", "#C9C9C9"]
+        "tonalRamp": [
+          "#161616",
+          "#2A2A2A",
+          "#414141",
+          "#595959",
+          "#707070",
+          "#858585",
+          "#A6A6A6",
+          "#C9C9C9"
+        ]
       },
       "line": {
         "role": "neutral",
         "displayName": "Line",
         "canonical": "#E0E0E0",
-        "tonalRamp": ["#202020", "#343434", "#4A4A4A", "#606060", "#777777", "#999999", "#BDBDBD", "#E0E0E0"]
+        "tonalRamp": [
+          "#202020",
+          "#343434",
+          "#4A4A4A",
+          "#606060",
+          "#777777",
+          "#999999",
+          "#BDBDBD",
+          "#E0E0E0"
+        ]
       },
       "signal-orange": {
         "role": "primary",
         "displayName": "Signal Orange",
         "canonical": "#F26B3A",
-        "tonalRamp": ["#42180A", "#6B2511", "#943418", "#B64320", "#D95528", "#E56B38", "#F26B3A", "#FFC2A9"]
+        "tonalRamp": [
+          "#42180A",
+          "#6B2511",
+          "#943418",
+          "#B64320",
+          "#D95528",
+          "#E56B38",
+          "#F26B3A",
+          "#FFC2A9"
+        ]
       },
       "signal-orange-strong": {
         "role": "primary",
         "displayName": "Signal Orange Strong",
         "canonical": "#D95528",
-        "tonalRamp": ["#351106", "#581C0D", "#7B2813", "#9D351A", "#B94421", "#D95528", "#F08B6C", "#FFD0C1"]
+        "tonalRamp": [
+          "#351106",
+          "#581C0D",
+          "#7B2813",
+          "#9D351A",
+          "#B94421",
+          "#D95528",
+          "#F08B6C",
+          "#FFD0C1"
+        ]
       },
       "route-blue": {
         "role": "secondary",
         "displayName": "Route Blue",
         "canonical": "#2F6FED",
-        "tonalRamp": ["#07163E", "#0E2D6D", "#15439A", "#1D58C4", "#2F6FED", "#5D8BEF", "#9AB7F8", "#DCE6FF"]
+        "tonalRamp": [
+          "#07163E",
+          "#0E2D6D",
+          "#15439A",
+          "#1D58C4",
+          "#2F6FED",
+          "#5D8BEF",
+          "#9AB7F8",
+          "#DCE6FF"
+        ]
       },
       "verified-green": {
         "role": "tertiary",
         "displayName": "Verified Green",
         "canonical": "#2F8F5B",
-        "tonalRamp": ["#0A2C1A", "#14522E", "#1E7040", "#268653", "#2F8F5B", "#57AC7B", "#91C9A8", "#DDF3E5"]
+        "tonalRamp": [
+          "#0A2C1A",
+          "#14522E",
+          "#1E7040",
+          "#268653",
+          "#2F8F5B",
+          "#57AC7B",
+          "#91C9A8",
+          "#DDF3E5"
+        ]
       },
       "caution-yellow": {
         "role": "tertiary",
         "displayName": "Caution Yellow",
         "canonical": "#D6A12C",
-        "tonalRamp": ["#3A2A08", "#664A0D", "#936C12", "#B4881A", "#D6A12C", "#E3BA53", "#F0D78D", "#FAF0D0"]
+        "tonalRamp": [
+          "#3A2A08",
+          "#664A0D",
+          "#936C12",
+          "#B4881A",
+          "#D6A12C",
+          "#E3BA53",
+          "#F0D78D",
+          "#FAF0D0"
+        ]
       },
       "alert-red": {
         "role": "tertiary",
         "displayName": "Alert Red",
         "canonical": "#C63F3F",
-        "tonalRamp": ["#3A0D0D", "#641919", "#8E2525", "#AA3232", "#C63F3F", "#DD6B6B", "#F0A6A6", "#FBDDDD"]
+        "tonalRamp": [
+          "#3A0D0D",
+          "#641919",
+          "#8E2525",
+          "#AA3232",
+          "#C63F3F",
+          "#DD6B6B",
+          "#F0A6A6",
+          "#FBDDDD"
+        ]
       },
       "basketball-orange": {
         "role": "tertiary",
         "displayName": "Basketball Orange",
         "canonical": "#E87A30",
-        "tonalRamp": ["#3D1607", "#67260D", "#913613", "#B94E1D", "#E87A30", "#F19C60", "#F7C39C", "#FDE8D7"]
+        "tonalRamp": [
+          "#3D1607",
+          "#67260D",
+          "#913613",
+          "#B94E1D",
+          "#E87A30",
+          "#F19C60",
+          "#F7C39C",
+          "#FDE8D7"
+        ]
       },
       "tennis-green": {
         "role": "tertiary",
         "displayName": "Tennis Green",
         "canonical": "#58A96A",
-        "tonalRamp": ["#0E2B14", "#1D5427", "#2B773A", "#3E9150", "#58A96A", "#83C08F", "#B4DBB9", "#E3F2E5"]
+        "tonalRamp": [
+          "#0E2B14",
+          "#1D5427",
+          "#2B773A",
+          "#3E9150",
+          "#58A96A",
+          "#83C08F",
+          "#B4DBB9",
+          "#E3F2E5"
+        ]
       },
       "soccer-red": {
         "role": "tertiary",
         "displayName": "Soccer Red",
         "canonical": "#D75A4C",
-        "tonalRamp": ["#3F0E0A", "#6B1F18", "#972F26", "#B84036", "#D75A4C", "#E78A80", "#F2B9B2", "#FBE4E1"]
+        "tonalRamp": [
+          "#3F0E0A",
+          "#6B1F18",
+          "#972F26",
+          "#B84036",
+          "#D75A4C",
+          "#E78A80",
+          "#F2B9B2",
+          "#FBE4E1"
+        ]
       },
       "baseball-yellow": {
         "role": "tertiary",
         "displayName": "Baseball Yellow",
         "canonical": "#D7A63C",
-        "tonalRamp": ["#3B2908", "#67490F", "#936B16", "#B58625", "#D7A63C", "#E4BF70", "#F0D9A5", "#FAF0D6"]
+        "tonalRamp": [
+          "#3B2908",
+          "#67490F",
+          "#936B16",
+          "#B58625",
+          "#D7A63C",
+          "#E4BF70",
+          "#F0D9A5",
+          "#FAF0D6"
+        ]
       },
       "track-blue": {
         "role": "tertiary",
         "displayName": "Track Blue",
         "canonical": "#5572C7",
-        "tonalRamp": ["#111B42", "#273879", "#3A54A0", "#4765B3", "#5572C7", "#8298DC", "#B2C0EB", "#E5E9F9"]
+        "tonalRamp": [
+          "#111B42",
+          "#273879",
+          "#3A54A0",
+          "#4765B3",
+          "#5572C7",
+          "#8298DC",
+          "#B2C0EB",
+          "#E5E9F9"
+        ]
       }
     },
     "typographyMeta": {

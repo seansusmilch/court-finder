@@ -25,8 +25,8 @@ export function AllDoneCard({ onNavigateToMap }: AllDoneCardProps) {
           You’re all caught up
         </h1>
         <p className='mx-auto mt-3 max-w-sm text-sm leading-6 text-muted-foreground sm:text-base'>
-          You’ve reviewed every available image for now. Thanks for helping
-          keep the map useful.
+          You’ve reviewed every available image for now. Thanks for helping keep
+          the map useful.
         </p>
         <Button
           type='button'

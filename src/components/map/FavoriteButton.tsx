@@ -42,7 +42,11 @@ interface FavoriteButtonProps {
   showLabel?: boolean;
 }
 
-export function FavoriteButton({ courtId, className, showLabel = true }: FavoriteButtonProps) {
+export function FavoriteButton({
+  courtId,
+  className,
+  showLabel = true,
+}: FavoriteButtonProps) {
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
@@ -63,14 +67,20 @@ export function FavoriteButton({ courtId, className, showLabel = true }: Favorit
 
   return (
     <Button
-      variant="outline"
+      variant='outline'
       className={cn('min-h-12', !showLabel && 'min-w-12', className)}
-      size="lg"
+      size='lg'
       onClick={toggleFavorite}
-      type="button"
-      aria-label={isFavorite ? 'Remove possible facility from saved places' : 'Save possible facility'}
+      type='button'
+      aria-label={
+        isFavorite
+          ? 'Remove possible facility from saved places'
+          : 'Save possible facility'
+      }
       aria-pressed={isFavorite}
-      title={isFavorite ? 'Remove from saved places' : 'Save this possible facility'}
+      title={
+        isFavorite ? 'Remove from saved places' : 'Save this possible facility'
+      }
     >
       <Heart
         className={cn(
@@ -78,7 +88,7 @@ export function FavoriteButton({ courtId, className, showLabel = true }: Favorit
           'h-4 w-4 transition-all',
           isFavorite && 'fill-current text-destructive'
         )}
-        aria-hidden="true"
+        aria-hidden='true'
       />
       {showLabel && (isFavorite ? 'Saved' : 'Save')}
     </Button>

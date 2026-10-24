@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import type { ReactElement, MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/mapbox';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   createDefaultButtons,
   CustomNavigationControls,
@@ -43,13 +43,17 @@ describe('CustomNavigationControls', () => {
     }).find((button) => button.id === 'settings');
     expect(settings?.ariaExpanded).toBe(true);
 
-    const compassIcon = buttons[1].icon as ReactElement<{ style?: React.CSSProperties }>;
+    const compassIcon = buttons[1].icon as ReactElement<{
+      style?: React.CSSProperties;
+    }>;
     expect(compassIcon.props.style).toEqual({ transform: 'rotate(-32deg)' });
   });
 
   it('resets bearing and pitch with a short map animation', () => {
     const mapRef = createMapRef();
-    const compass = createDefaultButtons(mapRef).find((button) => button.id === 'compass');
+    const compass = createDefaultButtons(mapRef).find(
+      (button) => button.id === 'compass'
+    );
 
     compass?.onClick();
 
@@ -99,7 +103,10 @@ describe('CustomNavigationControls', () => {
     const onLocateEnd = vi.fn();
     const getCurrentPosition = vi.fn(
       (_success: PositionCallback, error?: PositionErrorCallback) => {
-        error?.({ code: 1, message: 'Permission denied' } as GeolocationPositionError);
+        error?.({
+          code: 1,
+          message: 'Permission denied',
+        } as GeolocationPositionError);
       }
     );
 

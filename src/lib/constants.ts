@@ -1,4 +1,4 @@
-import { env } from "@/env";
+import { env } from '@/env';
 
 // Map rendering thresholds
 export const PINS_VISIBLE_FROM_ZOOM = 10;

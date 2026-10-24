@@ -77,7 +77,10 @@ function RouteComponent() {
 
           <dl className='mt-4 grid grid-cols-2 overflow-hidden rounded-xl border border-border/70 bg-card sm:grid-cols-4'>
             <Metric label='Pending review' value={metrics.pendingTiles} />
-            <Metric label='Processed batches' value={metrics.processedBatches} />
+            <Metric
+              label='Processed batches'
+              value={metrics.processedBatches}
+            />
             <Metric label='Recorded scans' value={metrics.scansCount} />
             <Metric label='Feedback' value={metrics.totalFeedback} />
           </dl>
@@ -143,7 +146,13 @@ function RouteComponent() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: number | undefined }) {
+function Metric({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | undefined;
+}) {
   return (
     <div className='min-w-0 border-b border-border/70 px-4 py-5 even:border-l sm:border-b-0 sm:px-5 sm:even:border-l'>
       <dt className='truncate text-sm text-muted-foreground'>{label}</dt>
@@ -171,7 +180,9 @@ function WorkflowLink({
     <Link
       to={to}
       className={`group flex min-h-20 items-center gap-4 border-b border-border/70 px-4 py-4 transition-colors last:border-b-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/60 sm:px-5 ${
-        emphasized ? 'bg-primary/[0.06] hover:bg-primary/[0.1]' : 'hover:bg-muted/50'
+        emphasized
+          ? 'bg-primary/[0.06] hover:bg-primary/[0.1]'
+          : 'hover:bg-muted/50'
       }`}
     >
       <span className='min-w-0 flex-1'>

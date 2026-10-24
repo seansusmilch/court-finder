@@ -76,7 +76,10 @@ export function TrainingFeedbackPage() {
       <FeedbackHeader predictionsLeft={predictionsLeft} />
 
       <div className='mx-auto grid w-full max-w-6xl items-start gap-4 px-4 pb-4 sm:px-6 md:gap-6 md:px-8 md:pb-12 lg:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)] lg:gap-8'>
-        <section className='min-w-0' aria-labelledby='feedback-evidence-heading'>
+        <section
+          className='min-w-0'
+          aria-labelledby='feedback-evidence-heading'
+        >
           <div className='mb-2 flex items-end justify-between gap-4 px-1 md:mb-3'>
             <div>
               <h2

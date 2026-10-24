@@ -39,7 +39,9 @@ export function FeedbackActions({
             Is this a {displayName}?
           </h2>
           <p className='mt-1.5 text-sm leading-5 text-muted-foreground'>
-            <span className='sm:hidden'>Choose unsure if the image is unclear.</span>
+            <span className='sm:hidden'>
+              Choose unsure if the image is unclear.
+            </span>
             <span className='hidden sm:inline'>
               Use the outline as a guide. It is okay to choose unsure when the
               image is ambiguous.

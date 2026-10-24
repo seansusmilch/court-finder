@@ -1,10 +1,7 @@
 import { query } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
-import {
-  styleTileUrl,
-  type GeoJSONPointFeature,
-} from './lib/tiles';
+import { styleTileUrl, type GeoJSONPointFeature } from './lib/tiles';
 import type { CourtStatus } from './lib/types';
 
 export const getAvailableZoomLevels = query({
@@ -71,7 +68,10 @@ interface BBoxBounds {
   maxLng: number;
 }
 
-function isCourtInBounds(court: { latitude: number; longitude: number }, bounds: BBoxBounds): boolean {
+function isCourtInBounds(
+  court: { latitude: number; longitude: number },
+  bounds: BBoxBounds
+): boolean {
   return (
     court.latitude >= bounds.minLat &&
     court.latitude <= bounds.maxLat &&
@@ -80,7 +80,10 @@ function isCourtInBounds(court: { latitude: number; longitude: number }, bounds:
   );
 }
 
-function shouldIncludeCourt(court: { status: string }, statusFilter: string): boolean {
+function shouldIncludeCourt(
+  court: { status: string },
+  statusFilter: string
+): boolean {
   if (statusFilter === 'verified') {
     return court.status === 'verified';
   }
@@ -101,11 +104,7 @@ export const featuresByViewport = query({
     zoom: v.number(),
     confidenceThreshold: v.optional(v.number()),
     statusFilter: v.optional(
-      v.union(
-        v.literal('all'),
-        v.literal('verified'),
-        v.literal('pending')
-      )
+      v.union(v.literal('all'), v.literal('verified'), v.literal('pending'))
     ),
   },
   handler: async (ctx, args) => {
@@ -140,9 +139,7 @@ export const featuresByViewport = query({
       return court.tileId !== null && court.tileId !== undefined;
     });
 
-    const tileIds = [
-      ...new Set(filteredCourts.map((court) => court.tileId!)),
-    ];
+    const tileIds = [...new Set(filteredCourts.map((court) => court.tileId!))];
     const tiles = await Promise.all(
       tileIds.map((tileId) => ctx.db.get(tileId))
     );
@@ -157,7 +154,8 @@ export const featuresByViewport = query({
         filteredCourts
           .map((court) => court.sourcePredictionId)
           .filter(
-            (id): id is NonNullable<typeof id> => id !== null && id !== undefined
+            (id): id is NonNullable<typeof id> =>
+              id !== null && id !== undefined
           )
       ),
     ];
@@ -180,7 +178,7 @@ export const featuresByViewport = query({
       if (!tile) continue;
 
       const detectionId = court.sourcePredictionId
-        ? sourcePredictionMap.get(court.sourcePredictionId) ?? ''
+        ? (sourcePredictionMap.get(court.sourcePredictionId) ?? '')
         : '';
 
       features.push({

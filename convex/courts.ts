@@ -1,13 +1,19 @@
-import { internalMutation, internalQuery, query, mutation } from './_generated/server';
+import {
+  internalMutation,
+  internalQuery,
+  query,
+  mutation,
+} from './_generated/server';
 import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { internal } from './_generated/api';
+import { pixelOnTileToLngLat, type GeoJSONPointFeature } from './lib/tiles';
 import {
-  pixelOnTileToLngLat,
-  type GeoJSONPointFeature,
-} from './lib/tiles';
-import { bboxOverlapMeetsThreshold, bboxIntersectionArea, type BBox } from './lib/bbox';
+  bboxOverlapMeetsThreshold,
+  bboxIntersectionArea,
+  type BBox,
+} from './lib/bbox';
 import {
   COURT_VERIFICATION,
   BBOX_OVERLAP_THRESHOLD,
@@ -37,10 +43,7 @@ async function getPredictionOrThrow(
   return prediction;
 }
 
-async function getCourtOrThrow(
-  ctx: MutationCtx,
-  courtId: Id<'courts'>
-) {
+async function getCourtOrThrow(ctx: MutationCtx, courtId: Id<'courts'>) {
   const court = await ctx.db.get(courtId);
   if (!court) {
     console.error('error: court not found', { courtId });
@@ -69,7 +72,18 @@ function calculateVerificationMetrics(
 
 async function createCourtFromPrediction(
   ctx: MutationCtx,
-  prediction: { _id: Id<'inference_predictions'>; class?: string; confidence: number | null | undefined; x: number | null; y: number | null; width: number | null; height: number | null; model?: string; version?: string; tileId: Id<'tiles'> },
+  prediction: {
+    _id: Id<'inference_predictions'>;
+    class?: string;
+    confidence: number | null | undefined;
+    x: number | null;
+    y: number | null;
+    width: number | null;
+    height: number | null;
+    model?: string;
+    version?: string;
+    tileId: Id<'tiles'>;
+  },
   status: CourtStatus = 'pending',
   verifiedAt?: number,
   totalFeedbackCount = 0,
@@ -122,7 +136,9 @@ export const verifyFromFeedback = internalMutation({
     const prediction = await getPredictionOrThrow(ctx, args.predictionId);
 
     if (!prediction.courtId) {
-      console.error('error: prediction has no courtId', { predictionId: args.predictionId });
+      console.error('error: prediction has no courtId', {
+        predictionId: args.predictionId,
+      });
       throw new Error('Prediction has no courtId');
     }
 
@@ -143,13 +159,20 @@ export const verifyFromFeedback = internalMutation({
       .query('feedback_submissions')
       .filter((q) =>
         q.or(
-          ...allCourtPredictions.map((p) => q.eq(q.field('predictionId'), p._id))
+          ...allCourtPredictions.map((p) =>
+            q.eq(q.field('predictionId'), p._id)
+          )
         )
       )
       .collect();
 
-    const positiveCount = allFeedback.filter((f) => f.userResponse === 'yes').length;
-    const metrics = calculateVerificationMetrics(positiveCount, allFeedback.length);
+    const positiveCount = allFeedback.filter(
+      (f) => f.userResponse === 'yes'
+    ).length;
+    const metrics = calculateVerificationMetrics(
+      positiveCount,
+      allFeedback.length
+    );
 
     // Update court status
     await ctx.db.patch(court._id, {
@@ -189,7 +212,9 @@ export const createPendingCourtFromPrediction = internalMutation({
   handler: async (ctx, args) => {
     const prediction = await ctx.db.get(args.predictionId);
     if (!prediction) {
-      console.error('error: prediction not found', { predictionId: args.predictionId });
+      console.error('error: prediction not found', {
+        predictionId: args.predictionId,
+      });
       throw new Error('Prediction not found');
     }
 
@@ -302,7 +327,12 @@ export const findOverlappingCourt = internalQuery({
     const candidateCourts = allCourts.filter((court) => {
       if (court.tileId !== args.tileId) return false;
       if (court.class !== args.class) return false;
-      if (!court.pixelX || !court.pixelY || !court.pixelWidth || !court.pixelHeight) {
+      if (
+        !court.pixelX ||
+        !court.pixelY ||
+        !court.pixelWidth ||
+        !court.pixelHeight
+      ) {
         return false;
       }
       return true;
@@ -320,7 +350,9 @@ export const findOverlappingCourt = internalQuery({
         height: court.pixelHeight!,
       };
 
-      if (bboxOverlapMeetsThreshold(searchBbox, courtBbox, BBOX_OVERLAP_THRESHOLD)) {
+      if (
+        bboxOverlapMeetsThreshold(searchBbox, courtBbox, BBOX_OVERLAP_THRESHOLD)
+      ) {
         const intersection = bboxIntersectionArea(searchBbox, courtBbox);
         const searchArea = args.pixelWidth * args.pixelHeight;
         const courtArea = court.pixelWidth! * court.pixelHeight!;
@@ -364,18 +396,31 @@ async function updateCourtStatusInternal(
 export const setCourtStatus = internalMutation({
   args: {
     courtId: v.id('courts'),
-    status: v.union(v.literal('verified'), v.literal('pending'), v.literal('rejected')),
+    status: v.union(
+      v.literal('verified'),
+      v.literal('pending'),
+      v.literal('rejected')
+    ),
     userId: v.id('users'),
   },
   handler: async (ctx, args) => {
-    return updateCourtStatusInternal(ctx, args.courtId, args.status, args.userId);
+    return updateCourtStatusInternal(
+      ctx,
+      args.courtId,
+      args.status,
+      args.userId
+    );
   },
 });
 
 export const updateCourtStatus = mutation({
   args: {
     courtId: v.id('courts'),
-    status: v.union(v.literal('verified'), v.literal('pending'), v.literal('rejected')),
+    status: v.union(
+      v.literal('verified'),
+      v.literal('pending'),
+      v.literal('rejected')
+    ),
   },
   handler: async (ctx, args): Promise<Id<'courts'>> => {
     const user = await requireCurrentUser(ctx);

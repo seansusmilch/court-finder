@@ -190,7 +190,10 @@ function ResetUserButton({
       onClick={() => onReset(user)}
     >
       <RotateCcw
-        className={cn('size-4', isResetting && 'animate-spin motion-reduce:animate-none')}
+        className={cn(
+          'size-4',
+          isResetting && 'animate-spin motion-reduce:animate-none'
+        )}
         aria-hidden='true'
       />
       {isResetting ? 'Resetting...' : 'Reset scans'}
@@ -336,10 +339,7 @@ function UserScanLimitsTable({
             const user = row.original;
 
             return (
-              <div
-                key={row.id}
-                className='rounded-lg border bg-muted/10 p-4'
-              >
+              <div key={row.id} className='rounded-lg border bg-muted/10 p-4'>
                 <div className='flex items-start justify-between gap-3'>
                   <UserIdentity user={user} />
                   <Badge
@@ -361,7 +361,9 @@ function UserScanLimitsTable({
                   </div>
                   <div>
                     <dt className='text-muted-foreground'>Plan limit</dt>
-                    <dd className='mt-1 font-medium'>{user.limit} scans/hour</dd>
+                    <dd className='mt-1 font-medium'>
+                      {user.limit} scans/hour
+                    </dd>
                   </div>
                 </dl>
                 <ResetUserButton
@@ -411,11 +413,20 @@ function UserScanLimitsTable({
                               header.getContext()
                             )}
                             {sorted === 'asc' ? (
-                              <ArrowUp className='size-3.5' aria-hidden='true' />
+                              <ArrowUp
+                                className='size-3.5'
+                                aria-hidden='true'
+                              />
                             ) : sorted === 'desc' ? (
-                              <ArrowDown className='size-3.5' aria-hidden='true' />
+                              <ArrowDown
+                                className='size-3.5'
+                                aria-hidden='true'
+                              />
                             ) : (
-                              <ArrowUpDown className='size-3.5 opacity-50' aria-hidden='true' />
+                              <ArrowUpDown
+                                className='size-3.5 opacity-50'
+                                aria-hidden='true'
+                              />
                             )}
                           </button>
                         ) : (
@@ -433,16 +444,25 @@ function UserScanLimitsTable({
             <tbody className='divide-y divide-border'>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className='px-4 py-12 text-center'>
+                  <td
+                    colSpan={columns.length}
+                    className='px-4 py-12 text-center'
+                  >
                     <EmptyState hasSearch={hasSearch} />
                   </td>
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id} className='transition-colors hover:bg-muted/30'>
+                  <tr
+                    key={row.id}
+                    className='transition-colors hover:bg-muted/30'
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className='px-4 py-4 align-middle'>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -468,7 +488,8 @@ function UserLimitsError({ onRetry }: { onRetry: () => void }) {
             <div>
               <CardTitle>Couldn&apos;t load user limits</CardTitle>
               <CardDescription className='mt-1'>
-                The admin user list is temporarily unavailable. Check your connection and try again.
+                The admin user list is temporarily unavailable. Check your
+                connection and try again.
               </CardDescription>
             </div>
           </div>
@@ -520,7 +541,9 @@ function UsersPageContent() {
     isAuthenticated ? {} : 'skip'
   ) as UserScanLimit[] | undefined;
   const resetUserScanLimit = useMutation(api.scans.resetUserScanLimit);
-  const [resettingUserId, setResettingUserId] = useState<Id<'users'> | null>(null);
+  const [resettingUserId, setResettingUserId] = useState<Id<'users'> | null>(
+    null
+  );
   const [pendingResetUser, setPendingResetUser] =
     useState<UserScanLimit | null>(null);
   const [statusMessage, setStatusMessage] = useState<{
@@ -536,7 +559,8 @@ function UsersPageContent() {
   const [identityRefreshKey, setIdentityRefreshKey] = useState(0);
   const userCount = users?.length ?? 0;
   const identityLookupKey =
-    users?.map((user) => `${user.userId}:${user.externalId ?? ''}`).join('|') ?? '';
+    users?.map((user) => `${user.userId}:${user.externalId ?? ''}`).join('|') ??
+    '';
 
   useEffect(() => {
     if (users === undefined) return;
@@ -667,16 +691,19 @@ function UsersPageContent() {
               <Gauge className='size-5' aria-hidden='true' />
             </div>
             <div>
-              <h1 className='font-display text-3xl font-semibold tracking-tight'>User scan limits</h1>
+              <h1 className='font-display text-3xl font-semibold tracking-tight'>
+                User scan limits
+              </h1>
               <p className='mt-1 text-muted-foreground'>
-                See each account\'s hourly scan usage and restore access when needed.
+                See each account\'s hourly scan usage and restore access when
+                needed.
               </p>
             </div>
           </div>
         </div>
         <Badge variant='outline' className='w-fit gap-1.5 px-3 py-1.5'>
-          <ShieldCheck className='size-4 text-primary' aria-hidden='true' />
-          5 scans per hour
+          <ShieldCheck className='size-4 text-primary' aria-hidden='true' />5
+          scans per hour
         </Badge>
       </div>
 
@@ -691,9 +718,15 @@ function UsersPageContent() {
           role={statusMessage.type === 'error' ? 'alert' : 'status'}
         >
           {statusMessage.type === 'success' ? (
-            <CheckCircle2 className='mt-0.5 size-4 shrink-0' aria-hidden='true' />
+            <CheckCircle2
+              className='mt-0.5 size-4 shrink-0'
+              aria-hidden='true'
+            />
           ) : (
-            <CircleAlert className='mt-0.5 size-4 shrink-0' aria-hidden='true' />
+            <CircleAlert
+              className='mt-0.5 size-4 shrink-0'
+              aria-hidden='true'
+            />
           )}
           <span>{statusMessage.text}</span>
         </div>
@@ -704,7 +737,8 @@ function UsersPageContent() {
           <CardTitle>Accounts</CardTitle>
           <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
             <CardDescription>
-              Resetting a limit gives the user a fresh five-scan window immediately.
+              Resetting a limit gives the user a fresh five-scan window
+              immediately.
             </CardDescription>
             {identityStatus === 'loading' ? (
               <span className='text-xs text-muted-foreground' role='status'>

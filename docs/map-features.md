@@ -571,9 +571,12 @@ const courtImageData = useQuery(api.inferences.getCourtImageData, {
 Checks if user has submitted feedback for a specific prediction.
 
 ```typescript
-const userFeedback = useQuery(api.feedback_submissions.getUserFeedbackForPrediction, {
-  predictionId: Id<'inference_predictions'>,
-});
+const userFeedback = useQuery(
+  api.feedback_submissions.getUserFeedbackForPrediction,
+  {
+    predictionId: Id<'inference_predictions'>,
+  }
+);
 ```
 
 #### `api.inferences.getAvailableZoomLevels`
@@ -865,12 +868,14 @@ The application migrated from a prediction-centric to a court-centric architectu
 - **After**: Multiple predictions link to a single court record
 
 **Benefits:**
+
 - Verification status persists across model updates
 - Better deduplication of detections
 - Community feedback aggregates at court level
 - Cleaner data organization
 
 **Migration Impact:**
+
 - New `courts` table as primary data source
 - `inference_predictions` now have `courtId` field
 - New `feedback_submissions` table for verification

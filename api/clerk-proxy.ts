@@ -74,14 +74,17 @@ export default {
     headers.set('Clerk-Secret-Key', secretKey);
     headers.set(
       'X-Forwarded-For',
-      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '',
+      request.headers.get('x-forwarded-for') ||
+        request.headers.get('x-real-ip') ||
+        ''
     );
 
     try {
       const upstreamUrl = getUpstreamUrl(request);
-      const body = request.method === 'GET' || request.method === 'HEAD'
-        ? undefined
-        : await request.arrayBuffer();
+      const body =
+        request.method === 'GET' || request.method === 'HEAD'
+          ? undefined
+          : await request.arrayBuffer();
       const response = await fetch(upstreamUrl, {
         method: request.method,
         headers,
@@ -96,7 +99,10 @@ export default {
 
       const location = responseHeaders.get('location');
       if (location) {
-        responseHeaders.set('location', rewriteRedirectLocation(location, upstreamUrl));
+        responseHeaders.set(
+          'location',
+          rewriteRedirectLocation(location, upstreamUrl)
+        );
       }
 
       return new Response(response.body, {

@@ -1,5 +1,10 @@
 import Loader from '@/components/loader';
-import { createFileRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
 import { useEffect } from 'react';
 

@@ -42,14 +42,15 @@ Use `bun update --latest` only after reviewing all major version jumps.
 
 - `package.json` declares `packageManager: bun@1.2.19`.
 - The lockfile is `bun.lock`.
-- This project uses Vite intentionally; keep package scripts aligned with `bun run ...`.
-- Tests are run through the package script with `bun run test`, which invokes Vitest.
+- This project uses Vite Plus through Bun scripts; keep package scripts aligned with `bun run ...`.
+- Keep `vite-plus`, the direct `vite` core alias, and its override on the same release.
+- Tests are run through `bun run test`, which invokes the Vitest bundled with Vite Plus. Import test APIs from `vite-plus/test`.
 - Convex commands should use `bunx convex ...` or existing Bun scripts.
 
 ## Verification
 
 ```bash
-bun check-types
+bun run check
 bun run test
 bun run build
 ```

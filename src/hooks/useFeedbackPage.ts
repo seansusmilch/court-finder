@@ -4,7 +4,11 @@ import { api } from '@/../convex/_generated/api';
 import { usePredictionLock, useImageLoadingState } from './';
 
 type FeedbackData = NonNullable<
-  ReturnType<typeof useQuery<typeof api.feedback_submissions.getNextPredictionForFeedback>>
+  ReturnType<
+    typeof useQuery<
+      typeof api.feedback_submissions.getNextPredictionForFeedback
+    >
+  >
 >;
 
 /**
