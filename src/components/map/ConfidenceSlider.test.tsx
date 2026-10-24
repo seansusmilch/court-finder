@@ -13,9 +13,9 @@ describe('ConfidenceSlider', () => {
       />
     );
 
-    expect(screen.getByText('Confidence: 70%')).toBeInTheDocument();
-
-    const slider = screen.getByRole('slider');
+    const slider = screen.getByRole('slider', { name: 'Minimum model confidence' });
+    expect(slider).toHaveAttribute('aria-valuetext', '70 percent');
+    expect(slider).toHaveValue('0.7');
     fireEvent.change(slider, { target: { value: '0.8' } });
 
     expect(onConfidenceChange).toHaveBeenLastCalledWith(0.8);
