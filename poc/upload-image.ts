@@ -8,12 +8,17 @@ const ROBOFLOW_SETTINGS = {
 };
 
 async function uploadImage() {
+  const mapboxApiKey = process.env.MAPBOX_API_KEY;
+  if (!mapboxApiKey) {
+    throw new Error('MAPBOX_API_KEY is not set in the environment');
+  }
+
   const url = `https://api.roboflow.com/dataset/${ROBOFLOW_SETTINGS.datasetName}/upload`;
 
   const params = new URLSearchParams({
     api_key: ROBOFLOW_SETTINGS.apiKey,
     image:
-      'https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/512/15/7911/11794@2x?access_token=pk.eyJ1Ijoic2VhbnN1c21pbGNoIiwiYSI6ImNtZWo0bHVkNTA5NmIyc29kZm5sYWl1bWEifQ.GKLz_Ya4ZfArpDeyVs1nfQ',
+      `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/512/15/7911/11794@2x?access_token=${mapboxApiKey}`,
     name: 'test-123.jpg',
     split: 'train',
     batch: 'User Contributed TEST',
