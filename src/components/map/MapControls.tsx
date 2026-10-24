@@ -82,7 +82,9 @@ export interface MapControlsProps {
 /**
  * Creates the default set of map control sections
  */
-export function createDefaultSections(settings: MapControlsSettings): MapSectionConfig[] {
+export function createDefaultSections(
+  settings: MapControlsSettings
+): MapSectionConfig[] {
   const actionSections =
     settings.scan || settings.upload
       ? [
@@ -254,7 +256,8 @@ export function MapControls({
                       Map filters and display
                     </DrawerTitle>
                     <DrawerDescription>
-                      Choose which possible facilities appear and how the map looks.
+                      Choose which possible facilities appear and how the map
+                      looks.
                     </DrawerDescription>
                   </div>
                   <DrawerClose asChild>

@@ -65,7 +65,8 @@ function RootComponent() {
   // The map owns the viewport on every device. Keep the desktop header in the
   // layout, but let the map itself occupy the remaining height.
   const hideHeaderRoutes = ['/map', '/feedback', '/training-feedback'];
-  const shouldHideHeader = isMobile && hideHeaderRoutes.includes(location.pathname);
+  const shouldHideHeader =
+    isMobile && hideHeaderRoutes.includes(location.pathname);
   const noScrollRoutes = ['/map'];
   const isMapRoute = noScrollRoutes.includes(location.pathname);
   const isTallMobileFeedback =
@@ -104,9 +105,7 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey='vite-ui-theme'
       >
-        <div
-          className={`grid ${gridRows} h-dvh`}
-        >
+        <div className={`grid ${gridRows} h-dvh`}>
           {!shouldHideHeader && <Header />}
           <main
             className={`min-h-0 ${

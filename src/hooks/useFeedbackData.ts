@@ -4,7 +4,11 @@ import { api } from '@/../convex/_generated/api';
 import type { Id } from '@/../convex/_generated/dataModel';
 
 type FeedbackData = NonNullable<
-  ReturnType<typeof useQuery<typeof api.feedback_submissions.getNextPredictionForFeedback>>
+  ReturnType<
+    typeof useQuery<
+      typeof api.feedback_submissions.getNextPredictionForFeedback
+    >
+  >
 >;
 
 /**
@@ -32,7 +36,8 @@ export function useFeedbackData(
   const isTransitioning =
     feedbackData === undefined && lastValidDataRef.current !== null;
 
-  const isInitialLoad = feedbackData === undefined && lastValidDataRef.current === null;
+  const isInitialLoad =
+    feedbackData === undefined && lastValidDataRef.current === null;
   const isComplete = feedbackData === null && !isTransitioning;
 
   return {

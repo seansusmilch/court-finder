@@ -226,11 +226,11 @@ export const getTileBatchDetails = query({
     const batch = args.batchId
       ? await ctx.db.get(args.batchId)
       : args.tileId
-      ? await ctx.db
-          .query('upload_batches')
-          .withIndex('by_tile', (q) => q.eq('tileId', args.tileId!))
-          .unique()
-      : null;
+        ? await ctx.db
+            .query('upload_batches')
+            .withIndex('by_tile', (q) => q.eq('tileId', args.tileId!))
+            .unique()
+        : null;
 
     const tileId = batch?.tileId ?? args.tileId;
     if (!tileId) throw new Error('tileId or batchId required');
@@ -744,9 +744,12 @@ export const uploadCenterTile = action({
     });
 
     // Upload the tile image to Roboflow
-    const result = await ctx.runAction(api.upload_batches.processNewBatchImageOnly, {
-      tileId,
-    });
+    const result = await ctx.runAction(
+      api.upload_batches.processNewBatchImageOnly,
+      {
+        tileId,
+      }
+    );
 
     console.log('complete', {
       durationMs: Date.now() - startTs,

@@ -23,19 +23,23 @@ export function CourtCountSection({
           <p className='font-mono text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground'>
             Possible facilities in view
           </p>
-          <p className={cn(
-            'mt-1 font-display text-3xl font-semibold tracking-tight',
-            isZoomSufficient ? 'text-foreground' : 'text-muted-foreground/50'
-          )}>
+          <p
+            className={cn(
+              'mt-1 font-display text-3xl font-semibold tracking-tight',
+              isZoomSufficient ? 'text-foreground' : 'text-muted-foreground/50'
+            )}
+          >
             {courtCount.toLocaleString()}
           </p>
         </div>
-        <div className={cn(
-          'flex size-10 items-center justify-center rounded-lg transition-colors',
-          isZoomSufficient
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-muted-foreground'
-        )}>
+        <div
+          className={cn(
+            'flex size-10 items-center justify-center rounded-lg transition-colors',
+            isZoomSufficient
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground'
+          )}
+        >
           <MapPin className='h-5 w-5' />
         </div>
       </div>

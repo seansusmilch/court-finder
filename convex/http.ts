@@ -70,7 +70,9 @@ http.route({
     if (evt.type === 'user.deleted') {
       const data = evt.data as { id?: string | null };
       if (data.id) {
-        await ctx.runMutation(internal.users.disconnectFromClerk, { id: data.id });
+        await ctx.runMutation(internal.users.disconnectFromClerk, {
+          id: data.id,
+        });
         console.log('clerk_webhook_user_disconnected', {
           startTs,
           durationMs: Date.now() - startTs,

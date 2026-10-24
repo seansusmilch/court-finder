@@ -23,11 +23,14 @@ export function DistanceDisplay({
   if (loading) {
     return (
       <div
-        className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}
-        role="status"
-        aria-live="polite"
+        className={cn(
+          'flex items-center gap-2 text-sm text-muted-foreground',
+          className
+        )}
+        role='status'
+        aria-live='polite'
       >
-        <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+        <LoaderCircle className='h-4 w-4 animate-spin' aria-hidden='true' />
         <span>Getting your location...</span>
       </div>
     );
@@ -36,11 +39,14 @@ export function DistanceDisplay({
   if (error) {
     return (
       <div
-        className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}
-        role="status"
-        aria-live="polite"
+        className={cn(
+          'flex items-center gap-2 text-sm text-muted-foreground',
+          className
+        )}
+        role='status'
+        aria-live='polite'
       >
-        <MapPinOff className="h-4 w-4 text-warning" aria-hidden="true" />
+        <MapPinOff className='h-4 w-4 text-warning' aria-hidden='true' />
         <span>Distance unavailable. Check location access to try again.</span>
       </div>
     );
@@ -49,11 +55,14 @@ export function DistanceDisplay({
   if (!userLocation) {
     return (
       <div
-        className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}
-        role="status"
-        aria-live="polite"
+        className={cn(
+          'flex items-center gap-2 text-sm text-muted-foreground',
+          className
+        )}
+        role='status'
+        aria-live='polite'
       >
-        <MapPin className="h-4 w-4" aria-hidden="true" />
+        <MapPin className='h-4 w-4' aria-hidden='true' />
         <span>Enable location to see distance</span>
       </div>
     );
@@ -69,12 +78,12 @@ export function DistanceDisplay({
   return (
     <div
       className={cn('flex items-center gap-2 text-sm', className)}
-      role="status"
-      aria-live="polite"
+      role='status'
+      aria-live='polite'
       aria-label={`Distance from your location: ${formatDistance(distanceKm)}`}
     >
-      <Navigation className="h-4 w-4 text-secondary" aria-hidden="true" />
-      <span className="font-medium">{formatDistance(distanceKm)}</span>
+      <Navigation className='h-4 w-4 text-secondary' aria-hidden='true' />
+      <span className='font-medium'>{formatDistance(distanceKm)}</span>
     </div>
   );
 }

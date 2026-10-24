@@ -21,7 +21,8 @@ export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
   const { setTheme, theme } = useTheme();
   const currentTheme = theme ?? 'system';
   const currentThemeLabel =
-    themeOptions.find((option) => option.value === currentTheme)?.label ?? 'System';
+    themeOptions.find((option) => option.value === currentTheme)?.label ??
+    'System';
 
   const handleThemeChange = (nextTheme: string) => {
     setTheme(nextTheme);
@@ -39,8 +40,14 @@ export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
           title={`Color theme: ${currentThemeLabel}`}
         >
           <span className='relative grid size-5 place-items-center'>
-            <Sun className='size-5 scale-100 rotate-0 transition-[opacity,transform] dark:scale-0 dark:-rotate-90 dark:opacity-0 motion-reduce:transition-none' aria-hidden='true' />
-            <Moon className='absolute size-5 scale-0 rotate-90 opacity-0 transition-[opacity,transform] dark:scale-100 dark:rotate-0 dark:opacity-100 motion-reduce:transition-none' aria-hidden='true' />
+            <Sun
+              className='size-5 scale-100 rotate-0 transition-[opacity,transform] dark:scale-0 dark:-rotate-90 dark:opacity-0 motion-reduce:transition-none'
+              aria-hidden='true'
+            />
+            <Moon
+              className='absolute size-5 scale-0 rotate-90 opacity-0 transition-[opacity,transform] dark:scale-100 dark:rotate-0 dark:opacity-100 motion-reduce:transition-none'
+              aria-hidden='true'
+            />
           </span>
         </Button>
       </DropdownMenuTrigger>
@@ -52,14 +59,20 @@ export function ModeToggle({ onChanged }: { onChanged?: () => void }) {
         <DropdownMenuLabel className='px-3 pb-1.5 pt-1 text-xs font-semibold tracking-[0.08em] text-muted-foreground'>
           Color theme
         </DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={currentTheme} onValueChange={handleThemeChange}>
+        <DropdownMenuRadioGroup
+          value={currentTheme}
+          onValueChange={handleThemeChange}
+        >
           {themeOptions.map(({ value, label, icon: Icon }) => (
             <DropdownMenuRadioItem
               key={value}
               value={value}
               className='min-h-12 rounded-lg px-3 py-2 pl-10 text-sm transition-colors focus:bg-muted focus:text-foreground data-[state=checked]:bg-primary/10 data-[state=checked]:font-medium data-[state=checked]:text-foreground hover:bg-muted dark:data-[state=checked]:bg-primary/15'
             >
-              <Icon className='size-4 text-muted-foreground' aria-hidden='true' />
+              <Icon
+                className='size-4 text-muted-foreground'
+                aria-hidden='true'
+              />
               <span>{label}</span>
             </DropdownMenuRadioItem>
           ))}

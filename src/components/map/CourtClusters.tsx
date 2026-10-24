@@ -16,7 +16,11 @@ interface CourtClustersProps {
   mapLoaded?: boolean;
 }
 
-export function CourtClusters({ id = 'courts', data, mapLoaded = false }: CourtClustersProps) {
+export function CourtClusters({
+  id = 'courts',
+  data,
+  mapLoaded = false,
+}: CourtClustersProps) {
   if (!mapLoaded) {
     return null;
   }
@@ -70,7 +74,7 @@ export function CourtClusters({ id = 'courts', data, mapLoaded = false }: CourtC
           'text-color': '#ffffff',
         }}
       />
-      </Source>
+    </Source>
   );
 }
 

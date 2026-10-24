@@ -125,7 +125,7 @@ For an admin, set `public_metadata.role` to `admin` in Clerk and expose that val
 8. Configure the Clerk webhook and signing secret, enable user sync, and deploy the frontend.
 9. Test sign-in, sign-out, a protected route, admin access, Clerk profile management, and a scan.
 10. After the rollback window, delete the old Convex Auth `accounts`, `sessions`, and related
-   tables from the Convex dashboard. The application no longer reads them.
+    tables from the Convex dashboard. The application no longer reads them.
 
 ## Rollback
 

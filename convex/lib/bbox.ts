@@ -13,10 +13,7 @@ export interface BBox {
 /**
  * Calculate intersection area of two bounding boxes
  */
-export function bboxIntersectionArea(
-  bbox1: BBox,
-  bbox2: BBox
-): number {
+export function bboxIntersectionArea(bbox1: BBox, bbox2: BBox): number {
   const x1 = Math.max(bbox1.x, bbox2.x);
   const y1 = Math.max(bbox1.y, bbox2.y);
   const x2 = Math.min(bbox1.x + bbox1.width, bbox2.x + bbox2.width);

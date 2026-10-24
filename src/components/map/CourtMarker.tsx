@@ -25,7 +25,8 @@ export function CourtMarker({
   const { emoji, colorLight, colorDark, colorLightMuted, colorDarkMuted } =
     getVisualForClass(courtClass);
   const { theme, systemTheme } = useTheme();
-  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
+  const isDark =
+    theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const isVerified = properties.status === 'verified';
 
   const arrowColor = isDark

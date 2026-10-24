@@ -1,6 +1,11 @@
 import Loader from '@/components/loader';
 import { api } from '@backend/_generated/api';
-import { createFileRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
 import { useConvexAuth, useQuery } from 'convex/react';
 import { useEffect } from 'react';
 
@@ -26,9 +31,22 @@ function AdminLayout() {
         replace: true,
       });
     }
-  }, [currentUser, hasAdmin, isAuthenticated, isLoading, location.href, navigate]);
+  }, [
+    currentUser,
+    hasAdmin,
+    isAuthenticated,
+    isLoading,
+    location.href,
+    navigate,
+  ]);
 
-  if (isLoading || !isAuthenticated || currentUser === undefined || !currentUser || hasAdmin !== true) {
+  if (
+    isLoading ||
+    !isAuthenticated ||
+    currentUser === undefined ||
+    !currentUser ||
+    hasAdmin !== true
+  ) {
     return <Loader />;
   }
   return <Outlet />;

@@ -144,7 +144,9 @@ function TileDetailsPage() {
                     <thead className='text-muted-foreground'>
                       <tr>
                         <th className='text-left font-medium py-1'>User</th>
-                        <th className='text-left font-medium py-1'>Clerk user</th>
+                        <th className='text-left font-medium py-1'>
+                          Clerk user
+                        </th>
                         <th className='text-left font-medium py-1'>Response</th>
                       </tr>
                     </thead>

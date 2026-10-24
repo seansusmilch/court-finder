@@ -5,11 +5,7 @@ import { api, internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import { v } from 'convex/values';
 import { env } from './env';
-import {
-  PERMISSIONS,
-  ROLES,
-  type UserRole,
-} from './lib/constants';
+import { PERMISSIONS, ROLES, type UserRole } from './lib/constants';
 
 type ClerkUserResponse = {
   id: string;
@@ -71,7 +67,9 @@ export const resolveUserIdentities = action({
         durationMs: Date.now() - startTs,
         missingEnvironmentVariable: 'CLERK_SECRET_KEY',
       });
-      throw new Error('CLERK_SECRET_KEY is required to resolve Clerk identities');
+      throw new Error(
+        'CLERK_SECRET_KEY is required to resolve Clerk identities'
+      );
     }
 
     const users = await ctx.runQuery(
@@ -102,7 +100,9 @@ export const resolveUserIdentities = action({
           );
 
           if (!response.ok) {
-            throw new Error(`Clerk user lookup failed with status ${response.status}`);
+            throw new Error(
+              `Clerk user lookup failed with status ${response.status}`
+            );
           }
 
           const clerkUser = (await response.json()) as ClerkUserResponse;
@@ -136,7 +136,8 @@ export const resolveUserIdentities = action({
       durationMs: Date.now() - startTs,
       userCount: identities.length,
       resolvedCount: identities.filter((identity) => identity.resolved).length,
-      unresolvedCount: identities.filter((identity) => !identity.resolved).length,
+      unresolvedCount: identities.filter((identity) => !identity.resolved)
+        .length,
     });
 
     return { identities };
@@ -156,7 +157,9 @@ export const getUserRole = internalAction({
     const startTs = Date.now();
     const secretKey = env.CLERK_SECRET_KEY;
     if (!secretKey) {
-      throw new Error('CLERK_SECRET_KEY is required for background Clerk authorization');
+      throw new Error(
+        'CLERK_SECRET_KEY is required for background Clerk authorization'
+      );
     }
 
     const response = await fetch(
@@ -176,7 +179,9 @@ export const getUserRole = internalAction({
         clerkUserId: args.clerkUserId,
         status: response.status,
       });
-      throw new Error(`Clerk role lookup failed with status ${response.status}`);
+      throw new Error(
+        `Clerk role lookup failed with status ${response.status}`
+      );
     }
 
     const user = (await response.json()) as ClerkUserResponse;

@@ -1,4 +1,9 @@
-import { internalMutation, internalQuery, mutation, query } from './_generated/server';
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from './_generated/server';
 import { v } from 'convex/values';
 import {
   ensureCurrentUserRecord,
@@ -71,7 +76,9 @@ export const applyClerkMigrationLinks = internalMutation({
       if (!clerkUserId) continue;
 
       if (user.externalId && user.externalId !== clerkUserId) {
-        throw new Error(`User ${user._id} is already linked to another Clerk user`);
+        throw new Error(
+          `User ${user._id} is already linked to another Clerk user`
+        );
       }
 
       if (args.cleanupLegacyFields) {

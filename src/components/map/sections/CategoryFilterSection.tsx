@@ -18,7 +18,8 @@ export function CategoryFilterSection({
   className,
 }: CategoryFilterSectionProps) {
   const { theme, systemTheme } = useTheme();
-  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
+  const isDark =
+    theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
   const allSelected = enabledCategories.length === categories.length;
 
   const toggleCategory = (cat: string) => {
@@ -90,9 +91,7 @@ export function CategoryFilterSection({
                 {visual.emoji}
               </span>
               <span>{visual.displayName}</span>
-              {isEnabled && (
-                <X className='h-3.5 w-3.5 opacity-70' />
-              )}
+              {isEnabled && <X className='h-3.5 w-3.5 opacity-70' />}
             </button>
           );
         })}

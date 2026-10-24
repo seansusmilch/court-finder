@@ -98,9 +98,11 @@ function getRequiredTiles(courtData: CourtImageData): Array<{
 /**
  * Stitches multiple tile images together on a canvas
  */
-async function stitchTiles(tiles: Array<{ url: string; offsetX: number; offsetY: number }>): Promise<HTMLCanvasElement> {
-  const maxX = Math.max(...tiles.map(t => t.offsetX));
-  const maxY = Math.max(...tiles.map(t => t.offsetY));
+async function stitchTiles(
+  tiles: Array<{ url: string; offsetX: number; offsetY: number }>
+): Promise<HTMLCanvasElement> {
+  const maxX = Math.max(...tiles.map((t) => t.offsetX));
+  const maxY = Math.max(...tiles.map((t) => t.offsetY));
   const canvas = document.createElement('canvas');
   canvas.width = maxX + TILE_SIZE;
   canvas.height = maxY + TILE_SIZE;
@@ -115,7 +117,7 @@ async function stitchTiles(tiles: Array<{ url: string; offsetX: number; offsetY:
       img.onload = () => resolve(img);
       img.onerror = reject;
       img.src = tile.url;
-    }).then(img => ({ img, ...tile }));
+    }).then((img) => ({ img, ...tile }));
   });
 
   const loadedImages = await Promise.all(loadPromises);
@@ -139,11 +141,17 @@ interface CropResult {
 function calculateCropBounds(
   courtData: CourtImageData,
   tiles: Array<{ offsetX: number; offsetY: number; x: number; y: number }>
-): { cropX: number; cropY: number; cropWidth: number; cropHeight: number; bboxInCrop: BboxStyle } {
+): {
+  cropX: number;
+  cropY: number;
+  cropWidth: number;
+  cropHeight: number;
+  bboxInCrop: BboxStyle;
+} {
   const { pixelX, pixelY, pixelWidth, pixelHeight, tileX, tileY } = courtData;
 
   // Find the court tile in the tiles array - it's the tile with matching x, y coordinates
-  const courtTile = tiles.find(t => t.x === tileX && t.y === tileY);
+  const courtTile = tiles.find((t) => t.x === tileX && t.y === tileY);
   if (!courtTile) {
     // Fallback: assume court is at origin if tile not found
     throw new Error('Court tile not found in tiles array');
@@ -170,8 +178,8 @@ function calculateCropBounds(
   let cropY = courtCenterY - cropHeight / 2;
 
   // Determine canvas size from tiles
-  const maxX = Math.max(...tiles.map(t => t.offsetX));
-  const maxY = Math.max(...tiles.map(t => t.offsetY));
+  const maxX = Math.max(...tiles.map((t) => t.offsetX));
+  const maxY = Math.max(...tiles.map((t) => t.offsetY));
   const canvasWidth = maxX + TILE_SIZE;
   const canvasHeight = maxY + TILE_SIZE;
 
@@ -258,12 +266,19 @@ export function CourtSatelliteImage({
         croppedCanvas.width = cropWidth;
         croppedCanvas.height = cropHeight;
         const croppedCtx = croppedCanvas.getContext('2d');
-        if (!croppedCtx) throw new Error('Failed to get cropped canvas context');
+        if (!croppedCtx)
+          throw new Error('Failed to get cropped canvas context');
 
         croppedCtx.drawImage(
           canvas,
-          cropX, cropY, cropWidth, cropHeight,
-          0, 0, cropWidth, cropHeight
+          cropX,
+          cropY,
+          cropWidth,
+          cropHeight,
+          0,
+          0,
+          cropWidth,
+          cropHeight
         );
 
         // Convert to data URL
@@ -307,17 +322,25 @@ export function CourtSatelliteImage({
         aria-live={loading ? 'polite' : undefined}
         aria-label={loading ? undefined : alt}
       >
-        <div className="flex max-w-xs flex-col items-center gap-3 text-sm text-muted-foreground">
+        <div className='flex max-w-xs flex-col items-center gap-3 text-sm text-muted-foreground'>
           {loading ? (
             <>
-              <Skeleton className="h-16 w-16 rounded-lg" aria-hidden="true" />
+              <Skeleton className='h-16 w-16 rounded-lg' aria-hidden='true' />
               <span>Loading satellite evidence…</span>
             </>
           ) : (
             <>
-              <CircleAlert className="h-6 w-6 text-warning" aria-hidden="true" />
-              <span className="font-medium text-foreground">Satellite evidence unavailable</span>
-              <span>This detection can still be reviewed using its model and location details.</span>
+              <CircleAlert
+                className='h-6 w-6 text-warning'
+                aria-hidden='true'
+              />
+              <span className='font-medium text-foreground'>
+                Satellite evidence unavailable
+              </span>
+              <span>
+                This detection can still be reviewed using its model and
+                location details.
+              </span>
             </>
           )}
         </div>
@@ -326,26 +349,45 @@ export function CourtSatelliteImage({
   }
 
   return (
-    <div className={cn('relative w-full aspect-square bg-muted rounded-lg overflow-hidden', className)}>
+    <div
+      className={cn(
+        'relative w-full aspect-square bg-muted rounded-lg overflow-hidden',
+        className
+      )}
+    >
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/90" role="status" aria-live="polite">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <Skeleton className="w-20 h-20 rounded-lg" />
-              <div className="absolute inset-0 overflow-hidden rounded-lg">
-                <div className="absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-secondary/60 animate-pulse" />
+        <div
+          className='absolute inset-0 z-10 flex items-center justify-center bg-muted/90'
+          role='status'
+          aria-live='polite'
+        >
+          <div className='flex flex-col items-center gap-4'>
+            <div className='relative'>
+              <Skeleton className='w-20 h-20 rounded-lg' />
+              <div className='absolute inset-0 overflow-hidden rounded-lg'>
+                <div className='absolute inset-x-2 top-1/2 h-1 -translate-y-1/2 rounded-full bg-secondary/60 animate-pulse' />
               </div>
             </div>
-            <span className="text-sm text-muted-foreground">Preparing satellite evidence…</span>
+            <span className='text-sm text-muted-foreground'>
+              Preparing satellite evidence…
+            </span>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/95 px-6" role="alert">
-          <div className="flex max-w-xs flex-col items-center gap-2 text-center text-sm text-muted-foreground">
-            <CircleAlert className="h-6 w-6 text-destructive" aria-hidden="true" />
-            <p className="font-medium text-foreground">Satellite evidence could not be prepared</p>
+        <div
+          className='absolute inset-0 flex items-center justify-center bg-muted/95 px-6'
+          role='alert'
+        >
+          <div className='flex max-w-xs flex-col items-center gap-2 text-center text-sm text-muted-foreground'>
+            <CircleAlert
+              className='h-6 w-6 text-destructive'
+              aria-hidden='true'
+            />
+            <p className='font-medium text-foreground'>
+              Satellite evidence could not be prepared
+            </p>
             <p>Details below remain available for review.</p>
           </div>
         </div>
@@ -365,9 +407,9 @@ export function CourtSatelliteImage({
       {/* Court bbox overlay */}
       {imageDataUrl && bboxStyle && (
         <div
-          className="pointer-events-none absolute box-border rounded-sm border-2 border-secondary/80 shadow-lg"
+          className='pointer-events-none absolute box-border rounded-sm border-2 border-secondary/80 shadow-lg'
           style={bboxStyle}
-          aria-hidden="true"
+          aria-hidden='true'
         />
       )}
     </div>

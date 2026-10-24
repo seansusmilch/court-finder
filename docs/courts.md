@@ -70,6 +70,7 @@ Court (1) ←→ (many) Feedback submissions (via predictions)
 **Primary Method**: Courts are created automatically when ML predictions are upserted.
 
 **Flow**:
+
 1. Roboflow model detects courts in a tile image
 2. `inferences:upsertPrediction` is called with detection data
 3. Prediction is created/updated in `inference_predictions` table
@@ -86,6 +87,7 @@ Court (1) ←→ (many) Feedback submissions (via predictions)
 **Method**: Uses bounding box overlap (75% threshold) OR haversine distance
 
 **Distance Thresholds** (class-specific):
+
 - Basketball court: 10 meters
 - Tennis court: 8 meters
 - Soccer field: 16 meters
@@ -94,6 +96,7 @@ Court (1) ←→ (many) Feedback submissions (via predictions)
 - Default: 20 meters
 
 **Logic**:
+
 ```typescript
 1. Convert prediction pixel coordinates to lat/lng
 2. Query ALL courts of same class (pending + verified)
@@ -109,6 +112,7 @@ Court (1) ←→ (many) Feedback submissions (via predictions)
 **Initial State**: All courts start as `status: 'pending'`
 
 **Verification Requirements**:
+
 - Minimum 3 feedback submissions total
 - Minimum 75% positive feedback
 - If thresholds met → `status: 'verified'`, `verifiedAt` set to timestamp
@@ -118,6 +122,7 @@ Court (1) ←→ (many) Feedback submissions (via predictions)
 **Admin Functions**: `courts:setCourtStatus`, `courts:updateCourtStatus`
 
 Allows admins to:
+
 - Override court status to any state
 - Manually reject false positives
 - Verify courts without meeting feedback thresholds
@@ -126,12 +131,12 @@ Allows admins to:
 
 ### Status States
 
-| State | Description | Transition |
-|-------|-------------|------------|
-| `pending` | Newly created, awaiting verification | → `verified` (feedback thresholds met) |
-| | | → `rejected` (admin action) |
-| `verified` | Meets community verification criteria | → `rejected` (admin action) |
-| `rejected` | Invalid detection, removed from display | Final state |
+| State      | Description                             | Transition                             |
+| ---------- | --------------------------------------- | -------------------------------------- |
+| `pending`  | Newly created, awaiting verification    | → `verified` (feedback thresholds met) |
+|            |                                         | → `rejected` (admin action)            |
+| `verified` | Meets community verification criteria   | → `rejected` (admin action)            |
+| `rejected` | Invalid detection, removed from display | Final state                            |
 
 ### Verification Process
 
@@ -140,6 +145,7 @@ Allows admins to:
 **Function**: `courts:verifyFromFeedback` (`convex/courts.ts:110-178`)
 
 **Algorithm**:
+
 ```typescript
 1. Get the prediction's court (every prediction must have one)
 2. Get ALL predictions linked to that court
@@ -164,6 +170,7 @@ Allows admins to:
 **Function**: `feedback_submissions:submitFeedback` (`convex/feedback_submissions.ts:201-290`)
 
 **Validation**:
+
 - One feedback per user per prediction
 - Links feedback to prediction and court
 - Triggers `verifyFromFeedback` asynchronously
@@ -175,17 +182,20 @@ Allows admins to:
 **Component**: `src/components/map/CourtMarker.tsx`
 
 **Visual Design**:
+
 - Verified courts: Green marker with emoji
 - Pending courts: Yellow/Orange marker with emoji
 - Emoji by class: 🏀 🎾 🏈 ⚾ 🏃
 
 **Visibility**:
+
 - Zoom level 10+: Individual markers visible
 - Zoom level < 10: Clustered markers
 - Filter by status (all/verified/pending)
 - Filter by confidence threshold (default 0.5)
 
 **Interaction**:
+
 - Click marker → Open popup
 - Hover → Show preview tooltip
 
@@ -194,6 +204,7 @@ Allows admins to:
 **Component**: `src/components/map/CourtPopup.tsx`
 
 **Pending Courts**:
+
 - Court type display name
 - Class emoji
 - ML confidence score
@@ -201,6 +212,7 @@ Allows admins to:
 - "View details" button
 
 **Verified Courts**:
+
 - Court type display name
 - Class emoji
 - ✓ Verified badge
@@ -212,6 +224,7 @@ Allows admins to:
 **Component**: `src/components/map/CourtDetailDrawer.tsx`
 
 **Sections**:
+
 1. **Satellite Image**: Static map tile centered on court location
 2. **Court Information**:
    - Type and class
@@ -235,6 +248,7 @@ Allows admins to:
 **Purpose**: Group nearby courts when zoomed out
 
 **Logic**:
+
 - Cluster courts within ~50px of each other
 - Display count and dominant class emoji
 - Click cluster → Zoom to bounds
@@ -245,21 +259,25 @@ Allows admins to:
 ### Queries
 
 **`courts:getByPredictionId`** (`convex/courts.ts:45-52`)
+
 - Input: `predictionId: Id<'inference_predictions'>`
 - Output: Court record or null
 - Purpose: Get court for a specific prediction
 
 **`courts:findOverlappingCourt`** (`convex/courts.ts:55-97`)
+
 - Input: `bbox: {x, y, width, height}`, `tileId`, `class`
 - Output: Nearest overlapping court or null
 - Purpose: Find court by bounding box overlap (75% threshold)
 
 **`courts:findNearbyCourt`** (`convex/courts.ts:282-316`)
+
 - Input: `latitude`, `longitude`, `class`
 - Output: Nearest court within radius or null
 - Purpose: Find court by haversine distance
 
 **`inferences:featuresByViewport`** (`convex/inferences.ts`)
+
 - Input: `bounds: {north, south, east, west}`, `zoom`, `filters`
 - Output: GeoJSON features for map display
 - Purpose: Get all courts/predictions visible in current viewport
@@ -267,18 +285,21 @@ Allows admins to:
 ### Mutations
 
 **`courts:createPendingCourtFromPrediction`** (`convex/courts.ts:65-108`)
+
 - Input: `predictionId: Id<'inference_predictions'>`
 - Output: `courtId: Id<'courts'>`
 - Purpose: Create new court from prediction
 - Side effects: Sets court status to 'pending', copies prediction metadata
 
 **`courts:verifyFromFeedback`** (`convex/courts.ts:110-178`)
+
 - Input: `predictionId: Id<'inference_predictions'>`
 - Output: void
 - Purpose: Aggregate feedback and update court status
 - Side effects: Updates court status, links all feedback to court
 
 **`courts:updateCourtStatus`** (admin only)
+
 - Input: `courtId`, `status`
 - Output: void
 - Purpose: Manual status override
@@ -287,6 +308,7 @@ Allows admins to:
 ### Internal Functions
 
 **`courts:setCourtStatus`**
+
 - Internal version of `updateCourtStatus`
 - Bypasses RLS for admin operations
 
@@ -297,6 +319,7 @@ Allows admins to:
 **Problem**: Multiple model versions scanning the same area can create duplicate courts
 
 **Solution**:
+
 1. Search ALL existing courts (pending + verified) before creating
 2. Use class-specific distance thresholds
 3. Link to nearest matching court if within radius
@@ -309,6 +332,7 @@ Allows admins to:
 **Problem**: Prediction without a linked court
 
 **Solution**:
+
 1. Migration ensures all predictions have courtId
 2. `upsertPrediction` automatically links/creates courts
 3. Query errors if prediction.courtId is null
@@ -320,6 +344,7 @@ Allows admins to:
 **Problem**: Feedback on different predictions for the same court not counted together
 
 **Solution**:
+
 1. Store feedback on predictions, not courts
 2. `verifyFromFeedback` queries ALL predictions for the court
 3. Aggregates feedback across all linked predictions
@@ -332,6 +357,7 @@ Allows admins to:
 **Problem**: A basketball court prediction overlaps a tennis court prediction
 
 **Solution**:
+
 1. Only compare predictions/courts of same class
 2. Separate radius thresholds per class
 3. Different classes can coexist at same location
@@ -343,6 +369,7 @@ Allows admins to:
 **Problem**: Court no longer exists, or court type changed
 
 **Solution**:
+
 1. Admin can set status to 'rejected'
 2. Negative feedback will prevent verification
 3. Future: Add 'demolished' status or 'changed' status
@@ -356,11 +383,13 @@ Allows admins to:
 **Problem**: Scanning all courts for nearby search is O(n)
 
 **Current Approach**:
+
 - Scan all courts of same class
 - Filter by distance in memory
 - Acceptable for < 10,000 courts
 
 **Future Improvements**:
+
 - Add geospatial index (e.g., tile-based indexing)
 - Cache nearby court lookups
 - Pre-compute court clusters
@@ -370,6 +399,7 @@ Allows admins to:
 **Problem**: Aggregating feedback for a court with many linked predictions
 
 **Current Approach**:
+
 - Query all predictions for court (typically 1-5)
 - Query all feedback for those predictions
 - Aggregate in memory
@@ -381,6 +411,7 @@ Allows admins to:
 **Problem**: Backfilling courtId for all predictions
 
 **Approach**:
+
 - Batch processing with pagination
 - Progress tracking
 - Idempotent operations
@@ -432,7 +463,7 @@ COURT_CLASS_VISUALS: Record<string, CourtClassVisual> = {
 COURT_VERIFICATION = {
   MIN_FEEDBACK_COUNT: 3,
   MIN_POSITIVE_PERCENTAGE: 0.75,
-}
+};
 ```
 
 ## Testing Requirements
@@ -476,6 +507,7 @@ COURT_VERIFICATION = {
 **Solution**: `linkPredictionsToCourtsByBboxOverlap` migration
 
 **Steps**:
+
 1. For each prediction without courtId:
    - Convert to lat/lng
    - Find nearby court (all courts)
@@ -491,11 +523,13 @@ COURT_VERIFICATION = {
 ### Future Schema Changes
 
 **Backwards Compatibility**:
+
 - Add optional fields with `v.optional()`
 - Run migration to populate new fields
 - Remove fields after deprecation period
 
 **Data Integrity**:
+
 - Never delete courts, only change status
 - Preserve prediction history
 - Audit trail for status changes
@@ -503,6 +537,7 @@ COURT_VERIFICATION = {
 ## Related Files
 
 ### Backend
+
 - `convex/schema.ts` - Database schema
 - `convex/courts.ts` - Court queries/mutations
 - `convex/inference_predictions.ts` - Prediction CRUD
@@ -511,6 +546,7 @@ COURT_VERIFICATION = {
 - `convex/migrations.ts` - Data migrations
 
 ### Frontend
+
 - `src/components/map/CourtMarker.tsx` - Map markers
 - `src/components/map/CourtPopup.tsx` - Marker popups
 - `src/components/map/CourtClusters.tsx` - Clustering
@@ -518,6 +554,7 @@ COURT_VERIFICATION = {
 - `src/lib/constants.ts` - Visual constants and thresholds
 
 ### Utilities
+
 - `convex/lib/spatial.ts` - Haversine distance
 - `convex/lib/tiles.ts` - Tile coordinate conversions
 - `convex/lib/constants.ts` - Verification and radius thresholds

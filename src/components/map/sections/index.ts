@@ -5,9 +5,24 @@
  * Each section can be used independently or combined.
  */
 
-export { CourtCountSection, createCourtCountSection } from './CourtCountSection';
-export { CategoryFilterSection, createCategoryFilterSection } from './CategoryFilterSection';
-export { ConfidenceSection, createConfidenceSection } from './ConfidenceSection';
+export {
+  CourtCountSection,
+  createCourtCountSection,
+} from './CourtCountSection';
+export {
+  CategoryFilterSection,
+  createCategoryFilterSection,
+} from './CategoryFilterSection';
+export {
+  ConfidenceSection,
+  createConfidenceSection,
+} from './ConfidenceSection';
 export { MapStyleSection, createMapStyleSection } from './MapStyleSection';
-export { ActionButtonsSection, createActionButtonsSection } from './ActionButtonsSection';
-export { StatusFilterSection, createStatusFilterSection } from './StatusFilterSection';
+export {
+  ActionButtonsSection,
+  createActionButtonsSection,
+} from './ActionButtonsSection';
+export {
+  StatusFilterSection,
+  createStatusFilterSection,
+} from './StatusFilterSection';

@@ -28,7 +28,12 @@ function NavItem({ icon: Icon, label, to, isActive }: NavItemProps) {
           className={cn('size-5', isActive ? 'text-primary' : 'text-current')}
         />
       ) : null}
-      <span className={cn('text-xs leading-none', isActive ? 'font-semibold' : 'font-medium')}>
+      <span
+        className={cn(
+          'text-xs leading-none',
+          isActive ? 'font-semibold' : 'font-medium'
+        )}
+      >
         {label}
       </span>
       {isActive && (
@@ -51,37 +56,32 @@ export default function BottomNav() {
       aria-label='Mobile navigation'
     >
       <div className='mx-auto flex min-h-16 w-full max-w-lg items-stretch gap-1 px-2'>
-        <NavItem
-          icon={Home}
-          label="Home"
-          to="/"
-          isActive={pathname === '/'}
-        />
+        <NavItem icon={Home} label='Home' to='/' isActive={pathname === '/'} />
         <NavItem
           icon={Map}
-          label="Map"
-          to="/map"
+          label='Map'
+          to='/map'
           isActive={pathname.startsWith('/map')}
         />
         <Show when='signed-in'>
           <NavItem
             icon={MessageSquare}
-            label="Feedback"
-            to="/feedback"
+            label='Feedback'
+            to='/feedback'
             isActive={pathname.startsWith('/feedback')}
           />
           <NavItem
             icon={User}
-            label="Account"
-            to="/account"
+            label='Account'
+            to='/account'
             isActive={pathname.startsWith('/account')}
           />
         </Show>
         <Show when='signed-out'>
           <NavItem
             icon={User}
-            label="Login"
-            to="/login"
+            label='Login'
+            to='/login'
             isActive={pathname === '/login'}
           />
         </Show>

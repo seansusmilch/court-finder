@@ -19,7 +19,8 @@ export function CourtTypePills({
   className,
 }: CourtTypePillsProps) {
   const { theme, systemTheme } = useTheme();
-  const isDark = theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
+  const isDark =
+    theme === 'dark' || (theme === 'system' && systemTheme === 'dark');
 
   return (
     <div
@@ -29,13 +30,13 @@ export function CourtTypePills({
       )}
     >
       <div
-        className="flex items-center gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide md:px-0"
-        role="group"
-        aria-label="Filter map by facility type"
+        className='flex items-center gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide md:px-0'
+        role='group'
+        aria-label='Filter map by facility type'
       >
         {/* All Courts option */}
         <button
-          type="button"
+          type='button'
           onClick={() => onTypeChange(null)}
           aria-pressed={selectedType === null}
           className={cn(
@@ -55,7 +56,7 @@ export function CourtTypePills({
           const sportColor = isDark ? type.colorDark : type.colorLight;
           return (
             <button
-              type="button"
+              type='button'
               key={type.key}
               onClick={() => onTypeChange(isSelected ? null : type.key)}
               aria-pressed={isSelected}

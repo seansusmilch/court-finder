@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import Map, {
-  ScaleControl,
-} from 'react-map-gl/mapbox';
+import Map, { ScaleControl } from 'react-map-gl/mapbox';
 import type { MapMouseEvent, MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@/styles/mapbox.css';
@@ -236,7 +234,10 @@ function MapPage() {
     mutationFn: async () => {
       const center = mapRef.current?.getCenter?.();
       if (!center) throw new Error('Map center not available');
-      const result = await startScanArea({ latitude: center.lat, longitude: center.lng });
+      const result = await startScanArea({
+        latitude: center.lat,
+        longitude: center.lng,
+      });
       setCurrentScanId(result.scanId as string);
       setIsScanningState(true);
       return result;
@@ -276,7 +277,12 @@ function MapPage() {
     api.scans.getProgress,
     currentScanId ? { scanId: currentScanId as Id<'scans'> } : 'skip'
   ) as
-    | { totalTiles: number; tilesProcessed: number; predictionsFound: number; isComplete: boolean }
+    | {
+        totalTiles: number;
+        tilesProcessed: number;
+        predictionsFound: number;
+        isComplete: boolean;
+      }
     | undefined
     | null;
 

@@ -76,16 +76,22 @@
   --shadow-offset-y: 1px;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-sm:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
   --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-xl:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 
   /* Enhanced Glow Shadows */
-  --shadow-glow-primary: 0 0 20px color-mix(in oklch, var(--primary) 30%, transparent);
-  --shadow-glow-accent: 0 0 20px color-mix(in oklch, var(--accent) 30%, transparent);
+  --shadow-glow-primary: 0 0 20px
+    color-mix(in oklch, var(--primary) 30%, transparent);
+  --shadow-glow-accent: 0 0 20px
+    color-mix(in oklch, var(--accent) 30%, transparent);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -166,16 +172,22 @@
   --shadow-offset-y: 1px;
   --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-sm:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
   --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-  --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-  --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-  --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-xl:
+    0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 
   /* Enhanced Glow Shadows */
-  --shadow-glow-primary: 0 0 20px color-mix(in oklch, var(--primary) 30%, transparent);
-  --shadow-glow-accent: 0 0 20px color-mix(in oklch, var(--accent) 30%, transparent);
+  --shadow-glow-primary: 0 0 20px
+    color-mix(in oklch, var(--primary) 30%, transparent);
+  --shadow-glow-accent: 0 0 20px
+    color-mix(in oklch, var(--accent) 30%, transparent);
 }
 
 @theme inline {
@@ -331,7 +343,8 @@
 }
 
 @keyframes locating {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -354,30 +367,70 @@
 }
 
 /* Court-specific color utilities */
-.bg-basketball { background-color: oklch(0.65 0.18 45); }
-.border-basketball { border-color: oklch(0.55 0.16 45); }
-.dark .bg-basketball { background-color: oklch(0.70 0.20 45); }
-.dark .border-basketball { border-color: oklch(0.60 0.18 45); }
+.bg-basketball {
+  background-color: oklch(0.65 0.18 45);
+}
+.border-basketball {
+  border-color: oklch(0.55 0.16 45);
+}
+.dark .bg-basketball {
+  background-color: oklch(0.7 0.2 45);
+}
+.dark .border-basketball {
+  border-color: oklch(0.6 0.18 45);
+}
 
-.bg-tennis { background-color: oklch(0.70 0.16 145); }
-.border-tennis { border-color: oklch(0.60 0.14 145); }
-.dark .bg-tennis { background-color: oklch(0.75 0.18 145); }
-.dark .border-tennis { border-color: oklch(0.65 0.16 145); }
+.bg-tennis {
+  background-color: oklch(0.7 0.16 145);
+}
+.border-tennis {
+  border-color: oklch(0.6 0.14 145);
+}
+.dark .bg-tennis {
+  background-color: oklch(0.75 0.18 145);
+}
+.dark .border-tennis {
+  border-color: oklch(0.65 0.16 145);
+}
 
-.bg-soccer { background-color: oklch(0.68 0.20 25); }
-.border-soccer { border-color: oklch(0.58 0.18 25); }
-.dark .bg-soccer { background-color: oklch(0.73 0.22 25); }
-.dark .border-soccer { border-color: oklch(0.63 0.20 25); }
+.bg-soccer {
+  background-color: oklch(0.68 0.2 25);
+}
+.border-soccer {
+  border-color: oklch(0.58 0.18 25);
+}
+.dark .bg-soccer {
+  background-color: oklch(0.73 0.22 25);
+}
+.dark .border-soccer {
+  border-color: oklch(0.63 0.2 25);
+}
 
-.bg-baseball { background-color: oklch(0.75 0.18 75); }
-.border-baseball { border-color: oklch(0.65 0.16 75); }
-.dark .bg-baseball { background-color: oklch(0.80 0.20 75); }
-.dark .border-baseball { border-color: oklch(0.70 0.18 75); }
+.bg-baseball {
+  background-color: oklch(0.75 0.18 75);
+}
+.border-baseball {
+  border-color: oklch(0.65 0.16 75);
+}
+.dark .bg-baseball {
+  background-color: oklch(0.8 0.2 75);
+}
+.dark .border-baseball {
+  border-color: oklch(0.7 0.18 75);
+}
 
-.bg-track { background-color: oklch(0.65 0.19 270); }
-.border-track { border-color: oklch(0.55 0.17 270); }
-.dark .bg-track { background-color: oklch(0.70 0.21 270); }
-.dark .border-track { border-color: oklch(0.60 0.19 270); }
+.bg-track {
+  background-color: oklch(0.65 0.19 270);
+}
+.border-track {
+  border-color: oklch(0.55 0.17 270);
+}
+.dark .bg-track {
+  background-color: oklch(0.7 0.21 270);
+}
+.dark .border-track {
+  border-color: oklch(0.6 0.19 270);
+}
 
 /* Slider styling */
 .slider {
@@ -421,13 +474,25 @@
 
 /* Slider track progress */
 .slider::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--value, 0%), var(--muted) var(--value, 0%), var(--muted) 100%);
+  background: linear-gradient(
+    to right,
+    var(--primary) 0%,
+    var(--primary) var(--value, 0%),
+    var(--muted) var(--value, 0%),
+    var(--muted) 100%
+  );
   border-radius: 8px;
   height: 8px;
 }
 
 .slider::-moz-range-track {
-  background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--value, 0%), var(--muted) var(--value, 0%), var(--muted) 100%);
+  background: linear-gradient(
+    to right,
+    var(--primary) 0%,
+    var(--primary) var(--value, 0%),
+    var(--muted) var(--value, 0%),
+    var(--muted) 100%
+  );
   border-radius: 8px;
   height: 8px;
 }

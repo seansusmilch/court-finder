@@ -61,7 +61,8 @@ function AccountPage() {
   }
 
   const primaryEmail = clerkUser?.primaryEmailAddress?.emailAddress;
-  const displayName = clerkUser?.fullName || primaryEmail || 'Court Finder account';
+  const displayName =
+    clerkUser?.fullName || primaryEmail || 'Court Finder account';
   const scanLimitPercent = scanLimitStatus
     ? Math.min(
         100,
@@ -80,14 +81,17 @@ function AccountPage() {
     <div className='container mx-auto max-w-2xl space-y-6 px-4 py-8 md:pb-8'>
       <div>
         <h1 className='text-3xl font-bold'>Account</h1>
-        <p className='mt-1 text-muted-foreground'>Your Court Finder activity and access</p>
+        <p className='mt-1 text-muted-foreground'>
+          Your Court Finder activity and access
+        </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Identity &amp; security</CardTitle>
           <CardDescription>
-            Clerk securely manages your photo, name, email addresses, password, and sign-in security.
+            Clerk securely manages your photo, name, email addresses, password,
+            and sign-in security.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -99,15 +103,17 @@ function AccountPage() {
               />
               <dl className='min-w-0 space-y-1'>
                 <div>
-                  <dt className='sr-only'>{clerkUser?.fullName ? 'Name' : 'Email'}</dt>
-                  <dd className='truncate font-medium'>
-                    {displayName}
-                  </dd>
+                  <dt className='sr-only'>
+                    {clerkUser?.fullName ? 'Name' : 'Email'}
+                  </dt>
+                  <dd className='truncate font-medium'>{displayName}</dd>
                 </div>
                 {clerkUser?.fullName && primaryEmail ? (
                   <div>
                     <dt className='sr-only'>Email</dt>
-                    <dd className='truncate text-sm text-muted-foreground'>{primaryEmail}</dd>
+                    <dd className='truncate text-sm text-muted-foreground'>
+                      {primaryEmail}
+                    </dd>
                   </div>
                 ) : null}
               </dl>
@@ -123,7 +129,8 @@ function AccountPage() {
             </Button>
           </div>
           <p className='mt-5 border-t pt-4 text-xs text-muted-foreground'>
-            Changes sync to Court Finder automatically after you save them in Clerk.
+            Changes sync to Court Finder automatically after you save them in
+            Clerk.
           </p>
         </CardContent>
       </Card>
@@ -153,7 +160,9 @@ function AccountPage() {
           <div className='flex items-start justify-between gap-4'>
             <div>
               <CardTitle>Limits</CardTitle>
-              <CardDescription>Current scan usage for this account</CardDescription>
+              <CardDescription>
+                Current scan usage for this account
+              </CardDescription>
             </div>
             <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-muted/40'>
               <Gauge className='h-5 w-5 text-muted-foreground' />
@@ -177,11 +186,16 @@ function AccountPage() {
                 <div>
                   <p className='text-sm font-medium'>Area scans</p>
                   <p className='text-sm text-muted-foreground'>
-                    {scanLimitStatus.remaining} of {scanLimitStatus.limit} scans remaining
+                    {scanLimitStatus.remaining} of {scanLimitStatus.limit} scans
+                    remaining
                   </p>
                 </div>
                 <Badge
-                  variant={scanLimitStatus.remaining === 0 ? 'destructive' : 'secondary'}
+                  variant={
+                    scanLimitStatus.remaining === 0
+                      ? 'destructive'
+                      : 'secondary'
+                  }
                   className='shrink-0'
                 >
                   {scanLimitStatus.count}/{scanLimitStatus.limit} used
@@ -192,12 +206,15 @@ function AccountPage() {
                 <div className='flex items-center justify-between gap-3 text-sm'>
                   <span className='text-muted-foreground'>Window</span>
                   <span className='font-medium'>
-                    {Math.round(scanLimitStatus.windowMs / (60 * 60 * 1000))} hour
+                    {Math.round(scanLimitStatus.windowMs / (60 * 60 * 1000))}{' '}
+                    hour
                   </span>
                 </div>
                 <div className='mt-1 flex items-center justify-between gap-3 text-sm'>
                   <span className='text-muted-foreground'>Resets</span>
-                  <span className='font-medium'>{resetTime ?? 'Ready now'}</span>
+                  <span className='font-medium'>
+                    {resetTime ?? 'Ready now'}
+                  </span>
                 </div>
               </div>
             </>
@@ -214,12 +231,20 @@ function AccountPage() {
           {stats ? (
             <div className='grid gap-4 sm:grid-cols-2'>
               <div className='rounded-lg border p-4'>
-                <p className='text-sm text-muted-foreground'>Feedback submissions</p>
-                <p className='mt-1 text-2xl font-semibold'>{stats.userSubmissionCount}</p>
+                <p className='text-sm text-muted-foreground'>
+                  Feedback submissions
+                </p>
+                <p className='mt-1 text-2xl font-semibold'>
+                  {stats.userSubmissionCount}
+                </p>
               </div>
               <div className='rounded-lg border p-4'>
-                <p className='text-sm text-muted-foreground'>Total predictions</p>
-                <p className='mt-1 text-2xl font-semibold'>{stats.totalPredictions}</p>
+                <p className='text-sm text-muted-foreground'>
+                  Total predictions
+                </p>
+                <p className='mt-1 text-2xl font-semibold'>
+                  {stats.totalPredictions}
+                </p>
               </div>
             </div>
           ) : (
@@ -231,9 +256,7 @@ function AccountPage() {
       {user.role === 'admin' ? (
         <Card className='border-primary/30 bg-primary/5'>
           <CardHeader>
-            <CardTitle className='text-primary'>
-              Administration
-            </CardTitle>
+            <CardTitle className='text-primary'>Administration</CardTitle>
             <CardDescription>Admin tools and dashboards</CardDescription>
           </CardHeader>
           <CardContent>
@@ -246,7 +269,6 @@ function AccountPage() {
           </CardContent>
         </Card>
       ) : null}
-
     </div>
   );
 }

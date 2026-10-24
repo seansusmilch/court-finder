@@ -20,7 +20,10 @@ export function StatusFilterSection({
       <div className='flex min-w-0 items-start gap-2'>
         <ShieldCheck className='h-4 w-4 text-muted-foreground' />
         <div className='min-w-0'>
-          <Label htmlFor='verified-only' className='cursor-pointer text-sm font-medium'>
+          <Label
+            htmlFor='verified-only'
+            className='cursor-pointer text-sm font-medium'
+          >
             Community verified only
           </Label>
           <p className='mt-1 text-xs leading-4 text-muted-foreground'>

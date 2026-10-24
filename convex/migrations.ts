@@ -1,8 +1,16 @@
 import { Migrations } from '@convex-dev/migrations';
 import { components, internal } from './_generated/api';
 import type { DataModel, Id } from './_generated/dataModel';
-import { pointToTile, tileCenterLatLng, pixelOnTileToLngLat } from './lib/tiles';
-import { COURT_VERIFICATION, MARKER_DEDUP_BASE_RADIUS_M, MARKER_DEDUP_RADIUS_BY_CLASS_M } from './lib/constants';
+import {
+  pointToTile,
+  tileCenterLatLng,
+  pixelOnTileToLngLat,
+} from './lib/tiles';
+import {
+  COURT_VERIFICATION,
+  MARKER_DEDUP_BASE_RADIUS_M,
+  MARKER_DEDUP_RADIUS_BY_CLASS_M,
+} from './lib/constants';
 import type { CourtStatus } from './lib/types';
 import { haversineMeters } from './lib/spatial';
 
@@ -111,8 +119,11 @@ export const generateCourtsFromExistingFeedback = migrations.define({
 
     if (feedback.length === 0) return;
 
-    const positiveCount = feedback.filter((f) => f.userResponse === 'yes').length;
-    const positivePercentage = feedback.length > 0 ? positiveCount / feedback.length : 0;
+    const positiveCount = feedback.filter(
+      (f) => f.userResponse === 'yes'
+    ).length;
+    const positivePercentage =
+      feedback.length > 0 ? positiveCount / feedback.length : 0;
 
     const hasPositiveFeedback = positiveCount > 0;
     const meetsThresholds =
@@ -194,21 +205,27 @@ export const linkPredictionsToCourtsByBboxOverlap = migrations.define({
 
       if (overlappingCourt) {
         await ctx.db.patch(doc._id, { courtId: overlappingCourt.courtId });
-        console.log('[linkPredictionsToCourtsByBboxOverlap] linked to existing court', {
-          predictionId: doc._id,
-          courtId: overlappingCourt.courtId,
-          overlapRatio: overlappingCourt.overlap,
-        });
+        console.log(
+          '[linkPredictionsToCourtsByBboxOverlap] linked to existing court',
+          {
+            predictionId: doc._id,
+            courtId: overlappingCourt.courtId,
+            overlapRatio: overlappingCourt.overlap,
+          }
+        );
       } else {
         const courtId = await ctx.runMutation(
           internal.courts.createPendingCourtFromPrediction,
           { predictionId: doc._id }
         );
         await ctx.db.patch(doc._id, { courtId });
-        console.log('[linkPredictionsToCourtsByBboxOverlap] created new court', {
-          predictionId: doc._id,
-          courtId,
-        });
+        console.log(
+          '[linkPredictionsToCourtsByBboxOverlap] created new court',
+          {
+            predictionId: doc._id,
+            courtId,
+          }
+        );
       }
     } catch (error) {
       console.error('[linkPredictionsToCourtsByBboxOverlap] error', {

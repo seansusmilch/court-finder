@@ -60,11 +60,16 @@ export default function Header() {
               }
               activeProps={{
                 'aria-current': 'page',
-                className: 'bg-background text-foreground shadow-sm after:opacity-100',
+                className:
+                  'bg-background text-foreground shadow-sm after:opacity-100',
               }}
               className='relative inline-flex min-h-12 items-center rounded-md px-4 text-sm font-medium text-muted-foreground outline-none transition-[background-color,color,box-shadow] after:absolute after:bottom-1.5 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity hover:bg-background/70 hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-secondary/60 focus-visible:ring-offset-0 motion-reduce:transition-none'
             >
-              {to === '/map' ? 'Explore' : to === '/feedback' ? 'Review' : label}
+              {to === '/map'
+                ? 'Explore'
+                : to === '/feedback'
+                  ? 'Review'
+                  : label}
             </Link>
           ))}
         </nav>

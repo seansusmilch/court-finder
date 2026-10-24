@@ -79,9 +79,7 @@ async function findNextPrediction(
 }
 
 // Utility: Build inference stub for UI expectations
-function buildInferenceStub(
-  prediction: Doc<'inference_predictions'>
-): {
+function buildInferenceStub(prediction: Doc<'inference_predictions'>): {
   tileId: Id<'tiles'>;
   model: string | undefined;
   version: string | undefined;
@@ -117,8 +115,7 @@ export const getNextPredictionForFeedback = query({
     }
 
     const userSubmissions = await getUserSubmissions(ctx, user._id);
-    const submittedPredictionIds =
-      getSubmittedPredictionIds(userSubmissions);
+    const submittedPredictionIds = getSubmittedPredictionIds(userSubmissions);
 
     const nextPrediction = await findNextPrediction(
       ctx,

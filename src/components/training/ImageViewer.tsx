@@ -87,7 +87,14 @@ export default function ImageViewer({
       x: viewport.width / 2 - bbox.x * scale,
       y: viewport.height / 2 - bbox.y * scale,
     });
-  }, [bbox.height, bbox.width, bbox.x, bbox.y, viewport.height, viewport.width]);
+  }, [
+    bbox.height,
+    bbox.width,
+    bbox.x,
+    bbox.y,
+    viewport.height,
+    viewport.width,
+  ]);
 
   const zoomAtPoint = useCallback(
     (factor: number, point: { x: number; y: number }) => {
@@ -312,9 +319,14 @@ export default function ImageViewer({
       >
         {imageError ? (
           <div className='flex max-w-xs flex-col items-center gap-3 px-6 text-center'>
-            <AlertTriangle aria-hidden='true' className='size-8 text-destructive' />
+            <AlertTriangle
+              aria-hidden='true'
+              className='size-8 text-destructive'
+            />
             <div>
-              <p className='text-sm font-semibold'>Satellite image unavailable</p>
+              <p className='text-sm font-semibold'>
+                Satellite image unavailable
+              </p>
               <p className='mt-1 text-xs leading-5 text-muted-foreground'>
                 Try this review again later.
               </p>
@@ -331,7 +343,9 @@ export default function ImageViewer({
             </div>
             <div className='text-center'>
               <p className='text-sm font-semibold'>Loading satellite image</p>
-              <p className='mt-1 text-xs text-muted-foreground'>Preparing the evidence…</p>
+              <p className='mt-1 text-xs text-muted-foreground'>
+                Preparing the evidence…
+              </p>
             </div>
           </div>
         )}

@@ -129,7 +129,8 @@ export function TrainingHelpPage() {
                     icon: Check,
                     text: 'Yes',
                     variant: 'default',
-                    className: 'bg-success hover:bg-success/90 text-success-foreground',
+                    className:
+                      'bg-success hover:bg-success/90 text-success-foreground',
                   },
                   title: 'Yes - This is correct',
                   description:
@@ -141,7 +142,8 @@ export function TrainingHelpPage() {
                     icon: X,
                     text: 'No',
                     variant: 'default',
-                    className: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
+                    className:
+                      'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
                   },
                   title: 'No - This is incorrect',
                   description:
@@ -162,8 +164,8 @@ export function TrainingHelpPage() {
                     item.color === 'green'
                       ? 'border-success/20 bg-success/10 dark:bg-success/20 dark:border-success/30'
                       : item.color === 'red'
-                      ? 'border-destructive/20 bg-destructive/10 dark:bg-destructive/20 dark:border-destructive/30'
-                      : 'border-muted bg-muted/50 dark:bg-muted/20 dark:border-muted/30'
+                        ? 'border-destructive/20 bg-destructive/10 dark:bg-destructive/20 dark:border-destructive/30'
+                        : 'border-muted bg-muted/50 dark:bg-muted/20 dark:border-muted/30'
                   }`}
                 >
                   <Button

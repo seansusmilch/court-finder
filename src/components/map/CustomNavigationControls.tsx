@@ -43,7 +43,7 @@ export function MapControlButton({
   return (
     <Button
       variant={variant}
-      size="icon"
+      size='icon'
       className={combineClasses(
         mapControlButtonClassName,
         variant === 'default' && 'border-primary',
@@ -54,7 +54,7 @@ export function MapControlButton({
       aria-label={ariaLabel ?? label}
       aria-expanded={ariaExpanded}
       title={ariaLabel ?? label}
-      type="button"
+      type='button'
     >
       {renderIcon ? renderIcon(icon) : icon}
     </Button>
@@ -135,7 +135,9 @@ export function createDefaultButtons(
 
   const getScanButtonIcon = () => {
     if (!isScanning || !scanProgress) {
-      return <Radar className='size-5 text-primary-foreground' aria-hidden='true' />;
+      return (
+        <Radar className='size-5 text-primary-foreground' aria-hidden='true' />
+      );
     }
     return null;
   };
@@ -154,11 +156,16 @@ export function createDefaultButtons(
         'border-primary !bg-primary !text-primary-foreground hover:!bg-primary/90 dark:!bg-primary dark:!text-primary-foreground disabled:!bg-primary disabled:!text-primary-foreground disabled:!opacity-100 disabled:cursor-wait',
       renderIcon: (icon) => {
         if (!isScanning || !scanProgress || scanProgress.totalTiles === 0) {
-          return <span className={isScanning ? 'animate-scan-spin' : ''}>{icon}</span>;
+          return (
+            <span className={isScanning ? 'animate-scan-spin' : ''}>
+              {icon}
+            </span>
+          );
         }
-        const progress = (scanProgress.tilesProcessed / scanProgress.totalTiles) * 100;
+        const progress =
+          (scanProgress.tilesProcessed / scanProgress.totalTiles) * 100;
         return (
-          <span className="font-mono text-base font-bold leading-none tracking-tight text-primary-foreground tabular-nums">
+          <span className='font-mono text-base font-bold leading-none tracking-tight text-primary-foreground tabular-nums'>
             {Math.round(progress)}%
           </span>
         );
@@ -175,7 +182,9 @@ export function createDefaultButtons(
     },
     {
       id: 'locate',
-      icon: <Navigation2 className={mapControlIconClassName} aria-hidden='true' />,
+      icon: (
+        <Navigation2 className={mapControlIconClassName} aria-hidden='true' />
+      ),
       label: 'Locate me',
       onClick: handleLocate,
       disabled: isLocating,
@@ -275,7 +284,10 @@ export function CustomNavigationControls({
   });
 
   const buttonMap = new Map(
-    [...configuredDefaults, ...(customButtons ?? [])].map((btn) => [btn.id, btn])
+    [...configuredDefaults, ...(customButtons ?? [])].map((btn) => [
+      btn.id,
+      btn,
+    ])
   );
 
   const buttons = sortSections(
@@ -300,8 +312,8 @@ export function CustomNavigationControls({
   return (
     <div
       className={cn(layoutStyles[layout], 'no-zoom', className)}
-      role="group"
-      aria-label="Map controls"
+      role='group'
+      aria-label='Map controls'
       style={Object.keys(positionStyle).length > 0 ? positionStyle : undefined}
     >
       {buttons.map((button) => (

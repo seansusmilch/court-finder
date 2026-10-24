@@ -11,11 +11,15 @@ export function getConfidenceLevel(confidence: number): ConfidenceLevel {
 }
 
 // Type guard for verified status
-export function isVerified(status: CourtStatus | undefined): status is 'verified' {
+export function isVerified(
+  status: CourtStatus | undefined
+): status is 'verified' {
   return status === 'verified';
 }
 
 // Type guard for pending status
-export function isPending(status: CourtStatus | undefined): status is 'pending' {
+export function isPending(
+  status: CourtStatus | undefined
+): status is 'pending' {
   return status === 'pending';
 }

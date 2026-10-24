@@ -74,11 +74,13 @@ async function listClerkUsers(secretKey: string): Promise<ClerkUser[]> {
     });
 
     if (!response.ok) {
-      throw new Error(`Clerk user migration lookup failed with status ${response.status}`);
+      throw new Error(
+        `Clerk user migration lookup failed with status ${response.status}`
+      );
     }
 
     const body = (await response.json()) as ClerkUserListResponse;
-    const page = Array.isArray(body) ? body : body.data ?? [];
+    const page = Array.isArray(body) ? body : (body.data ?? []);
     users.push(...page);
 
     if (page.length < limit) return users;
@@ -91,10 +93,7 @@ export const migrateLegacyUsers = action({
     apply: v.optional(v.boolean()),
     cleanupLegacyFields: v.optional(v.boolean()),
   },
-  handler: async (
-    ctx: ActionCtx,
-    args
-  ): Promise<MigrationResult> => {
+  handler: async (ctx: ActionCtx, args): Promise<MigrationResult> => {
     const startTs = Date.now();
     const apply = args.apply === true;
     const cleanupLegacyFields = args.cleanupLegacyFields === true;
@@ -107,7 +106,9 @@ export const migrateLegacyUsers = action({
       permission: PERMISSIONS.ADMIN.ACCESS,
     });
     if (!canMigrate) {
-      throw new Error('Administrator access is required for the Clerk migration');
+      throw new Error(
+        'Administrator access is required for the Clerk migration'
+      );
     }
 
     const secretKey = env.CLERK_SECRET_KEY;
@@ -115,10 +116,11 @@ export const migrateLegacyUsers = action({
       throw new Error('CLERK_SECRET_KEY is required for the Clerk migration');
     }
 
-    const [localUsers, clerkUsers]: [LocalMigrationUser[], ClerkUser[]] = await Promise.all([
-      ctx.runQuery(internal.users.listForClerkMigration, {}),
-      listClerkUsers(secretKey),
-    ]) as [LocalMigrationUser[], ClerkUser[]];
+    const [localUsers, clerkUsers]: [LocalMigrationUser[], ClerkUser[]] =
+      (await Promise.all([
+        ctx.runQuery(internal.users.listForClerkMigration, {}),
+        listClerkUsers(secretKey),
+      ])) as [LocalMigrationUser[], ClerkUser[]];
 
     const localEmailCounts = new Map<string, number>();
     const localExternalIdCounts = new Map<string, number>();
@@ -206,10 +208,13 @@ export const migrateLegacyUsers = action({
     let linkedCount = 0;
     let cleanedCount = 0;
     if (apply) {
-      const result = await ctx.runMutation(internal.users.applyClerkMigrationLinks, {
-        links,
-        cleanupLegacyFields,
-      });
+      const result = await ctx.runMutation(
+        internal.users.applyClerkMigrationLinks,
+        {
+          links,
+          cleanupLegacyFields,
+        }
+      );
       linkedCount = result.linkedCount;
       cleanedCount = result.cleanedCount;
     }
